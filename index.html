@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Wander — Travel Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --canvas:#fffaf0;--ink:#0a0a0a;--muted:#6a6a6a;--body:#3a3a3a;
+  --hair:#e5e5e5;--card:#f0ebe0;--card2:#e8e3d8;--card3:#d8d3c8;
+  --sky:#1a3a5a;--skylt:#93c5fd;--ocean:#1a4a5a;
+  --peach:#ffb084;--peach-d:#7a3d1a;
+  --lav:#b8a4ed;--lav-d:#3a2a6a;
+  --ochre:#e8b94a;--ochre-d:#6a4a10;
+  --coral:#ff7b5a;--mint:#a4d4c5;--mint-d:#0a3a2a;
+  --teal:#1a4a4a;--blue:#4a7ade;
+  --r-card:16px;--r-btn:11px;--r-pill:9999px;
+}
+html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-serif;color:var(--ink);}
+.app-wrap{max-width:430px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:var(--canvas);position:relative;overflow:hidden;}
+@media(min-width:860px){
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+  .app-wrap{height:90vh;max-height:860px;border-radius:28px;box-shadow:0 24px 80px rgba(0,0,0,.22);}
+}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden;}
+.screen.active{display:flex;}
+.scroll{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;}
+.scroll::-webkit-scrollbar{display:none;}
+
+/* Typography */
+.sl{font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:#9a9a9a;margin-bottom:6px;}
+.page-title{font-size:20px;font-weight:700;letter-spacing:-.5px;}
+.section-head{font-size:15px;font-weight:700;letter-spacing:-.2px;margin-bottom:10px;}
+
+/* Cards */
+.card{background:var(--card);border-radius:var(--r-card);padding:14px;}
+.card2{background:var(--card2);border-radius:var(--r-card);padding:14px;}
+
+/* Buttons */
+.btn-d{background:var(--ink);color:#fffaf0;border:none;border-radius:var(--r-btn);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;}
+.btn-d:hover{background:#2a2a2a;}
+.btn-l{background:var(--card2);color:var(--ink);border:none;border-radius:var(--r-btn);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
+.btn-ghost{background:none;color:var(--blue);border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0;}
+
+/* Inputs */
+.inp{background:var(--card2);border:none;border-radius:10px;padding:9px 12px;font-size:13px;font-family:inherit;color:var(--ink);width:100%;outline:none;}
+.inp::placeholder{color:#9a9a9a;}
+.inp:focus{background:#ddd8ce;}
+
+/* Pills / chips */
+.pill{background:var(--card2);border-radius:var(--r-pill);padding:5px 12px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:inherit;color:var(--muted);white-space:nowrap;}
+.pill.on{background:var(--ink);color:#fffaf0;}
+.pill-sm{background:var(--card2);border-radius:var(--r-pill);padding:3px 9px;font-size:10px;font-weight:700;border:none;color:var(--muted);}
+
+/* Avatar */
+.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;border:2px solid var(--canvas);flex:0 0 auto;}
+.av-sm{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;border:2px solid var(--canvas);flex:0 0 auto;}
+.av-row{display:flex;}.av-row .av{margin-left:-6px;}.av-row .av:first-child{margin-left:0;}
+.av-row .av-sm{margin-left:-5px;}.av-row .av-sm:first-child{margin-left:0;}
+
+/* Day pills */
+.dp{flex:0 0 auto;padding:6px 10px;border-radius:11px;font-size:11px;font-weight:600;cursor:pointer;text-align:center;background:var(--card2);color:var(--muted);line-height:1.3;min-width:44px;}
+.dp.on{background:var(--ink);color:#fffaf0;}
+
+/* Tab bar */
+.tabbar{display:flex;gap:4px;overflow-x:auto;padding:10px 16px 8px;background:var(--canvas);border-bottom:1px solid var(--hair);flex:0 0 auto;}
+.tabbar::-webkit-scrollbar{display:none;}
+.tbtn{flex:0 0 auto;padding:6px 12px;border-radius:var(--r-pill);font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--card);color:var(--muted);font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.tbtn.on{background:var(--ink);color:#fffaf0;}
+.tbtn i{font-size:14px;}
+
+/* Tab panels */
+.tp{display:none;padding:14px 16px 80px;}
+.tp.active{display:block;}
+
+/* Bottom nav */
+.bnav{display:flex;border-top:1px solid var(--hair);background:var(--canvas);padding:8px 0 max(10px,env(safe-area-inset-bottom));flex:0 0 auto;}
+.bni{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;font-size:10px;color:#9a9a9a;font-weight:500;padding:3px 0;border:none;background:none;font-family:inherit;}
+.bni.on{color:var(--ink);}
+.bni i{font-size:20px;}
+
+/* Check items */
+.check-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--card2);cursor:pointer;}
+.chk{width:18px;height:18px;border-radius:5px;border:2px solid var(--card3);flex:0 0 auto;display:flex;align-items:center;justify-content:center;}
+.chk.done{background:var(--ink);border-color:var(--ink);}
+
+/* Expense rows */
+.exp-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--card2);}
+.exp-row:last-child{border:none;}
+.eicon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;flex:0 0 auto;}
+
+/* Photo grid */
+.photo-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;}
+.photo-thumb{aspect-ratio:1;background:var(--card2);border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;cursor:pointer;}
+.photo-thumb:hover{opacity:.9;}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-overlay{position:absolute;bottom:0;left:0;right:0;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.5));display:flex;align-items:center;justify-content:space-between;}
+
+/* Trip card */
+.trip-card{border-radius:18px;padding:16px;cursor:pointer;margin-bottom:10px;transition:opacity .15s;}
+.trip-card:hover{opacity:.92;}
+
+/* Status bar */
+.sbar{padding:10px 18px 4px;display:flex;justify-content:space-between;font-size:11px;font-weight:600;background:var(--canvas);flex:0 0 auto;}
+
+/* Toggles */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--card2);}
+.toggle{width:40px;height:22px;border-radius:9999px;background:var(--card3);position:relative;cursor:pointer;transition:.2s;flex:0 0 auto;}
+.toggle.on{background:var(--ink);}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s;}
+.toggle.on::after{left:20px;}
+
+/* Back button */
+.back-btn{background:var(--card2);border:none;border-radius:9px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+.back-btn i{font-size:16px;}
+
+/* Lightbox */
+.lightbox{position:absolute;inset:0;background:rgba(0,0,0,.92);z-index:100;display:none;flex-direction:column;align-items:center;justify-content:center;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:100%;max-height:70vh;border-radius:12px;}
+
+/* Badge */
+.badge{border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;}
+.badge-up{background:#fffaf0;color:#3a2a6a;}
+.badge-act{background:#0a2a20;color:#a4d4c5;}
+.badge-past{background:var(--card3);color:var(--muted);}
+.badge-pend{background:#fff3cd;color:#856404;}
+
+/* Invite chip */
+.invite-chip{display:flex;align-items:center;gap:8px;background:var(--card2);border-radius:11px;padding:9px 11px;}
+
+/* User colors */
+.u-amy{background:#ff7b5a;color:#fff;}
+.u-james{background:#1a4a4a;color:#a4d4c5;}
+.u-maria{background:#e8b94a;color:#3a2a00;}
+.u-rosa{background:#4a7ade;color:#fff;}
+.u-lynnell{background:#b8a4ed;color:#2a1a50;}
+
+/* Notification dot */
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#ff7b5a;position:absolute;top:2px;right:2px;}
+</style>
+</head>
+<body>
+<div class="app-wrap" id="app">
+
+<!-- ════════════════════════════════════
+     SCREEN: LOGIN
+════════════════════════════════════ -->
+<div class="screen active" id="s-login" style="justify-content:center;padding:32px 24px;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="width:64px;height:64px;border-radius:18px;background:var(--sky);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 24px rgba(26,58,90,.25);"><i class="ti ti-plane" style="font-size:30px;color:#fffaf0;"></i></div>
+    <div style="font-size:34px;font-weight:700;letter-spacing:-.8px;margin-bottom:6px;">Wander</div>
+    <div style="color:var(--muted);font-size:14px;">Your adventures, organized.</div>
+  </div>
+
+  <!-- Sign in form (only — accounts created by admin in Supabase) -->
+  <div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Email</div>
+      <input id="login-email" type="email" class="inp" placeholder="you@example.com" autocomplete="email" style="font-size:15px;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Password</div>
+      <input id="login-password" type="password" class="inp" placeholder="••••••••" autocomplete="current-password" style="font-size:15px;">
+    </div>
+    <div id="login-error" style="display:none;background:#fee;border-radius:9px;padding:9px 12px;font-size:12px;color:#cc3a3a;margin-bottom:12px;"></div>
+    <button onclick="doLogin()" id="login-btn" class="btn-d" style="width:100%;padding:13px;font-size:15px;font-weight:700;">Sign in →</button>
+    <div style="text-align:center;margin-top:20px;">
+      <span style="font-size:12px;color:var(--muted);">Access is by invitation only.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HOME
+════════════════════════════════════ -->
+<div class="screen" id="s-home">
+  <div class="sbar"><span id="home-time">9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:4px 16px 12px;flex:0 0 auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <div style="width:32px;height:32px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;"><i class="ti ti-plane" style="font-size:16px;color:#fffaf0;"></i></div>
+        <span style="font-size:22px;font-weight:700;letter-spacing:-.6px;">Wander</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button onclick="go('profile')" style="position:relative;background:none;border:none;cursor:pointer;" aria-label="Profile">
+          <div class="av u-amy" id="home-av" style="width:32px;height:32px;font-size:13px;">A</div>
+        </button>
+        <button class="btn-d" onclick="go('new-trip')" style="padding:7px 13px;font-size:12px;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus" style="font-size:14px;"></i> New trip</button>
+      </div>
+    </div>
+    <p style="color:#9a9a9a;font-size:12px;margin-bottom:12px;" id="home-greeting">Welcome back, Amy</p>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
+      <div style="background:var(--sky);border-radius:13px;padding:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:2px;">Upcoming</div>
+        <div style="font-size:24px;font-weight:700;color:#fffaf0;letter-spacing:-1px;">2</div>
+        <div style="font-size:11px;color:#7ab0e8;">trips planned</div>
+      </div>
+      <div style="background:var(--peach);border-radius:13px;padding:12px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--peach-d);margin-bottom:2px;">Total spent</div>
+        <div style="font-size:24px;font-weight:700;color:#3a1a08;letter-spacing:-1px;">$4,280</div>
+        <div style="font-size:11px;color:#8a4a20;">all trips</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll" style="padding:0 16px 12px;">
+    <!-- Real DB trips rendered here -->
+    <div id="home-trips"></div>
+
+    <div class="sl" style="margin-top:4px;">Demo trip</div>
+
+    <div class="trip-card" style="background:var(--lav);" onclick="openTrip()">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;">
+        <div><div style="font-size:18px;font-weight:700;color:#1a1030;letter-spacing:-.4px;">🇮🇹 Italy</div><div style="font-size:12px;color:#5a4080;margin-top:1px;">Rome · Florence · Amalfi</div></div>
+        <span class="badge badge-up">UPCOMING</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-size:11px;font-weight:600;color:#3a2a6a;">Sep 12 – Sep 26, 2026</div><div style="font-size:10px;color:#7a6aaa;margin-top:1px;">14 days · 4 travelers</div></div>
+        <div class="av-row"><div class="av u-amy">A</div></div>
+      </div>
+      <div style="margin-top:10px;background:rgba(255,255,255,.35);border-radius:9999px;height:3px;"><div style="background:#3a2a6a;height:3px;border-radius:9999px;width:0;"></div></div>
+      <div style="font-size:10px;color:#5a4080;margin-top:3px;">76 days until departure</div>
+    </div>
+  </div>
+
+  <div class="bnav">
+    <button class="bni on"><i class="ti ti-map-2"></i><span>Trips</span></button>
+    <button class="bni" onclick="go('tasks-global')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="bni" onclick="go('expenses-global')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
+    <button class="bni" onclick="go('profile')"><i class="ti ti-user-circle"></i><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: NEW TRIP
+════════════════════════════════════ -->
+<div class="screen" id="s-new-trip">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:6px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left"></i></button>
+    <span class="page-title">New trip</span>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="margin-bottom:12px;"><div class="sl">Destination</div><input class="inp" placeholder="Where are you going?" value="Italy — Rome, Florence, Amalfi"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;">
+      <div><div class="sl">Start date</div><input class="inp" value="Sep 12, 2026"></div>
+      <div><div class="sl">End date</div><input class="inp" value="Sep 26, 2026"></div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="sl">Card color</div>
+      <div style="display:flex;gap:7px;">
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--lav);cursor:pointer;border:3px solid var(--ink);"></div>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--mint);cursor:pointer;"></div>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--peach);cursor:pointer;"></div>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--ochre);cursor:pointer;"></div>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--sky);cursor:pointer;"></div>
+        <div style="width:26px;height:26px;border-radius:50%;background:var(--coral);cursor:pointer;"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="sl" style="margin:0;">Travelers & invites</div>
+        <button class="btn-ghost">+ Invite person</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="invite-chip">
+          <div class="av u-amy" style="width:32px;height:32px;font-size:13px;">A</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Amy</div><div style="font-size:10px;color:var(--muted);">You · trip organizer</div></div>
+          <span style="background:var(--ink);color:#fffaf0;border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;">HOST</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
+          <i class="ti ti-mail" style="font-size:16px;color:#9a9a9a;"></i>
+          <input class="inp" style="background:none;padding:0;font-size:12px;" placeholder="Enter email to invite...">
+          <button class="btn-d" style="padding:6px 12px;font-size:12px;">Send</button>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="sl">Shared with the group</div>
+      <div style="display:flex;flex-direction:column;gap:4px;">
+        <div class="toggle-row"><span style="font-size:13px;">Daily plans visible to all</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><span style="font-size:13px;">Expenses shared with travelers</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><span style="font-size:13px;">Shared photo space</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row" style="border:none;"><span style="font-size:13px;">Travel log visible to all</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;"><div class="sl">Trip budget (optional)</div>
+      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border-radius:10px;padding:9px 12px;"><span style="color:var(--muted);font-weight:600;">$</span><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="0.00" value="5000"></div>
+    </div>
+    <button class="btn-d" style="width:100%;padding:13px;font-size:14px;border-radius:13px;" onclick="openTrip()">Create trip →</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: TRIP DETAIL
+════════════════════════════════════ -->
+<div class="screen" id="s-trip">
+  <!-- Trip header -->
+  <div style="background:var(--lav);padding:12px 16px 14px;flex:0 0 auto;">
+    <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
+      <button class="back-btn" onclick="go('home')" style="background:rgba(255,255,255,.35);"><i class="ti ti-arrow-left" style="color:#2a1a50;"></i></button>
+      <div style="flex:1;"><div style="font-size:19px;font-weight:700;color:#1a1030;letter-spacing:-.4px;">🇮🇹 Italy</div><div style="font-size:11px;color:#5a4080;">Sep 12 – Sep 26 · 14 days</div></div>
+      <button onclick="go('trip-settings')" style="background:rgba(255,255,255,.35);border:none;border-radius:9px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-settings" style="font-size:15px;color:#2a1a50;"></i></button>
+    </div>
+    <!-- Countdown bar -->
+    <div style="background:rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;margin-bottom:9px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#5a4080;" id="trip-countdown-label">Departure countdown</div>
+        <div style="font-size:13px;font-weight:700;color:#1a1030;" id="trip-days-badge">73 days away</div>
+      </div>
+      <div style="background:rgba(0,0,0,.12);border-radius:99px;height:4px;"><div style="background:#3a2a6a;height:4px;border-radius:99px;width:0%;" id="trip-progress-bar"></div></div>
+      <div style="font-size:10px;color:#5a4080;margin-top:4px;">Sep 12 – Sep 26, 2026 · 14 nights</div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:11px;">
+      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:#1a1030;" id="trip-stat-days">73</div>
+        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;" id="trip-stat-label">Days away</div>
+      </div>
+      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:#1a1030;">$840</div>
+        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;">Spent</div>
+      </div>
+      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:#1a1030;">58</div>
+        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;">Photos</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;">
+      <div class="av-row"><div class="av u-amy">A</div></div>
+      <span style="font-size:11px;color:#5a4080;">Amy</span>
+      <button onclick="go('trip-settings')" style="margin-left:auto;background:rgba(255,255,255,.35);border:none;border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;color:#3a2a6a;">+ Invite</button>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tbtn on" onclick="tab(this,'plans')"><i class="ti ti-calendar-event"></i> Plans</button>
+    <button class="tbtn" onclick="tab(this,'photos')"><i class="ti ti-camera"></i> Photos</button>
+    <button class="tbtn" onclick="tab(this,'suitcase')"><i class="ti ti-luggage"></i> Suitcase</button>
+    <button class="tbtn" onclick="tab(this,'log')"><i class="ti ti-notebook"></i> Log</button>
+    <button class="tbtn" onclick="tab(this,'tasks')"><i class="ti ti-checklist"></i> To-do</button>
+    <button class="tbtn" onclick="tab(this,'expenses')"><i class="ti ti-receipt"></i> Expenses</button>
+    <button class="tbtn" onclick="tab(this,'chat')"><i class="ti ti-sparkles"></i> AI chat</button>
+  </div>
+
+  <div class="scroll">
+
+    <!-- ─── PLANS ─── -->
+    <div class="tp active" id="tp-plans">
+
+      <!-- Route bar -->
+      <div style="display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 0 11px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:4px;flex:0 0 auto;">
+          <div style="font-size:10px;font-weight:700;background:var(--sky);color:#fffaf0;border-radius:7px;padding:3px 8px;">PHX</div>
+          <i class="ti ti-plane" style="font-size:12px;color:var(--muted);"></i>
+          <div style="font-size:10px;font-weight:700;background:var(--lav);color:#1a1030;border-radius:7px;padding:3px 8px;">Rome</div>
+          <i class="ti ti-arrow-right" style="font-size:10px;color:var(--muted);"></i>
+          <div style="font-size:10px;font-weight:700;background:var(--peach);color:#3a1a08;border-radius:7px;padding:3px 8px;">Naples</div>
+          <i class="ti ti-arrow-right" style="font-size:10px;color:var(--muted);"></i>
+          <div style="font-size:10px;font-weight:700;background:var(--mint);color:#0a2a20;border-radius:7px;padding:3px 8px;">Amalfi</div>
+          <i class="ti ti-plane" style="font-size:12px;color:var(--muted);transform:scaleX(-1);"></i>
+          <div style="font-size:10px;font-weight:700;background:var(--sky);color:#fffaf0;border-radius:7px;padding:3px 8px;">PHX</div>
+        </div>
+        <button onclick="showAddFlight()" style="flex:0 0 auto;margin-left:6px;background:var(--card2);border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-plus" style="font-size:11px;"></i> Flight</button>
+      </div>
+
+      <!-- Day picker — shows city label -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;">
+        <div class="dp on" onclick="selectDay(this,12,'Friday, Sep 12','rome')">
+          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
+          <div style="font-size:14px;font-weight:700;">12</div>
+          <div style="font-size:9px;">Fri</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,13,'Saturday, Sep 13','rome')">
+          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
+          <div style="font-size:14px;font-weight:700;">13</div>
+          <div style="font-size:9px;">Sat</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,14,'Sunday, Sep 14','rome')">
+          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
+          <div style="font-size:14px;font-weight:700;">14</div>
+          <div style="font-size:9px;">Sun</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,15,'Monday, Sep 15','rome')">
+          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
+          <div style="font-size:14px;font-weight:700;">15</div>
+          <div style="font-size:9px;">Mon</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,16,'Tuesday, Sep 16','naples')" style="border:2px solid var(--coral);">
+          <div style="font-size:8px;color:#cc3a20;font-weight:700;">✈️→NAP</div>
+          <div style="font-size:14px;font-weight:700;">16</div>
+          <div style="font-size:9px;">Tue</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,17,'Wednesday, Sep 17','naples')">
+          <div style="font-size:8px;color:#7a4030;font-weight:700;">NAPLES</div>
+          <div style="font-size:14px;font-weight:700;">17</div>
+          <div style="font-size:9px;">Wed</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,18,'Thursday, Sep 18','amalfi')">
+          <div style="font-size:8px;color:#0a4a30;font-weight:700;">AMALFI</div>
+          <div style="font-size:14px;font-weight:700;">18</div>
+          <div style="font-size:9px;">Thu</div>
+        </div>
+        <div class="dp" onclick="selectDay(this,19,'Friday, Sep 19','amalfi')">
+          <div style="font-size:8px;color:#0a4a30;font-weight:700;">AMALFI</div>
+          <div style="font-size:14px;font-weight:700;">19</div>
+          <div style="font-size:9px;">Fri</div>
+        </div>
+      </div>
+
+      <div style="font-size:14px;font-weight:700;margin-bottom:11px;" id="plans-day-title">Friday, September 12</div>
+
+      <!-- ── DB PLANS SECTION (live data) ── -->
+      <div id="plans-db-section" style="margin-bottom:4px;">
+        <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;">
+          <div id="plans-db-empty" style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Your trip plans appear here</div>
+            <div style="font-size:11px;color:var(--muted);">Create a trip and use the buttons below to add flights, hotels & activities</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
+          <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
+          <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;">
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+          <span style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted);">DEMO REFERENCE</span>
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+        </div>
+      </div>
+
+      <!-- Sep 12 content -->
+      <div id="day-content-12">
+
+        <!-- FLIGHT with duration -->
+        <div style="background:var(--sky);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--skylt);"><i class="ti ti-plane" style="font-size:12px;"></i> International flight</div>
+            <span style="background:rgba(255,255,255,.2);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;">⏱ 11h 35m</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">PHX</div><div style="font-size:10px;color:var(--skylt);">8:40 AM</div></div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:3px;margin-bottom:3px;"><div style="flex:1;height:1px;background:rgba(147,197,253,.4);"></div><i class="ti ti-plane" style="font-size:12px;color:var(--skylt);"></i><div style="flex:1;height:1px;background:rgba(147,197,253,.4);"></div></div>
+              <div style="text-align:center;font-size:9px;color:var(--skylt);">Direct · +1 day</div>
+            </div>
+            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">FCO</div><div style="font-size:10px;color:var(--skylt);">9:15 AM</div></div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;">
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">AA 7842</span>
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">American Airlines</span>
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Conf: XK42A8</span>
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Seats 14A–D</span>
+          </div>
+          <!-- check-in reminder chip -->
+          <div style="background:rgba(255,255,255,.12);border-radius:9px;padding:7px 10px;display:flex;align-items:center;gap:7px;">
+            <i class="ti ti-bell" style="font-size:14px;color:var(--skylt);"></i>
+            <div style="flex:1;font-size:11px;color:#fffaf0;">Online check-in opens <strong>Sep 11 at 8:40 AM</strong></div>
+            <span style="background:#fffaf0;color:var(--sky);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;">✓ To-do added</span>
+          </div>
+        </div>
+
+        <!-- HOTEL with check-in timeline -->
+        <div class="card" style="margin-bottom:9px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Hotel</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:2px;">Hotel de Russie</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:9px;">Via del Babuino 9, Rome · 4 nights</div>
+          <!-- timeline -->
+          <div style="display:flex;flex-direction:column;gap:0;">
+            <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--card2);">
+              <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);">3:00<br>PM</div>
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex:0 0 auto;"></div>
+              <div style="font-size:12px;font-weight:600;">Check-in</div>
+              <span style="margin-left:auto;background:rgba(74,122,222,.12);color:var(--blue);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;">Today</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:9px;padding:6px 0;">
+              <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);">11:00<br>AM</div>
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--card3);flex:0 0 auto;"></div>
+              <div style="font-size:12px;color:var(--muted);">Check-out</div>
+              <span style="margin-left:auto;font-size:10px;color:var(--muted);">Sep 16</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">
+            <span style="background:var(--card2);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">HTL-29847</span>
+            <span style="background:var(--card2);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Breakfast included</span>
+          </div>
+        </div>
+
+        <!-- EXCURSIONS -->
+        <div class="card" style="margin-bottom:9px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-map-pin" style="font-size:12px;"></i> Excursions</div>
+            <button class="btn-ghost">+ Add</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:7px;">
+            <div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--lav);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;color:#2a1a50;white-space:nowrap;">2:00 PM</div><div style="font-size:13px;">Colosseum & Forum tour</div></div>
+            <div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--peach);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;color:#6b3d1f;white-space:nowrap;">7:30 PM</div><div style="font-size:13px;">Dinner — Osteria dell'Enoteca</div></div>
+          </div>
+        </div>
+
+        <!-- OUTFITS FOR TODAY (from suitcase) -->
+        <div class="card" style="margin-bottom:9px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-hanger" style="font-size:12px;"></i> Outfits today</div>
+            <button class="btn-ghost" onclick="tab(document.querySelector('.tbtn:nth-child(3)'),'suitcase')">Edit →</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <!-- Day outfit -->
+            <div style="display:flex;align-items:center;gap:9px;background:rgba(255,200,120,.12);border-radius:10px;padding:8px 10px;">
+              <div style="font-size:16px;">🌅</div>
+              <div style="flex:1;">
+                <div style="font-size:10px;font-weight:700;color:#c8a020;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Daytime</div>
+                <div style="font-size:12px;font-weight:600;">Black linen top + wide-leg trousers</div>
+                <div style="font-size:10px;color:var(--muted);">White sneakers</div>
+              </div>
+              <div style="width:36px;height:36px;border-radius:8px;background:var(--card3);display:flex;align-items:center;justify-content:center;"><i class="ti ti-shirt" style="font-size:16px;color:#9a9a9a;"></i></div>
+            </div>
+            <!-- Evening outfit -->
+            <div style="display:flex;align-items:center;gap:9px;background:rgba(100,80,180,.08);border-radius:10px;padding:8px 10px;">
+              <div style="font-size:16px;">🌙</div>
+              <div style="flex:1;">
+                <div style="font-size:10px;font-weight:700;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Evening</div>
+                <div style="font-size:12px;font-weight:600;">Navy wrap dress</div>
+                <div style="font-size:10px;color:var(--muted);">Black heels · Gold earrings</div>
+              </div>
+              <div style="width:36px;height:36px;border-radius:8px;background:#e8e0f5;display:flex;align-items:center;justify-content:center;"><i class="ti ti-shirt" style="font-size:16px;color:#9a9a9a;"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TODAY'S EXPENSES -->
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-coins" style="font-size:12px;"></i> Today's expenses</div>
+            <span style="font-size:13px;font-weight:700;">$380</span>
+          </div>
+          <div class="exp-row"><div class="eicon" style="background:var(--lav);">🍝</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;">Dinner</div><div style="font-size:10px;color:var(--muted);">Amy paid · ÷ 4</div></div><div style="font-size:13px;font-weight:700;">$240</div></div>
+          <div class="exp-row" style="border:none;"><div class="eicon" style="background:var(--mint);">🎟️</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;">Colosseum tickets</div><div style="font-size:10px;color:var(--muted);">Amy paid · just me</div></div><div style="font-size:13px;font-weight:700;">$140</div></div>
+          <button class="btn-d" style="width:100%;margin-top:10px;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="tab(document.querySelector('.tbtn:nth-child(6)'),'expenses')"><i class="ti ti-plus" style="font-size:13px;"></i> Add expense</button>
+        </div>
+      </div>
+
+      <!-- Sep 16 — INTRA-TRIP FLIGHT DAY (hidden by default) -->
+      <div id="day-content-16" style="display:none;">
+        <!-- Internal flight card -->
+        <div style="background:var(--teal);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--mint);"><i class="ti ti-plane" style="font-size:12px;"></i> Internal flight</div>
+            <span style="background:rgba(255,255,255,.2);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;">⏱ 1h 05m</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">FCO</div><div style="font-size:10px;color:var(--mint);">10:00 AM</div><div style="font-size:9px;color:var(--mint);">Rome</div></div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:3px;margin-bottom:3px;"><div style="flex:1;height:1px;background:rgba(164,212,197,.4);"></div><i class="ti ti-plane" style="font-size:12px;color:var(--mint);"></i><div style="flex:1;height:1px;background:rgba(164,212,197,.4);"></div></div>
+              <div style="text-align:center;font-size:9px;color:var(--mint);">Alitalia</div>
+            </div>
+            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">NAP</div><div style="font-size:10px;color:var(--mint);">11:05 AM</div><div style="font-size:9px;color:var(--mint);">Naples</div></div>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">AZ 1234</span>
+            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Conf: IT9987</span>
+          </div>
+        </div>
+        <!-- Hotel check-out (Rome) -->
+        <div class="card" style="margin-bottom:9px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#cc3a3a;margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Check-out today</div>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:#cc3a3a;">11:00<br>AM</div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#cc3a3a;flex:0 0 auto;"></div>
+            <div><div style="font-size:13px;font-weight:700;">Hotel de Russie — Rome</div><div style="font-size:10px;color:var(--muted);">Leave luggage at concierge until taxi</div></div>
+          </div>
+        </div>
+        <!-- Hotel check-in (Naples) -->
+        <div class="card" style="margin-bottom:9px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--blue);margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Check-in today</div>
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);">3:00<br>PM</div>
+            <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex:0 0 auto;"></div>
+            <div><div style="font-size:13px;font-weight:700;">Grand Hotel Vesuvio — Naples</div><div style="font-size:10px;color:var(--muted);">Via Partenope 45, Naples · 2 nights</div></div>
+          </div>
+        </div>
+        <!-- Outfits for Sep 16 -->
+        <div class="card">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:9px;"><i class="ti ti-hanger" style="font-size:12px;"></i> Outfits today</div>
+          <div style="display:flex;align-items:center;gap:9px;background:rgba(255,200,120,.12);border-radius:10px;padding:8px 10px;">
+            <div style="font-size:16px;">🌅</div>
+            <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#c8a020;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Daytime (travel)</div><div style="font-size:12px;font-weight:600;">Floral sundress + denim jacket</div><div style="font-size:10px;color:var(--muted);">White sneakers</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ─── PHOTOS ─── -->
+    <div class="tp" id="tp-photos">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div><div class="section-head">Shared photos</div><div style="font-size:11px;color:var(--muted);">58 photos · All travelers can upload & download</div></div>
+        <button class="btn-d" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:4px;"><i class="ti ti-upload" style="font-size:14px;"></i> Upload</button>
+      </div>
+
+      <!-- Upload options -->
+      <div style="display:flex;gap:7px;margin-bottom:14px;">
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:14px;"></i> Camera</button>
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-photo" style="font-size:14px;"></i> Gallery</button>
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-download" style="font-size:14px;"></i> Download all</button>
+      </div>
+
+      <!-- Filter by person -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;">
+        <button class="pill on" onclick="catpill(this)">All</button>
+        <button class="pill" onclick="catpill(this)" style="display:flex;align-items:center;gap:5px;"><div class="av-sm u-amy">A</div> Amy</button>
+      </div>
+
+      <!-- Filter by day -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;">
+        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All days</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 12</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 13</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 14</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 15</button>
+      </div>
+
+      <!-- Day group -->
+      <div class="sl">Sep 12 — Travel day · Rome arrival</div>
+      <div class="photo-grid" style="margin-bottom:16px;">
+        <div class="photo-thumb" onclick="openPhoto('✈️ Boarding at PHX','Amy','Sep 12')" style="background:#e0d8f0;">
+          <i class="ti ti-plane" style="font-size:28px;color:#b8a4ed;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🌅 Sunrise from the plane','Amy','Sep 12')" style="background:#fce8d0;">
+          <i class="ti ti-sun" style="font-size:28px;color:#e8b94a;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🏛️ First view of Rome','Amy','Sep 12')" style="background:#d0e8e0;">
+          <i class="ti ti-building-arch" style="font-size:28px;color:#1a4a4a;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🌹 Hotel lobby','Amy','Sep 12')" style="background:#f8d8c8;">
+          <i class="ti ti-home" style="font-size:28px;color:#ff7b5a;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🍝 First pasta in Rome!','Amy','Sep 12')" style="background:#e8d8f0;">
+          <i class="ti ti-cup" style="font-size:28px;color:#b8a4ed;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" style="background:var(--card2);border:1.5px dashed var(--card3);" onclick="triggerUpload()">
+          <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add photo</span></div>
+        </div>
+      </div>
+
+      <div class="sl">Sep 13 — Colosseum & Forum</div>
+      <div class="photo-grid" style="margin-bottom:16px;">
+        <div class="photo-thumb" onclick="openPhoto('🏛️ The Colosseum','Amy','Sep 13')" style="background:#c8d8f0;">
+          <i class="ti ti-building-arch" style="font-size:32px;color:var(--blue);"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🌿 Roman Forum ruins','Amy','Sep 13')" style="background:#d8e8d8;">
+          <i class="ti ti-trees" style="font-size:28px;color:#3a7a3a;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+        <div class="photo-thumb" onclick="openPhoto('🍦 Gelato time!','Amy','Sep 13')" style="background:#fce0d0;">
+          <i class="ti ti-ice-cream" style="font-size:28px;color:#ff7b5a;"></i>
+          <div class="photo-overlay">
+            <div class="av-sm u-amy">A</div>
+            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending uploads from others -->
+      <div style="background:var(--card);border-radius:var(--r-card);padding:12px;margin-top:4px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:8px;"><i class="ti ti-clock" style="font-size:12px;"></i> Recently added</div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div class="av u-amy">A</div>
+            <div style="flex:1;"><div style="font-size:12px;font-weight:600;">You added 5 photos</div><div style="font-size:10px;color:var(--muted);">Colosseum & Forum · 2 hours ago</div></div>
+            <button style="background:var(--card2);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">View</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── SUITCASE ─── -->
+    <div class="tp" id="tp-suitcase">
+
+      <!-- Day picker -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;">
+        <div class="dp on" onclick="suitcaseDay(this,12,'Sep 12 — Travel day · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">12</div><div style="font-size:9px;">Fri</div></div>
+        <div class="dp" onclick="suitcaseDay(this,13,'Sep 13 — Colosseum day · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">13</div><div style="font-size:9px;">Sat</div></div>
+        <div class="dp" onclick="suitcaseDay(this,14,'Sep 14 — Vatican · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">14</div><div style="font-size:9px;">Sun</div></div>
+        <div class="dp" onclick="suitcaseDay(this,15,'Sep 15 · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">15</div><div style="font-size:9px;">Mon</div></div>
+        <div class="dp" onclick="suitcaseDay(this,16,'Sep 16 — Travel to Naples')"><div style="font-size:8px;font-weight:700;">→NAP</div><div style="font-size:14px;font-weight:700;">16</div><div style="font-size:9px;">Tue</div></div>
+        <div class="dp" onclick="suitcaseDay(this,0,'Extras — not assigned to a day')"><div style="font-size:8px;font-weight:700;">EXTRAS</div><div style="font-size:16px;font-weight:700;">+</div></div>
+      </div>
+
+      <!-- Day header + sharing toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div id="suitcase-day-title" style="font-size:13px;font-weight:700;">Sep 12 — Travel day · Rome</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--muted);" id="suitcase-share-label">Private</span>
+          <div class="toggle" id="suitcase-share-toggle" onclick="toggleSuitcaseShare(this)"></div>
+        </div>
+      </div>
+
+      <!-- Share banner (shown when sharing is on) -->
+      <div id="suitcase-share-banner" style="display:none;background:rgba(74,122,222,.1);border-radius:10px;padding:8px 11px;margin-bottom:10px;display:none;align-items:center;gap:7px;">
+        <i class="ti ti-users" style="font-size:14px;color:var(--blue);"></i>
+        <span style="font-size:11px;color:var(--blue);font-weight:500;">Your Sep 12 outfits are shared with your travel group</span>
+      </div>
+
+      <!-- Category filter -->
+      <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
+        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
+      </div>
+
+      <!-- CLOSET ITEMS for Sep 12 -->
+      <div id="suitcase-items-12">
+
+        <!-- Section: Daytime -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">🌅</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
+          <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
+            <div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
+              <i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>
+              <span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌅 Day</span>
+            </div>
+            <div style="padding:8px;">
+              <div style="font-size:12px;font-weight:600;">Black linen top</div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">+ Wide-leg trousers</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span>
+                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
+                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,14)">14</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
+            <div style="background:#d8f0e8;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
+              <i class="ti ti-shirt" style="font-size:28px;color:#3a8a5a;"></i>
+              <span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌅 Day</span>
+              <div style="position:absolute;bottom:5px;right:5px;background:#fffaf0;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700;">PHOTO</div>
+            </div>
+            <div style="padding:8px;">
+              <div style="font-size:12px;font-weight:600;">Floral sundress</div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Green print</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
+                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">15</span>
+                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">16</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Evening -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">🌙</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
+          <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
+            <div style="background:#e8e0f5;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
+              <i class="ti ti-shirt" style="font-size:28px;color:#7a5ab8;"></i>
+              <span style="position:absolute;top:6px;left:6px;background:#f0ebff;color:#5a4080;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌙 Eve</span>
+            </div>
+            <div style="padding:8px;">
+              <div style="font-size:12px;font-weight:600;">Navy wrap dress</div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Silk blend</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span>
+                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,14)">14</span>
+              </div>
+            </div>
+          </div>
+          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
+            <div style="background:#f5e8f0;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
+              <i class="ti ti-shirt" style="font-size:28px;color:#b84080;"></i>
+              <span style="position:absolute;top:6px;left:6px;background:#f0ebff;color:#5a4080;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌙 Eve</span>
+            </div>
+            <div style="padding:8px;">
+              <div style="font-size:12px;font-weight:600;">Coral jumpsuit</div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Linen, wide leg</div>
+              <div style="display:flex;gap:3px;flex-wrap:wrap;">
+                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
+                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">15</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section: Shoes -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">👟</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-size:12px;font-weight:600;">White sneakers</span><span style="background:#fff8e0;color:#c8a020;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">🌅</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">All-day comfort</div>
+              <div style="display:flex;gap:3px;"><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">13</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">16</span></div>
+            </div>
+          </div>
+          <div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">
+            <div style="width:44px;height:44px;border-radius:9px;background:#1a1a2a;display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>
+            <div style="flex:1;">
+              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-size:12px;font-weight:600;">Black heels</span><span style="background:#f0ebff;color:#5a4080;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">🌙</span></div>
+              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Pointed toe, 3in</div>
+              <div style="display:flex;gap:3px;"><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">14</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add item button -->
+        <div style="display:flex;gap:7px;margin-bottom:11px;">
+          <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-camera" style="font-size:13px;"></i> Camera</button>
+          <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-photo" style="font-size:13px;"></i> Gallery</button>
+          <button class="btn-d" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
+        </div>
+
+        <!-- Add item form (collapsed by default) -->
+        <div id="add-item-form" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
+          <div style="font-size:12px;font-weight:700;margin-bottom:10px;">New closet item</div>
+          <input class="inp" placeholder="Item name (e.g. Blue silk blouse)" style="margin-bottom:7px;">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px;">
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
+              <select class="inp" style="background:var(--card3);">
+                <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
+              <select class="inp" style="background:var(--card3);">
+                <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:9px;">
+            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Assign to days</div>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;">
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">12</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">13</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">14</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">15</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">16</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">17</span>
+              <span class="pill" onclick="catpill(this)" style="font-size:10px;">18</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:7px;">
+            <button class="btn-l" style="flex:1;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Cancel</button>
+            <button class="btn-d" style="flex:2;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Save item →</button>
+          </div>
+        </div>
+
+        <div class="sl">Day notes</div>
+        <textarea class="inp" rows="2" style="resize:none;line-height:1.5;">Comfortable shoes — lots of airport walking + dress for dinner</textarea>
+      </div>
+
+      <!-- Extras day (shown when EXTRAS selected) -->
+      <div id="suitcase-items-0" style="display:none;">
+        <div style="background:var(--card);border-radius:13px;padding:13px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Items in Extras are not shown in the daily plan view.</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🎒</div><div><div style="font-size:13px;font-weight:600;">Travel pillow</div><div style="font-size:10px;color:var(--muted);">Neck support</div></div></div>
+            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🧴</div><div><div style="font-size:13px;font-weight:600;">Skincare kit</div><div style="font-size:10px;color:var(--muted);">TSA-approved bottles</div></div></div>
+            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🔌</div><div><div style="font-size:13px;font-weight:600;">Type L adapters (×2)</div><div style="font-size:10px;color:var(--muted);">Italy plug type</div></div></div>
+          </div>
+        </div>
+        <button class="btn-d" style="width:100%;padding:10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;" onclick="showAddItem()"><i class="ti ti-plus" style="font-size:13px;"></i> Add to extras</button>
+      </div>
+
+    </div>
+
+    <!-- ─── LOG ─── -->
+    <div class="tp" id="tp-log">
+
+      <!-- Log header: view toggle + back-fill button -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
+        <div style="display:flex;background:var(--card2);border-radius:11px;padding:3px;gap:2px;">
+          <button id="log-view-overview" onclick="logView('overview')" style="background:var(--ink);color:#fffaf0;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Overview</button>
+          <button id="log-view-daily" onclick="logView('daily')" style="background:none;color:var(--muted);border:none;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Daily</button>
+        </div>
+        <button onclick="logView('daily');openLogDay(12)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Back-fill</button>
+      </div>
+
+      <!-- ── OVERVIEW (grid of day cards) ── -->
+      <div id="log-overview">
+
+        <!-- Destination label: Rome -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
+          <span style="font-size:20px;">🏛️</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#1a3a5a;letter-spacing:.5px;">ROME</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 12–15</div>
+          </div>
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+        </div>
+
+        <!-- Sep 12 card — has entry -->
+        <div onclick="logView('daily');openLogDay(12)" style="background:linear-gradient(135deg,#e8e0f5,#d8d0f0);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">
+          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">🏛️</div>
+          <div style="font-size:9px;font-weight:700;color:#5a4080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Friday · Sep 12</div>
+          <div style="font-size:14px;font-weight:700;color:#1a1030;margin-bottom:6px;">Arrived in Rome ✈️</div>
+          <div style="font-size:12px;color:#3a2060;line-height:1.5;margin-bottom:9px;">"11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos."</div>
+          <!-- plan snippets pulled in -->
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#5a4080;">✈️ AA 7842 PHX→FCO</span>
+            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#5a4080;">🏨 Hotel Indigo Roma check-in</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:4px;">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#5a4080;"></i></div>
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#5a4080;"></i></div>
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5a4080;">+2</div>
+            </div>
+            <span style="font-size:10px;color:#7a60a0;">Tap to read →</span>
+          </div>
+        </div>
+
+        <!-- Sep 13 card — has entry -->
+        <div onclick="logView('daily');openLogDay(13)" style="background:linear-gradient(135deg,#ffeadc,#ffd8c0);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">
+          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">⚔️</div>
+          <div style="font-size:9px;font-weight:700;color:#8a4a20;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Saturday · Sep 13</div>
+          <div style="font-size:14px;font-weight:700;color:#3a1808;margin-bottom:6px;">Colosseum & Roman Forum 🏟️</div>
+          <div style="font-size:12px;color:#5a2a08;line-height:1.5;margin-bottom:9px;">"Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning."</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
+            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#8a4a20;">🏛️ Colosseum guided tour</span>
+            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#8a4a20;">🍝 Dinner at Armando al Pantheon</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:4px;">
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#8a4a20;"></i></div>
+              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#8a4a20;">+3</div>
+            </div>
+            <span style="font-size:10px;color:#9a5a30;">Tap to read →</span>
+          </div>
+        </div>
+
+        <!-- Sep 14 card — empty, tap to add -->
+        <div onclick="logView('daily');openLogDay(14)" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;border:2px dashed var(--card3);position:relative;overflow:hidden;">
+          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.1;">✝️</div>
+          <div style="font-size:9px;font-weight:700;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Sunday · Sep 14</div>
+          <div style="font-size:13px;font-weight:600;color:#bbb;margin-bottom:5px;">Vatican Museums & Sistine Chapel</div>
+          <div style="display:flex;gap:5px;margin-bottom:8px;">
+            <span style="background:var(--card3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#9a9a9a;">🎨 Vatican tour — booked</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;color:#bbb;">
+            <i class="ti ti-pencil" style="font-size:15px;"></i>
+            <span style="font-size:12px;">No entry yet — tap to write</span>
+          </div>
+        </div>
+
+        <!-- Sep 15 card — has short entry -->
+        <div onclick="logView('daily');openLogDay(15)" style="background:linear-gradient(135deg,#d8f0e8,#c4e8d8);border-radius:16px;padding:14px;margin-bottom:14px;cursor:pointer;position:relative;overflow:hidden;">
+          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">🌹</div>
+          <div style="font-size:9px;font-weight:700;color:#2a6a4a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Monday · Sep 15</div>
+          <div style="font-size:14px;font-weight:700;color:#0a2a18;margin-bottom:6px;">Trastevere & Borghese Garden 🌿</div>
+          <div style="font-size:12px;color:#1a4a30;line-height:1.5;margin-bottom:9px;">"Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip."</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#2a6a4a;"></i></div>
+            <span style="font-size:10px;color:#3a7a5a;">Tap to read →</span>
+          </div>
+        </div>
+
+        <!-- Destination label: Naples -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
+          <span style="font-size:20px;">🍕</span>
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#1a3a5a;letter-spacing:.5px;">NAPLES</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 16–18</div>
+          </div>
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+        </div>
+
+        <!-- Sep 16 card — empty -->
+        <div onclick="logView('daily');openLogDay(16)" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;border:2px dashed var(--card3);position:relative;overflow:hidden;">
+          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.1;">🍕</div>
+          <div style="font-size:9px;font-weight:700;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Tuesday · Sep 16</div>
+          <div style="font-size:13px;font-weight:600;color:#bbb;margin-bottom:5px;">Fly Rome → Naples + Arrival</div>
+          <div style="display:flex;gap:5px;margin-bottom:8px;">
+            <span style="background:var(--card3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#9a9a9a;">✈️ FCO→NAP internal flight</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;color:#bbb;">
+            <i class="ti ti-pencil" style="font-size:15px;"></i>
+            <span style="font-size:12px;">No entry yet — tap to write</span>
+          </div>
+        </div>
+
+        <!-- Future days placeholder -->
+        <div style="background:var(--card2);border-radius:13px;padding:13px;text-align:center;color:var(--muted);font-size:12px;margin-bottom:11px;">
+          <span style="font-size:20px;display:block;margin-bottom:5px;">✨</span>
+          Sep 17 onward — your adventure continues!<br>
+          <span style="font-size:10px;">Entries will appear here as you add them</span>
+        </div>
+
+      </div><!-- /log-overview -->
+
+      <!-- ── DAILY VIEW (full scrapbook page) ── -->
+      <div id="log-daily" style="display:none;">
+
+        <!-- Day navigator -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;">
+          <button onclick="logDayNav(-1)" style="width:34px;height:34px;border-radius:50%;background:var(--card2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-chevron-left" style="font-size:16px;"></i></button>
+          <div style="flex:1;text-align:center;">
+            <div id="log-day-label" style="font-size:13px;font-weight:700;">Friday, Sep 12</div>
+            <div id="log-day-city" style="font-size:10px;color:var(--muted);">Rome 🏛️</div>
+          </div>
+          <button onclick="logDayNav(1)" style="width:34px;height:34px;border-radius:50%;background:var(--card2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-chevron-right" style="font-size:16px;"></i></button>
+        </div>
+
+        <!-- Sep 12 daily page -->
+        <div id="log-day-12" class="log-day-page">
+          <!-- Scrapbook header -->
+          <div style="background:linear-gradient(135deg,#e8e0f5,#d0c8f0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
+            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(15deg);">🏛️</div>
+            <div style="position:absolute;left:10px;bottom:-8px;font-size:40px;opacity:.1;transform:rotate(-10deg);">✈️</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#7a60b0;text-transform:uppercase;margin-bottom:3px;">Day 1 of 14 · Rome, Italy</div>
+            <div style="font-size:20px;font-weight:800;color:#1a1030;line-height:1.2;margin-bottom:3px;">Arrived in Rome ✈️</div>
+            <div style="font-size:11px;color:#7a60b0;">Friday, September 12, 2026</div>
+          </div>
+
+          <!-- Plan highlights pulled from that day -->
+          <div style="margin-bottom:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day's plans</div>
+            <div style="display:flex;flex-direction:column;gap:5px;">
+              <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;">✈️</span>
+                <div><div style="font-size:12px;font-weight:600;">AA 7842 · PHX → FCO</div><div style="font-size:10px;color:var(--muted);">Dep 9:45pm → Arr 3:20pm+1 · 11h 35m</div></div>
+              </div>
+              <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
+                <span style="font-size:16px;">🏨</span>
+                <div><div style="font-size:12px;font-weight:600;">Hotel Indigo Roma — check-in</div><div style="font-size:10px;color:var(--muted);">Check-in from 3:00pm · 4 nights</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Journal entry -->
+          <div style="margin-bottom:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>
+            <div id="log-12-display" style="background:var(--card2);border-radius:14px;padding:13px;">
+              <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos. Cobblestone streets everywhere and the smell of espresso from every corner."</p>
+              <button onclick="logEdit(12)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
+            </div>
+            <div id="log-12-edit" style="display:none;">
+              <textarea id="log-12-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos. Cobblestone streets everywhere and the smell of espresso from every corner.</textarea>
+              <div style="display:flex;gap:7px;">
+                <button onclick="logCancel(12)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button>
+                <button onclick="logSave(12)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save changes</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Photos row -->
+          <div style="margin-bottom:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">Photos from this day</div>
+            <div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">
+              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#e0d8f8,#c8bce8);display:flex;align-items:center;justify-content:center;font-size:28px;">🛫</div>
+              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#f8e8d8,#e8c8b0);display:flex;align-items:center;justify-content:center;font-size:28px;">🏛️</div>
+              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#d8e8f8,#b8cce8);display:flex;align-items:center;justify-content:center;font-size:28px;">🌆</div>
+              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:var(--card2);border:1.5px dashed var(--card3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#9a9a9a;">
+                <i class="ti ti-plus" style="font-size:16px;"></i>
+                <span style="font-size:9px;font-weight:600;">Add</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mood + highlight stickers -->
+          <div style="background:var(--card2);border-radius:13px;padding:11px;margin-bottom:4px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span>
+              <span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">😍</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
+            </div>
+          </div>
+        </div><!-- /log-day-12 -->
+
+        <!-- Sep 14 daily page (empty — for demo of write flow) -->
+        <div id="log-day-14" class="log-day-page" style="display:none;">
+          <div style="background:linear-gradient(135deg,#f0ede8,#e8e4dc);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
+            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(10deg);">✝️</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#6a5a40;text-transform:uppercase;margin-bottom:3px;">Day 3 of 14 · Rome, Italy</div>
+            <div style="font-size:20px;font-weight:800;color:#1a1a10;line-height:1.2;margin-bottom:3px;">Vatican & Sistine Chapel 🎨</div>
+            <div style="font-size:11px;color:#6a5a40;">Sunday, September 14, 2026</div>
+          </div>
+
+          <!-- Plan highlights -->
+          <div style="margin-bottom:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day's plans</div>
+            <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
+              <span style="font-size:16px;">🎨</span>
+              <div><div style="font-size:12px;font-weight:600;">Vatican Museums + Sistine Chapel</div><div style="font-size:10px;color:var(--muted);">9:00am skip-the-line guided tour</div></div>
+            </div>
+          </div>
+
+          <!-- Empty entry — write form shown by default -->
+          <div style="margin-bottom:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>
+            <div id="log-14-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;">
+              <p id="log-14-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>
+              <button onclick="logEdit(14)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
+            </div>
+            <div id="log-14-edit">
+              <textarea id="log-14-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about your day at the Vatican..."></textarea>
+              <div style="display:flex;gap:7px;">
+                <button class="btn-l" style="flex:1;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-camera" style="font-size:12px;"></i> Photo</button>
+                <button onclick="logSave(14)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mood -->
+          <div style="background:var(--card2);border-radius:13px;padding:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span>
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
+            </div>
+          </div>
+        </div><!-- /log-day-14 -->
+
+        <!-- Other day pages (13, 15, 16) — minimal for demo -->
+        <div id="log-day-13" class="log-day-page" style="display:none;">
+          <div style="background:linear-gradient(135deg,#ffeadc,#ffd0b0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
+            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(12deg);">⚔️</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#8a4a20;text-transform:uppercase;margin-bottom:3px;">Day 2 of 14 · Rome, Italy</div>
+            <div style="font-size:20px;font-weight:800;color:#3a1808;margin-bottom:3px;">Colosseum & Roman Forum 🏟️</div>
+            <div style="font-size:11px;color:#8a4a20;">Saturday, September 13, 2026</div>
+          </div>
+          <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;margin-bottom:11px;">
+            <span style="font-size:16px;">🏛️</span>
+            <div><div style="font-size:12px;font-weight:600;">Colosseum + Roman Forum guided tour</div><div style="font-size:10px;color:var(--muted);">10:00am · 3 hours</div></div>
+          </div>
+          <div id="log-13-display" style="background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
+            <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning."</p>
+            <button onclick="logEdit(13)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
+          </div>
+          <div id="log-13-edit" style="display:none;">
+            <textarea id="log-13-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning.</textarea>
+            <div style="display:flex;gap:7px;"><button onclick="logCancel(13)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave(13)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save</button></div>
+          </div>
+          <div style="background:var(--card2);border-radius:13px;padding:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
+            <div style="display:flex;gap:8px;justify-content:center;">
+              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="log-day-15" class="log-day-page" style="display:none;">
+          <div style="background:linear-gradient(135deg,#d8f0e8,#b8e0d0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
+            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(-8deg);">🌹</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#2a6a4a;text-transform:uppercase;margin-bottom:3px;">Day 4 of 14 · Rome, Italy</div>
+            <div style="font-size:20px;font-weight:800;color:#0a2a18;margin-bottom:3px;">Trastevere & Borghese 🌿</div>
+            <div style="font-size:11px;color:#2a6a4a;">Monday, September 15, 2026</div>
+          </div>
+          <div id="log-15-display" style="background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
+            <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip."</p>
+            <button onclick="logEdit(15)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
+          </div>
+          <div id="log-15-edit" style="display:none;">
+            <textarea id="log-15-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip.</textarea>
+            <div style="display:flex;gap:7px;"><button onclick="logCancel(15)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave(15)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save</button></div>
+          </div>
+          <div style="background:var(--card2);border-radius:13px;padding:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
+            <div style="display:flex;gap:8px;justify-content:center;"><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span></div>
+          </div>
+        </div>
+
+        <div id="log-day-16" class="log-day-page" style="display:none;">
+          <div style="background:linear-gradient(135deg,#fff0d8,#ffe0b0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
+            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(8deg);">🍕</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#7a5a20;text-transform:uppercase;margin-bottom:3px;">Day 5 of 14 · Naples, Italy</div>
+            <div style="font-size:20px;font-weight:800;color:#2a1a08;margin-bottom:3px;">Rome → Naples ✈️🍕</div>
+            <div style="font-size:11px;color:#7a5a20;">Tuesday, September 16, 2026</div>
+          </div>
+          <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;margin-bottom:11px;">
+            <span style="font-size:16px;">✈️</span>
+            <div><div style="font-size:12px;font-weight:600;">FCO → NAP · AZ 1234</div><div style="font-size:10px;color:var(--muted);">Dep 11:15am → Arr 12:05pm · 50m</div></div>
+          </div>
+          <div id="log-16-edit">
+            <textarea id="log-16-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about the move to Naples..."></textarea>
+            <div style="display:flex;gap:7px;"><button class="btn-l" style="flex:1;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-camera" style="font-size:12px;"></i> Photo</button><button onclick="logSave(16)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button></div>
+          </div>
+          <div id="log-16-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-top:11px;">
+            <p id="log-16-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>
+            <button onclick="logEdit(16)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit</button>
+          </div>
+          <div style="background:var(--card2);border-radius:13px;padding:11px;margin-top:11px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>
+            <div style="display:flex;gap:8px;justify-content:center;"><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span></div>
+          </div>
+        </div>
+
+      </div><!-- /log-daily -->
+
+    </div>
+
+    <!-- ─── TASKS ─── -->
+    <div class="tp" id="tp-tasks">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div><div class="section-head">To-do</div><div style="font-size:11px;color:var(--muted);">5 of 12 done</div></div>
+        <button class="btn-d" style="padding:7px 12px;font-size:11px;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
+      </div>
+      <div style="background:var(--card2);border-radius:var(--r-pill);height:5px;margin-bottom:15px;"><div style="background:var(--ink);height:5px;border-radius:var(--r-pill);width:42%;"></div></div>
+      <div class="sl">Before you go</div>
+      <!-- auto-generated tasks from flights/hotels -->
+      <div class="check-row" style="background:rgba(74,122,222,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk done"><i class="ti ti-check" style="font-size:10px;color:#fffaf0;"></i></div>
+        <div style="flex:1;"><div style="font-size:13px;text-decoration:line-through;color:#9a9a9a;">Check passport expiry</div></div>
+        <span style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border-radius:6px;padding:2px 6px;">Done</span>
+      </div>
+      <div class="check-row" style="background:rgba(74,122,222,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk done"><i class="ti ti-check" style="font-size:10px;color:#fffaf0;"></i></div>
+        <div style="flex:1;"><div style="font-size:13px;text-decoration:line-through;color:#9a9a9a;">Book travel insurance</div></div>
+        <span style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border-radius:6px;padding:2px 6px;">Done</span>
+      </div>
+      <!-- auto-added from flight -->
+      <div class="check-row" style="background:rgba(26,58,90,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;">✈️ Online check-in opens — AA 7842</div>
+          <div style="font-size:10px;color:var(--muted);">Auto · 24h before departure</div>
+        </div>
+        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#ff6b3a;background:#fff3ee;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;">Sep 11</span>
+      </div>
+      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;"><div style="font-size:13px;">Download offline maps — Rome</div></div>
+        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#c8a020;background:#fef9e7;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;">Sep 8</span>
+      </div>
+      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;"><div style="font-size:13px;">Notify bank of travel dates</div></div>
+        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#cc3a3a;background:#fee;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;"><i class="ti ti-alert-circle" style="font-size:11px;"></i> Overdue</span>
+      </div>
+      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;"><div style="font-size:13px;">Pack Type L adapter plugs</div></div>
+        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
+      </div>
+      <div class="sl" style="margin-top:13px;">At the destination</div>
+      <!-- auto-added from hotel -->
+      <div class="check-row" style="background:rgba(164,212,197,.18);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;">
+          <div style="font-size:13px;">🏨 Hotel check-out — Hotel de Russie</div>
+          <div style="font-size:10px;color:var(--muted);">Auto · by 11:00 AM</div>
+        </div>
+        <span style="font-size:10px;font-weight:600;color:#2a6a5a;background:rgba(164,212,197,.3);border-radius:6px;padding:2px 7px;white-space:nowrap;">Sep 16</span>
+      </div>
+      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;"><div style="font-size:13px;">Get SIM card or activate eSIM</div></div>
+        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
+      </div>
+      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
+        <div class="chk"></div>
+        <div style="flex:1;"><div style="font-size:13px;">Get Euros from ATM</div></div>
+        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
+      </div>
+      <!-- add new task row -->
+      <div style="display:flex;align-items:center;gap:7px;margin-top:13px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
+        <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;"></i>
+        <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:12px;flex:1;" placeholder="Add a task...">
+        <button onclick="openCal(this)" style="background:none;border:none;cursor:pointer;color:#9a9a9a;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:3px;white-space:nowrap;"><i class="ti ti-calendar" style="font-size:13px;"></i> Date</button>
+      </div>
+    </div>
+
+    <!-- ─── EXPENSES ─── -->
+    <div class="tp" id="tp-expenses">
+      <div style="background:var(--sky);border-radius:17px;padding:15px;margin-bottom:13px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--skylt);margin-bottom:4px;">Total spent</div>
+        <div style="font-size:30px;font-weight:700;color:#fffaf0;letter-spacing:-1px;margin-bottom:9px;">$6,420</div>
+        <div style="background:rgba(255,255,255,.2);border-radius:var(--r-pill);height:4px;margin-bottom:5px;"><div style="background:var(--skylt);height:4px;border-radius:var(--r-pill);width:64%;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--skylt);"><span>$6,420 of $10,000 budget</span><span>64%</span></div>
+      </div>
+
+      <div style="background:var(--mint);border-radius:13px;padding:11px;display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
+        <div style="font-size:12px;font-weight:600;color:#0a2a20;">Your total spent</div>
+        <div style="font-size:17px;font-weight:700;color:#0a3a2a;">$840</div>
+      </div>
+
+      <div class="card" style="margin-bottom:13px;">
+        <div class="sl">Add expense</div>
+        <input class="inp" placeholder="Description (e.g. Dinner at Trattoria)" style="margin-bottom:7px;">
+        <!-- Amount + Currency + Conversion -->
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Amount</div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <select id="exp-currency" onchange="updateConversion()" class="inp" style="background:var(--card2);width:auto;flex:0 0 auto;padding-right:8px;">
+              <option value="USD">🇺🇸 USD</option>
+              <option value="EUR" selected>🇪🇺 EUR</option>
+              <option value="GBP">🇬🇧 GBP</option>
+              <option value="JPY">🇯🇵 JPY</option>
+              <option value="CAD">🇨🇦 CAD</option>
+              <option value="AUD">🇦🇺 AUD</option>
+              <option value="CHF">🇨🇭 CHF</option>
+              <option value="MXN">🇲🇽 MXN</option>
+              <option value="BRL">🇧🇷 BRL</option>
+              <option value="THB">🇹🇭 THB</option>
+            </select>
+            <input id="exp-amount" oninput="updateConversion()" class="inp" style="background:var(--card2);flex:1;" placeholder="0.00" type="number" min="0" step="0.01">
+          </div>
+          <!-- Live USD conversion -->
+          <div id="exp-usd" style="display:none;margin-top:5px;font-size:11px;color:var(--muted);padding:5px 9px;background:var(--card2);border-radius:8px;">
+            ≈ <strong id="exp-usd-val">$0.00</strong> USD · rate updated today
+          </div>
+        </div>
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Paid by</div>
+          <select class="inp" style="background:var(--card2);"><option>Amy (you)</option></select>
+        </div>
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Split type</div>
+          <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;">
+            <button class="pill on" onclick="splitType(this,'even')" style="font-size:11px;">Even split</button>
+            <button class="pill" onclick="splitType(this,'dollar')" style="font-size:11px;">Custom $</button>
+            <button class="pill" onclick="splitType(this,'pct')" style="font-size:11px;">Custom %</button>
+            <button class="pill" onclick="splitType(this,'me')" style="font-size:11px;">Just me</button>
+          </div>
+          <!-- Custom $ inputs -->
+          <div id="split-dollar" style="display:none;margin-top:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+            <div style="background:var(--card3);border-radius:9px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;color:#9a9a9a;margin-bottom:3px;">Amy</div><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:12px;font-weight:600;">$</span><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="0.00"></div></div>
+          </div>
+          <!-- Custom % inputs -->
+          <div id="split-pct" style="display:none;margin-top:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
+            <div style="background:var(--card3);border-radius:9px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;color:#9a9a9a;margin-bottom:3px;">Amy</div><div style="display:flex;align-items:center;gap:3px;"><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="100"><span style="color:var(--muted);font-size:12px;font-weight:600;">%</span></div></div>
+          </div>
+        </div>
+        <div style="margin-bottom:7px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Include in split</div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:4px;background:var(--ink);color:#fffaf0;border-radius:var(--r-pill);padding:4px 9px;cursor:pointer;"><div class="av-sm u-amy">A</div><span style="font-size:11px;font-weight:600;">Amy</span></div>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Category</div>
+          <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;">
+            <button class="pill on" style="font-size:11px;" onclick="catpill(this)">✈️ Flight</button>
+            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🏨 Hotel</button>
+            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🍝 Food</button>
+            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🎟️ Activity</button>
+            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🚕 Transport</button>
+            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🛍️ Shopping</button>
+          </div>
+        </div>
+        <button class="btn-d" style="width:100%;padding:10px;font-size:13px;">Save expense →</button>
+      </div>
+
+      <!-- Paid/unpaid summary -->
+      <div style="display:flex;gap:7px;margin-bottom:11px;">
+        <div style="flex:1;background:#d4edda;border-radius:12px;padding:9px 11px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#1a5a2a;">$6,240</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#2a7a3a;margin-top:1px;">Paid ✓</div>
+        </div>
+        <div style="flex:1;background:#fee;border-radius:12px;padding:9px 11px;text-align:center;">
+          <div style="font-size:16px;font-weight:700;color:#cc3a3a;">$180</div>
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#cc3a3a;margin-top:1px;">Still owe</div>
+        </div>
+      </div>
+
+      <!-- Filter pills -->
+      <div style="display:flex;gap:5px;margin-bottom:10px;">
+        <button class="pill on" onclick="filterExp(this,'all')" style="font-size:11px;">All</button>
+        <button class="pill" onclick="filterExp(this,'paid')" style="font-size:11px;">✓ Paid</button>
+        <button class="pill" onclick="filterExp(this,'owe')" style="font-size:11px;">Still owe</button>
+      </div>
+
+      <div class="sl">All expenses</div>
+      <div class="card" id="exp-list">
+
+        <!-- PAID expense -->
+        <div class="exp-row exp-item" data-status="paid">
+          <div class="eicon" style="background:var(--sky);"><i class="ti ti-plane" style="font-size:14px;color:var(--skylt);"></i></div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Flights (4 tickets)</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
+            <div style="font-size:10px;color:var(--muted);">€2,600 → <strong style="color:var(--ink);">$2,840</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div style="font-size:13px;font-weight:700;">$2,840</div>
+            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
+          </div>
+        </div>
+
+        <!-- PAID expense -->
+        <div class="exp-row exp-item" data-status="paid">
+          <div class="eicon" style="background:var(--peach);">🏨</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Hotel de Russie (4n)</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
+            <div style="font-size:10px;color:var(--muted);">€2,930 → <strong style="color:var(--ink);">$3,200</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div style="font-size:13px;font-weight:700;">$3,200</div>
+            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
+          </div>
+        </div>
+
+        <!-- PAID expense -->
+        <div class="exp-row exp-item" data-status="paid">
+          <div class="eicon" style="background:var(--lav);">🍝</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Dinner — Osteria</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
+            <div style="font-size:10px;color:var(--muted);">€220 → <strong style="color:var(--ink);">$240</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div style="font-size:13px;font-weight:700;">$240</div>
+            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
+          </div>
+        </div>
+
+        <!-- STILL OWE expense -->
+        <div class="exp-row exp-item" data-status="owe" style="border:none;">
+          <div class="eicon" style="background:var(--mint);">🎟️</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Colosseum tickets</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 13 · Amy paid · just me</div>
+            <div style="font-size:10px;color:var(--muted);">€128 → <strong style="color:var(--ink);">$140</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div style="font-size:13px;font-weight:700;">$140</div>
+            <button onclick="togglePaid(this)" class="paid-btn owe" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#fee;color:#cc3a3a;">Unpaid</button>
+          </div>
+        </div>
+
+        <!-- STILL OWE expense -->
+        <div class="exp-row exp-item" data-status="owe" style="border:none;">
+          <div class="eicon" style="background:var(--ochre);">🚕</div>
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:600;">Airport taxi — Rome</div>
+            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · just me</div>
+            <div style="font-size:10px;color:var(--muted);">€37 → <strong style="color:var(--ink);">$40</strong></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+            <div style="font-size:13px;font-weight:700;">$40</div>
+            <button onclick="togglePaid(this)" class="paid-btn owe" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#fee;color:#cc3a3a;">Unpaid</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ─── CHAT ─── -->
+    <div class="tp" id="tp-chat">
+      <!-- Collapsible header -->
+      <div onclick="toggleChat()" style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:12px;padding:11px;margin-bottom:12px;cursor:pointer;">
+        <div>
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:3px;"><i class="ti ti-sparkles" style="font-size:12px;"></i> AI Travel Assistant · Gemini</div>
+          <div style="font-size:12px;color:var(--body);">Ask anything about Italy</div>
+        </div>
+        <i id="chat-chevron" class="ti ti-chevron-up" style="font-size:16px;color:var(--muted);transition:.2s;"></i>
+      </div>
+      <!-- Collapsible body -->
+      <div id="chat-body">
+        <div style="display:flex;flex-direction:column;margin-bottom:11px;">
+          <div class="bubble bai">Ciao! Ready to help plan your Italy adventure. What would you like to know?</div>
+          <div class="bubble buser">What should I pack for September in Rome?</div>
+          <div class="bubble bai">September in Rome is warm (highs 27°C/80°F). Pack light linen or cotton, a layer for evenings, and a small scarf for cathedral visits. Comfortable walking shoes are essential — Rome's cobblestones are tough!</div>
+        </div>
+        <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;">
+          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">Best restaurants near Colosseum ↗</button>
+          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">3-day Rome itinerary ↗</button>
+          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">Italian customs ↗</button>
+        </div>
+      </div>
+      <!-- Input always visible -->
+      <div style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
+        <input class="inp" style="background:none;padding:0;flex:1;font-size:12px;" placeholder="Ask about restaurants, packing, activities...">
+        <button class="btn-d" style="padding:7px 12px;border-radius:9px;font-size:12px;flex:0 0 auto;"><i class="ti ti-send" style="font-size:13px;"></i></button>
+      </div>
+    </div>
+
+  </div><!-- end scroll -->
+</div><!-- end s-trip -->
+
+<!-- ════════════════════════════════════
+     SCREEN: TRIP SETTINGS / INVITE
+════════════════════════════════════ -->
+<div class="screen" id="s-trip-settings">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:6px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="go('trip')"><i class="ti ti-arrow-left"></i></button>
+    <span class="page-title">Trip settings</span>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="margin-bottom:14px;">
+      <div class="sl">Trip details</div>
+      <div class="card" style="display:flex;flex-direction:column;gap:8px;">
+        <div><div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Destination</div><input class="inp" value="Italy — Rome, Florence, Amalfi"></div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;">
+          <div><div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Start</div><input class="inp" value="Sep 12, 2026"></div>
+          <div><div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">End</div><input class="inp" value="Sep 26, 2026"></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="sl" style="margin:0;">Travelers</div>
+        <button class="btn-ghost">+ Invite</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <div class="invite-chip">
+          <div class="av u-amy" style="width:34px;height:34px;font-size:13px;">A</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Amy</div><div style="font-size:10px;color:var(--muted);">Trip organizer</div></div>
+          <span style="background:var(--ink);color:#fffaf0;border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;">HOST</span>
+        </div>
+        <div style="background:var(--card);border-radius:11px;padding:10px;">
+          <div style="font-size:11px;font-weight:600;margin-bottom:7px;">Invite by email</div>
+          <div style="display:flex;gap:7px;">
+            <input class="inp" style="flex:1;" placeholder="Enter email address...">
+            <button class="btn-d" style="padding:9px 14px;font-size:12px;">Send invite</button>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:var(--card2);border-radius:9px;">
+            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:4px;">Or share invite link</div>
+            <div style="display:flex;align-items:center;gap:7px;">
+              <div style="flex:1;font-size:11px;color:var(--muted);background:var(--card3);border-radius:7px;padding:6px 9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">wander.app/join/italy-2026-xk9</div>
+              <button class="btn-l" style="padding:6px 12px;font-size:11px;flex:0 0 auto;">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:14px;">
+      <div class="sl">Sharing settings</div>
+      <div class="card">
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Shared photo space</div><div style="font-size:10px;color:var(--muted);">All travelers can upload & download</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Daily plans visible to all</div><div style="font-size:10px;color:var(--muted);">Everyone sees flights, hotels, excursions</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Expenses shared</div><div style="font-size:10px;color:var(--muted);">All travelers see splits and totals</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Travel log visible</div><div style="font-size:10px;color:var(--muted);">Daily journal entries shared</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row" style="border:none;"><div><div style="font-size:13px;font-weight:500;">Suitcase visible to others</div><div style="font-size:10px;color:var(--muted);">Share your outfit plans</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+
+    <button class="btn-d" style="width:100%;padding:12px;font-size:13px;">Save settings</button>
+    <button style="width:100%;padding:12px;font-size:13px;background:none;border:1px solid #e5e5e5;border-radius:11px;color:#cc3a3a;cursor:pointer;font-family:inherit;margin-top:8px;font-weight:600;">Leave trip</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: PROFILE / MY DASHBOARD
+════════════════════════════════════ -->
+<div class="screen" id="s-profile">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:6px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left"></i></button>
+    <span class="page-title">My profile</span>
+    <button onclick="doLogout()" style="margin-left:auto;background:none;border:none;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;font-family:inherit;">Sign out</button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <!-- Profile header -->
+    <div style="background:var(--sky);border-radius:var(--r-card);padding:18px;margin-bottom:14px;text-align:center;">
+      <div id="prof-av" class="av u-amy" style="width:60px;height:60px;font-size:22px;margin:0 auto 10px;">A</div>
+      <div id="prof-name" style="font-size:20px;font-weight:700;color:#fffaf0;letter-spacing:-.4px;">Amy</div>
+      <div id="prof-email" style="font-size:12px;color:var(--skylt);margin-bottom:12px;">amy@dwnnout.com</div>
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#fffaf0;">3</div>
+          <div style="font-size:9px;color:var(--skylt);text-transform:uppercase;letter-spacing:.8px;font-weight:700;">Trips</div>
+        </div>
+        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#fffaf0;">58</div>
+          <div style="font-size:9px;color:var(--skylt);text-transform:uppercase;letter-spacing:.8px;font-weight:700;">Photos</div>
+        </div>
+        <div style="background:rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:#fffaf0;">$4,280</div>
+          <div style="font-size:9px;color:var(--skylt);text-transform:uppercase;letter-spacing:.8px;font-weight:700;">Spent</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- My sharing defaults -->
+    <div style="margin-bottom:14px;">
+      <div class="sl">My sharing defaults</div>
+      <div class="card">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">These apply to all trips. You can override per trip in trip settings.</div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Share my travel log</div><div style="font-size:10px;color:var(--muted);">Others see your daily journal entries</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Share my suitcase</div><div style="font-size:10px;color:var(--muted);">Others see your outfit plans</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Show when I'm active</div><div style="font-size:10px;color:var(--muted);">Others see your last active time</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row" style="border:none;"><div><div style="font-size:13px;font-weight:500;">Expense notifications</div><div style="font-size:10px;color:var(--muted);">Alert when someone adds an expense</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+
+    <!-- Pending invites -->
+    <div style="margin-bottom:14px;">
+      <div class="sl">Trip invites</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:40px;height:40px;border-radius:11px;background:var(--mint);display:flex;align-items:center;justify-content:center;font-size:20px;flex:0 0 auto;">🇮🇹</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Italy 2026 — Rome, Florence, Amalfi</div><div style="font-size:11px;color:var(--muted);">Invited by Amy · Sep 12–26</div></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:10px;">
+          <button class="btn-l" style="flex:1;padding:9px;font-size:12px;">Decline</button>
+          <button class="btn-d" style="flex:2;padding:9px;font-size:12px;" onclick="openTrip()">Accept & join →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- My trips summary -->
+    <div style="margin-bottom:14px;">
+      <div class="sl">My trips</div>
+      <div style="display:flex;flex-direction:column;gap:7px;">
+        <div class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openTrip()">
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--lav);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;">🇮🇹</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Italy 2026</div><div style="font-size:10px;color:var(--muted);">Sep 12–26 · Upcoming · 4 travelers</div></div>
+          <i class="ti ti-chevron-right" style="font-size:16px;color:var(--muted);"></i>
+        </div>
+        <div class="card" style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:9px;background:var(--mint);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;">🇫🇷</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Paris 2026</div><div style="font-size:10px;color:var(--muted);">Jul 4–11 · Active · 2 travelers</div></div>
+          <i class="ti ti-chevron-right" style="font-size:16px;color:var(--muted);"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings link -->
+    <button onclick="go('settings')" style="width:100%;padding:12px;font-size:13px;background:var(--card);border:none;border-radius:11px;color:var(--ink);cursor:pointer;font-family:inherit;font-weight:600;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px;"><i class="ti ti-bell" style="font-size:15px;"></i> Notifications & Alerts</button>
+    <button onclick="go('login')" style="width:100%;padding:12px;font-size:13px;background:none;border:1px solid var(--hair);border-radius:11px;color:var(--muted);cursor:pointer;font-family:inherit;font-weight:600;">Sign out</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     PHOTO LIGHTBOX
+════════════════════════════════════ -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;">
+    <button onclick="event.stopPropagation();downloadPhoto()" style="background:rgba(255,255,255,.2);border:none;border-radius:9px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-download" style="font-size:18px;color:#fff;"></i></button>
+    <button onclick="closeLightbox()" style="background:rgba(255,255,255,.2);border:none;border-radius:9px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-x" style="font-size:18px;color:#fff;"></i></button>
+  </div>
+  <div id="lb-icon" style="font-size:80px;margin-bottom:16px;"></div>
+  <div id="lb-title" style="font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;text-align:center;padding:0 24px;"></div>
+  <div style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+    <div id="lb-av" class="av" style="width:28px;height:28px;font-size:11px;"></div>
+    <div id="lb-meta" style="font-size:12px;color:rgba(255,255,255,.7);"></div>
+  </div>
+  <div style="position:absolute;bottom:24px;left:0;right:0;display:flex;justify-content:center;gap:12px;">
+    <button style="background:rgba(255,255,255,.2);border:none;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"><i class="ti ti-heart" style="font-size:15px;"></i> Like</button>
+    <button onclick="event.stopPropagation();downloadPhoto()" style="background:#fffaf0;border:none;border-radius:9px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--ink);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;"><i class="ti ti-download" style="font-size:15px;"></i> Download</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: SETTINGS
+════════════════════════════════════ -->
+<div class="screen" id="s-settings">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:6px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="go('profile')"><i class="ti ti-arrow-left"></i></button>
+    <span class="page-title">Notifications & Alerts</span>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="margin-bottom:16px;">
+      <div class="sl">In-App Alerts</div>
+      <div class="card">
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Alert on app open</div><div style="font-size:10px;color:var(--muted);">Show upcoming tasks when you open Wander</div></div><div class="toggle on" id="set-appopen" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">To-do due date reminders</div><div style="font-size:10px;color:var(--muted);">Alert when a task is due today or overdue</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Flight check-in reminder</div><div style="font-size:10px;color:var(--muted);">24 hours before each departure</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Hotel check-out reminder</div><div style="font-size:10px;color:var(--muted);">Morning of check-out day</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row" style="border:none;"><div><div style="font-size:13px;font-weight:500;">Expense added by co-traveler</div><div style="font-size:10px;color:var(--muted);">When someone logs a shared expense</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="sl">Push Notifications</div>
+      <div class="card">
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Enable push notifications</div><div style="font-size:10px;color:var(--muted);">Requires permission from your device</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="toggle-row" style="border:none;"><div><div style="font-size:13px;font-weight:500;">New photo added to trip</div><div style="font-size:10px;color:var(--muted);">When a co-traveler uploads a photo</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="sl">SMS / Text Messages</div>
+      <div class="card">
+        <div class="toggle-row"><div><div style="font-size:13px;font-weight:500;">Enable SMS alerts</div><div style="font-size:10px;color:var(--muted);">Receive text messages for critical reminders</div></div><div class="toggle" id="set-sms" onclick="toggleSMS(this)"></div></div>
+        <div id="sms-phone-wrap" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--card2);">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Your mobile number</div>
+          <div style="display:flex;align-items:center;gap:7px;">
+            <select class="inp" style="width:80px;flex:0 0 auto;"><option>🇺🇸 +1</option><option>🇬🇧 +44</option><option>🇪🇺 +39</option><option>🇫🇷 +33</option></select>
+            <input class="inp" style="flex:1;" placeholder="(555) 000-0000" type="tel">
+          </div>
+        </div>
+        <div class="toggle-row" style="border:none;margin-top:8px;"><div><div style="font-size:13px;font-weight:500;">Flight check-in via SMS</div><div style="font-size:10px;color:var(--muted);">Text reminder 24h before departure</div></div><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <div class="sl">Default Preferences</div>
+      <div class="card">
+        <div class="toggle-row" style="border:none;"><div><div style="font-size:13px;font-weight:500;">Quiet hours</div><div style="font-size:10px;color:var(--muted);">No alerts between 10 PM – 8 AM</div></div><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+    <button class="btn-d" style="width:100%;padding:12px;font-size:13px;">Save preferences</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     CALENDAR MODAL
+════════════════════════════════════ -->
+<div id="cal-modal" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);align-items:flex-end;" onclick="if(event.target===this)closeCal()">
+  <div style="background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 32px;width:100%;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <button onclick="calNav(-1)" style="background:var(--card2);border:none;border-radius:9px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+      <span id="cal-header" style="font-size:15px;font-weight:700;"></span>
+      <button onclick="calNav(1)" style="background:var(--card2);border:none;border-radius:9px;width:32px;height:32px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:4px;" id="cal-dow">
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Su</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Mo</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Tu</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">We</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Th</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Fr</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:#9a9a9a;padding:4px 0;">Sa</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;" id="cal-grid"></div>
+    <button onclick="closeCal()" class="btn-l" style="width:100%;margin-top:14px;padding:11px;">Cancel</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     ALERT BANNER (bottom sheet)
+════════════════════════════════════ -->
+<!-- ═══════════ ADD FLIGHT SHEET ═══════════ -->
+<div id="add-flight-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddSheet('flight')">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">✈️ Add flight</div>
+      <button onclick="closeAddSheet('flight')" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Airline</div><input id="f-airline" class="inp" placeholder="American Airlines"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Flight #</div><input id="f-number" class="inp" placeholder="AA 7842"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">From (airport)</div><input id="f-from" class="inp" placeholder="PHX" style="text-transform:uppercase;"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">To (airport)</div><input id="f-to" class="inp" placeholder="FCO" style="text-transform:uppercase;"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Departure time</div><input id="f-dep" class="inp" type="time"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Arrival time</div><input id="f-arr" class="inp" type="time"></div>
+    </div>
+    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Notes / confirmation #</div><input id="f-notes" class="inp" placeholder="Seat 14A · conf ABC123"></div>
+    <div id="f-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
+    <button onclick="saveFlight()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save flight →</button>
+  </div>
+</div>
+
+<!-- ═══════════ ADD HOTEL SHEET ═══════════ -->
+<div id="add-hotel-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddSheet('hotel')">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">🏨 Add hotel</div>
+      <button onclick="closeAddSheet('hotel')" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Hotel name</div><input id="h-name" class="inp" placeholder="Hotel Indigo Roma"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Address</div><input id="h-addr" class="inp" placeholder="Via Nazionale 1, Rome, Italy"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-in date</div><input id="h-in" class="inp" type="date"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-out date</div><input id="h-out" class="inp" type="date"></div>
+    </div>
+    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="h-conf" class="inp" placeholder="ABC123XYZ"></div>
+    <div id="h-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
+    <button onclick="saveHotel()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save hotel →</button>
+  </div>
+</div>
+
+<!-- ═══════════ ADD ACTIVITY SHEET ═══════════ -->
+<div id="add-excursion-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddSheet('excursion')">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">🎟️ Add activity</div>
+      <button onclick="closeAddSheet('excursion')" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Activity name</div><input id="e-title" class="inp" placeholder="Colosseum guided tour"></div>
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Start time</div><input id="e-time" class="inp" type="time"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Cost ($)</div><input id="e-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Description / notes</div><textarea id="e-desc" class="inp" rows="3" style="resize:none;" placeholder="Meeting point, what to bring, dress code..."></textarea></div>
+    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking ref (optional)</div><input id="e-ref" class="inp" placeholder="VIATOR-ABC123"></div>
+    <div id="e-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
+    <button onclick="saveExcursion()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save activity →</button>
+  </div>
+</div>
+
+<div id="alert-sheet" style="display:none;position:absolute;inset:0;z-index:200;background:rgba(0,0,0,.4);" onclick="if(event.target===this)dismissAlert()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 32px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div style="font-size:16px;font-weight:700;">Upcoming reminders</div>
+      <button onclick="dismissAlert()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;background:#fee;border-radius:12px;padding:10px 12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#cc3a3a;flex:0 0 auto;"></div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Notify bank of travel dates</div><div style="font-size:11px;color:#cc3a3a;font-weight:500;">Overdue</div></div>
+        <i class="ti ti-alert-circle" style="font-size:16px;color:#cc3a3a;"></i>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#fff3ee;border-radius:12px;padding:10px 12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#ff6b3a;flex:0 0 auto;"></div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">✈️ Check-in opens — AA 7842</div><div style="font-size:11px;color:#ff6b3a;font-weight:500;">Sep 11 · 3 days away</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:#fef9e7;border-radius:12px;padding:10px 12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#c8a020;flex:0 0 auto;"></div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Download offline maps — Rome</div><div style="font-size:11px;color:#c8a020;font-weight:500;">Sep 8 · due soon</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:10px 12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:#9a9a9a;flex:0 0 auto;"></div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">🏨 Hotel check-out reminder</div><div style="font-size:11px;color:var(--muted);font-weight:500;">Sep 16</div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="dismissAlert()" class="btn-l" style="flex:1;padding:11px;font-size:13px;">Dismiss</button>
+      <button onclick="dismissAlert();tab(document.querySelector('.tbtn:nth-child(5)'),'tasks')" class="btn-d" style="flex:2;padding:11px;font-size:13px;">View all tasks →</button>
+    </div>
+    <button onclick="go('settings')" style="width:100%;margin-top:9px;background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;">Turn off alerts in Settings</button>
+  </div>
+</div>
+
+</div><!-- end app-wrap -->
+
+<style>
+.bubble{padding:9px 13px;border-radius:14px;max-width:86%;font-size:12px;line-height:1.5;margin-bottom:6px;}
+.buser{background:var(--ink);color:#fffaf0;align-self:flex-end;border-bottom-right-radius:3px;margin-left:auto;}
+.bai{background:var(--card2);color:var(--ink);align-self:flex-start;border-bottom-left-radius:3px;}
+#tp-chat{display:flex;flex-direction:column;}
+</style>
+
+<script>
+// ── Supabase init ────────────────────────────────────────────────────────────
+var SUPABASE_URL = 'https://qfdyezjpdldavqmgxirv.supabase.co';
+var SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFmZHllempwZGxkYXZxbWd4aXJ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NzMzOTUsImV4cCI6MjA5ODI0OTM5NX0.AU0ayegySlXBpeEhgV2r6-XsO0jCGQzIJntMQoZ6HQU';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+var currentUser = null;   // will be set to Supabase user object after login
+var currentProfile = {};  // {id, name, avatar_color}
+var userTrips = [];       // trips loaded from DB
+
+// ── Auth tab toggle ──────────────────────────────────────────────────────────
+function authTab(tab){
+  document.getElementById('auth-form-in').style.display = tab==='in' ? '' : 'none';
+  document.getElementById('auth-form-up').style.display = tab==='up' ? '' : 'none';
+  document.getElementById('auth-tab-in').style.background = tab==='in' ? 'var(--ink)' : 'none';
+  document.getElementById('auth-tab-in').style.color = tab==='in' ? '#fffaf0' : 'var(--muted)';
+  document.getElementById('auth-tab-up').style.background = tab==='up' ? 'var(--ink)' : 'none';
+  document.getElementById('auth-tab-up').style.color = tab==='up' ? '#fffaf0' : 'var(--muted)';
+}
+
+// ── Sign in ──────────────────────────────────────────────────────────────────
+async function doLogin(){
+  var email = document.getElementById('login-email').value.trim();
+  var password = document.getElementById('login-password').value;
+  var errEl = document.getElementById('login-error');
+  var btn = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  if(!email || !password){ errEl.textContent='Please enter email and password.'; errEl.style.display=''; return; }
+  btn.textContent = 'Signing in…'; btn.disabled = true;
+  var res = await sb.auth.signInWithPassword({email, password});
+  btn.textContent = 'Sign in →'; btn.disabled = false;
+  if(res.error){ errEl.textContent = res.error.message; errEl.style.display=''; return; }
+  await afterLogin(res.data.user);
+}
+
+// ── Sign up ──────────────────────────────────────────────────────────────────
+async function doSignup(){
+  var name = document.getElementById('signup-name').value.trim();
+  var email = document.getElementById('signup-email').value.trim();
+  var password = document.getElementById('signup-password').value;
+  var errEl = document.getElementById('signup-error');
+  var okEl = document.getElementById('signup-success');
+  var btn = document.getElementById('signup-btn');
+  errEl.style.display='none'; okEl.style.display='none';
+  if(!name || !email || !password){ errEl.textContent='Please fill in all fields.'; errEl.style.display=''; return; }
+  if(password.length < 6){ errEl.textContent='Password must be at least 6 characters.'; errEl.style.display=''; return; }
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+  var res = await sb.auth.signUp({email, password, options:{data:{name}}});
+  btn.textContent = 'Create account →'; btn.disabled = false;
+  if(res.error){ errEl.textContent = res.error.message; errEl.style.display=''; return; }
+  // If email confirmation is off in Supabase, user is auto-confirmed
+  if(res.data.session){
+    await afterLogin(res.data.user);
+  } else {
+    okEl.style.display='';
+    setTimeout(()=>authTab('in'), 2000);
+  }
+}
+
+// ── After successful login ────────────────────────────────────────────────────
+async function afterLogin(user){
+  currentUser = user;
+  // Load profile
+  var {data:prof} = await sb.from('profiles').select('*').eq('id', user.id).single();
+  currentProfile = prof || {id:user.id, name:user.email.split('@')[0], avatar_color:'blue'};
+  // Update UI with real name
+  updateUserUI();
+  // Load trips
+  await loadTrips();
+  go('home');
+  setTimeout(showAlert, 600);
+}
+
+// ── Load trips from Supabase ──────────────────────────────────────────────────
+async function loadTrips(){
+  var {data, error} = await sb.from('trips').select('*, trip_members(*)').order('start_date');
+  if(error){ console.error(error); return; }
+  userTrips = data || [];
+  renderHomeTrips();
+}
+
+// ── Render trips on home screen ───────────────────────────────────────────────
+function renderHomeTrips(){
+  var container = document.getElementById('home-trips');
+  if(!container) return;
+  if(userTrips.length === 0){
+    container.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🗺️</div><div style="font-size:14px;font-weight:600;margin-bottom:5px;">No trips yet</div><div style="font-size:12px;">Tap "+ New trip" to get started</div></div>';
+    return;
+  }
+  var now = new Date();
+  container.innerHTML = userTrips.map(function(t){
+    var start = t.start_date ? new Date(t.start_date) : null;
+    var end = t.end_date ? new Date(t.end_date) : null;
+    var status = '', badge = '';
+    if(start && end){
+      if(now < start){ status='upcoming'; badge='<span class="badge badge-up">Upcoming</span>'; }
+      else if(now > end){ status='past'; badge='<span class="badge" style="background:#e0e0e0;color:#666;">Past</span>'; }
+      else { status='active'; badge='<span class="badge badge-act">Active</span>'; }
+    }
+    var color = t.color || '#b8a4ed';
+    var emoji = t.cover_emoji || '✈️';
+    var dests = (t.destinations||[]).join(' → ') || 'Destination TBD';
+    var dateStr = start ? start.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    if(start && end) dateStr += ' – '+end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return '<div onclick="openDbTrip(\''+t.id+'\')" style="background:'+color+'22;border:1.5px solid '+color+'44;border-radius:16px;padding:14px;cursor:pointer;margin-bottom:9px;">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+      +'<div style="display:flex;align-items:center;gap:9px;">'
+      +'<div style="width:36px;height:36px;border-radius:10px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:18px;">'+emoji+'</div>'
+      +'<div><div style="font-size:15px;font-weight:700;">'+t.name+'</div><div style="font-size:11px;color:var(--muted);">'+dests+'</div></div>'
+      +'</div>'+badge+'</div>'
+      +'<div style="font-size:11px;color:var(--muted);">'+dateStr+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function openDbTrip(id){
+  var trip = userTrips.find(function(t){ return t.id===id; });
+  if(!trip) return;
+  currentTripId = trip.id;
+  currentTripStartDate = trip.start_date || null;
+  // Open the trip UI
+  openTrip();
+  // Load plans for whatever day is currently selected
+  loadDayPlans(currentDayNum);
+}
+
+// ── Update UI with logged-in user ────────────────────────────────────────────
+function updateUserUI(){
+  var name = currentProfile.name || 'Traveler';
+  var initials = name.split(' ').map(function(w){ return w[0]; }).join('').toUpperCase().slice(0,2);
+  var av = document.getElementById('home-av');
+  if(av){ av.className='av'; av.textContent=initials; av.style.background='var(--sky)'; av.style.color='#fffaf0'; }
+  var gr = document.getElementById('home-greeting');
+  if(gr) gr.textContent = 'Welcome back, '+name.split(' ')[0];
+  var pav = document.getElementById('prof-av');
+  if(pav){ pav.className='av'; pav.textContent=initials; pav.style.cssText+='width:60px;height:60px;font-size:22px;margin:0 auto 10px;background:var(--sky);color:#fffaf0;'; }
+  var pn = document.getElementById('prof-name');
+  if(pn) pn.textContent = name;
+  var pe = document.getElementById('prof-email');
+  if(pe && currentUser) pe.textContent = currentUser.email;
+}
+
+// ── Sign out ──────────────────────────────────────────────────────────────────
+async function doLogout(){
+  await sb.auth.signOut();
+  currentUser = null; currentProfile = {}; userTrips = [];
+  go('login');
+}
+
+// ── Check existing session on page load ──────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async function(){
+  var {data:{session}} = await sb.auth.getSession();
+  if(session){
+    await afterLogin(session.user);
+  }
+  // Listen for auth changes
+  sb.auth.onAuthStateChange(async function(event, session){
+    if(event === 'SIGNED_IN' && session) await afterLogin(session.user);
+    if(event === 'SIGNED_OUT'){ currentUser=null; go('login'); }
+  });
+});
+
+// ── Screen navigation ────────────────────────────────────────────────────────
+function go(name){
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var el = document.getElementById('s-'+name);
+  if(el) el.classList.add('active');
+}
+
+function login(user){ /* legacy mock — kept for demo compatibility */ go('home'); setTimeout(showAlert,600); }
+
+function openTrip(){go('trip');updateTripDays();}
+
+function tab(btn,name){
+  document.querySelectorAll('.tbtn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('active');});
+  var el = document.getElementById('tp-'+name);
+  if(el) el.classList.add('active');
+}
+
+function dp(pill){
+  var parent = pill.parentElement;
+  parent.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
+  pill.classList.add('on');
+}
+
+// ── Trip data state ──────────────────────────────────────────────────────────
+var currentTripId = null;
+var currentTripStartDate = null;
+var currentDayNum = 12;
+
+// Map day number to a calendar date string (YYYY-MM-DD)
+// Demo trip: day 12 = Sep 12 2026, day 13 = Sep 13 2026, etc.
+function getDayDateStr(dayNum) {
+  if (currentTripStartDate) {
+    var d = new Date(currentTripStartDate);
+    d.setDate(d.getDate() + (dayNum - 1));
+    return d.toISOString().slice(0,10);
+  }
+  // Demo fallback: Sep 2026
+  return '2026-09-' + (dayNum < 10 ? '0' : '') + dayNum;
+}
+
+function selectDay(pill, dayNum, label, city){
+  currentDayNum = dayNum;
+  // update pill highlight
+  pill.parentElement.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
+  pill.classList.add('on');
+  // update title
+  var t = document.getElementById('plans-day-title');
+  if(t) t.textContent = label;
+  // show/hide day content blocks
+  var all = document.querySelectorAll('[id^="day-content-"]');
+  all.forEach(function(el){ el.style.display='none'; });
+  var target = document.getElementById('day-content-'+dayNum);
+  if(target) target.style.display='block';
+  // load DB plans for this day
+  loadDayPlans(dayNum);
+}
+
+// ── Load day plans from Supabase ─────────────────────────────────────────────
+async function loadDayPlans(dayNum) {
+  var listEl = document.getElementById('plans-db-list');
+  if (!listEl) return;
+
+  if (!currentTripId || !currentUser) {
+    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div><div style="font-size:12px;font-weight:600;margin-bottom:3px;">Your trip plans appear here</div><div style="font-size:11px;color:var(--muted);">Create a trip and use the buttons below to add flights, hotels & activities</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);font-size:12px;">Loading…</div>';
+  var dateStr = getDayDateStr(dayNum);
+
+  var [fr, hr, er] = await Promise.all([
+    sb.from('flights').select('*').eq('trip_id', currentTripId).eq('flight_date', dateStr).order('departure_time'),
+    sb.from('hotels').select('*').eq('trip_id', currentTripId).lte('checkin_date', dateStr).gte('checkout_date', dateStr),
+    sb.from('excursions').select('*').eq('trip_id', currentTripId).eq('excursion_date', dateStr).order('start_time')
+  ]);
+
+  var items = [];
+  (fr.data||[]).forEach(function(f){ items.push({type:'flight',data:f,sort:f.departure_time||'00:00'}); });
+  (hr.data||[]).forEach(function(h){ items.push({type:'hotel',data:h,sort:'03:00'}); });
+  (er.data||[]).forEach(function(e){ items.push({type:'excursion',data:e,sort:e.start_time||'12:00'}); });
+  items.sort(function(a,b){ return a.sort.localeCompare(b.sort); });
+
+  if (items.length === 0) {
+    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — tap a button below to add</div>';
+    return;
+  }
+  listEl.innerHTML = items.map(renderPlanItem).join('');
+}
+
+function renderPlanItem(item) {
+  if (item.type === 'flight') {
+    var f = item.data;
+    var dep = f.departure_time ? f.departure_time.slice(0,5) : '';
+    var arr = f.arrival_time ? f.arrival_time.slice(0,5) : '';
+    return '<div style="background:rgba(74,122,222,.09);border-radius:13px;padding:12px 13px;">'
+      +'<div style="display:flex;align-items:flex-start;gap:9px;">'
+      +'<span style="font-size:20px;flex:0 0 auto;">✈️</span>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:13px;font-weight:700;">'+(f.airline||'')+(f.flight_number?' · '+f.flight_number:'')+'</div>'
+      +(f.departure_airport||f.arrival_airport ? '<div style="font-size:11px;color:var(--muted);">'+(f.departure_airport||'?')+' → '+(f.arrival_airport||'?')+'</div>' : '')
+      +(dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr:'')+'</div>' : '')
+      +(f.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+f.notes+'</div>' : '')
+      +'</div>'
+      +'<button onclick="deletePlanItem(\'flights\',\''+f.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +'</div></div>';
+  }
+  if (item.type === 'hotel') {
+    var h = item.data;
+    return '<div style="background:rgba(164,212,197,.2);border-radius:13px;padding:12px 13px;">'
+      +'<div style="display:flex;align-items:flex-start;gap:9px;">'
+      +'<span style="font-size:20px;flex:0 0 auto;">🏨</span>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:13px;font-weight:700;">'+h.hotel_name+'</div>'
+      +(h.address ? '<div style="font-size:11px;color:var(--muted);">'+h.address+'</div>' : '')
+      +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
+      +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
+      +'</div>'
+      +'<button onclick="deletePlanItem(\'hotels\',\''+h.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +'</div></div>';
+  }
+  if (item.type === 'excursion') {
+    var e = item.data;
+    var time = e.start_time ? e.start_time.slice(0,5) : '';
+    return '<div style="background:rgba(232,185,74,.15);border-radius:13px;padding:12px 13px;">'
+      +'<div style="display:flex;align-items:flex-start;gap:9px;">'
+      +'<span style="font-size:20px;flex:0 0 auto;">🎟️</span>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:13px;font-weight:700;">'+e.title+'</div>'
+      +(time ? '<div style="font-size:11px;color:var(--muted);">'+time+'</div>' : '')
+      +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
+      +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
+      +'</div>'
+      +'<button onclick="deletePlanItem(\'excursions\',\''+e.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +'</div></div>';
+  }
+  return '';
+}
+
+async function deletePlanItem(table, id) {
+  await sb.from(table).delete().eq('id', id);
+  loadDayPlans(currentDayNum);
+}
+
+// ── Add sheet open/close ──────────────────────────────────────────────────────
+function openAddSheet(type) {
+  document.getElementById('add-'+type+'-sheet').style.display = 'flex';
+}
+function closeAddSheet(type) {
+  document.getElementById('add-'+type+'-sheet').style.display = 'none';
+}
+
+// ── Save flight ───────────────────────────────────────────────────────────────
+async function saveFlight() {
+  var errEl = document.getElementById('f-error');
+  errEl.style.display = 'none';
+  if (!currentTripId || !currentUser) { errEl.textContent='Please sign in and open a real trip first.'; errEl.style.display=''; return; }
+  var airline = document.getElementById('f-airline').value.trim();
+  var num = document.getElementById('f-number').value.trim();
+  var from = document.getElementById('f-from').value.trim().toUpperCase();
+  var to = document.getElementById('f-to').value.trim().toUpperCase();
+  if (!from && !num) { errEl.textContent='Please enter at least a flight number or departure airport.'; errEl.style.display=''; return; }
+  var data = {
+    trip_id: currentTripId, flight_date: getDayDateStr(currentDayNum),
+    airline: airline||null, flight_number: num||null,
+    departure_airport: from||null, arrival_airport: to||null,
+    departure_time: document.getElementById('f-dep').value||null,
+    arrival_time: document.getElementById('f-arr').value||null,
+    notes: document.getElementById('f-notes').value.trim()||null,
+    created_by: currentUser.id
+  };
+  var {error} = await sb.from('flights').insert(data);
+  if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  closeAddSheet('flight');
+  ['f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  loadDayPlans(currentDayNum);
+}
+
+// ── Save hotel ────────────────────────────────────────────────────────────────
+async function saveHotel() {
+  var errEl = document.getElementById('h-error');
+  errEl.style.display = 'none';
+  if (!currentTripId || !currentUser) { errEl.textContent='Please sign in and open a real trip first.'; errEl.style.display=''; return; }
+  var name = document.getElementById('h-name').value.trim();
+  var checkin = document.getElementById('h-in').value;
+  var checkout = document.getElementById('h-out').value;
+  if (!name) { errEl.textContent='Please enter a hotel name.'; errEl.style.display=''; return; }
+  if (!checkin || !checkout) { errEl.textContent='Please enter check-in and check-out dates.'; errEl.style.display=''; return; }
+  if (checkout <= checkin) { errEl.textContent='Check-out must be after check-in.'; errEl.style.display=''; return; }
+  var data = {
+    trip_id: currentTripId, hotel_name: name,
+    address: document.getElementById('h-addr').value.trim()||null,
+    checkin_date: checkin, checkout_date: checkout,
+    confirmation: document.getElementById('h-conf').value.trim()||null,
+    created_by: currentUser.id
+  };
+  var {error} = await sb.from('hotels').insert(data);
+  if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  closeAddSheet('hotel');
+  ['h-name','h-addr','h-in','h-out','h-conf'].forEach(function(id){ document.getElementById(id).value=''; });
+  loadDayPlans(currentDayNum);
+}
+
+// ── Save excursion ────────────────────────────────────────────────────────────
+async function saveExcursion() {
+  var errEl = document.getElementById('e-error');
+  errEl.style.display = 'none';
+  if (!currentTripId || !currentUser) { errEl.textContent='Please sign in and open a real trip first.'; errEl.style.display=''; return; }
+  var title = document.getElementById('e-title').value.trim();
+  if (!title) { errEl.textContent='Please enter an activity name.'; errEl.style.display=''; return; }
+  var data = {
+    trip_id: currentTripId, excursion_date: getDayDateStr(currentDayNum),
+    title: title,
+    start_time: document.getElementById('e-time').value||null,
+    cost: parseFloat(document.getElementById('e-cost').value)||null,
+    description: document.getElementById('e-desc').value.trim()||null,
+    booking_ref: document.getElementById('e-ref').value.trim()||null,
+    created_by: currentUser.id
+  };
+  var {error} = await sb.from('excursions').insert(data);
+  if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  closeAddSheet('excursion');
+  ['e-title','e-time','e-cost','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
+  loadDayPlans(currentDayNum);
+}
+
+function showAddFlight(){
+  alert('Add internal flight — coming in full build with Supabase!');
+}
+
+function catpill(btn){
+  btn.closest('div').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');
+}
+
+var logDays = [12,13,14,15,16];
+var logDayMeta = {
+  12:{label:'Friday, Sep 12', city:'Rome 🏛️'},
+  13:{label:'Saturday, Sep 13', city:'Rome 🏛️'},
+  14:{label:'Sunday, Sep 14', city:'Rome 🏛️'},
+  15:{label:'Monday, Sep 15', city:'Rome 🏛️'},
+  16:{label:'Tuesday, Sep 16', city:'Naples 🍕'}
+};
+var currentLogDay = 12;
+
+function logView(v){
+  document.getElementById('log-overview').style.display = v==='overview' ? '' : 'none';
+  document.getElementById('log-daily').style.display = v==='daily' ? '' : 'none';
+  document.getElementById('log-view-overview').style.background = v==='overview' ? 'var(--ink)' : 'none';
+  document.getElementById('log-view-overview').style.color = v==='overview' ? '#fffaf0' : 'var(--muted)';
+  document.getElementById('log-view-daily').style.background = v==='daily' ? 'var(--ink)' : 'none';
+  document.getElementById('log-view-daily').style.color = v==='daily' ? '#fffaf0' : 'var(--muted)';
+}
+
+function openLogDay(day){
+  currentLogDay = day;
+  document.querySelectorAll('.log-day-page').forEach(function(p){ p.style.display='none'; });
+  var pg = document.getElementById('log-day-'+day);
+  if(pg) pg.style.display='';
+  var meta = logDayMeta[day] || {label:'Sep '+day, city:'Italy'};
+  document.getElementById('log-day-label').textContent = meta.label;
+  document.getElementById('log-day-city').textContent = meta.city;
+  document.querySelector('#s-trip .scroll').scrollTop = 0;
+}
+
+function logDayNav(dir){
+  var idx = logDays.indexOf(currentLogDay);
+  var next = logDays[idx+dir];
+  if(next !== undefined) openLogDay(next);
+}
+
+function logEdit(day){
+  document.getElementById('log-'+day+'-display').style.display='none';
+  document.getElementById('log-'+day+'-edit').style.display='';
+}
+
+function logCancel(day){
+  document.getElementById('log-'+day+'-display').style.display='';
+  document.getElementById('log-'+day+'-edit').style.display='none';
+}
+
+function logSave(day){
+  var txt = document.getElementById('log-'+day+'-text').value.trim();
+  if(!txt) return;
+  var disp = document.getElementById('log-'+day+'-display');
+  var saved = document.getElementById('log-'+day+'-saved');
+  if(saved) saved.textContent = '"'+txt+'"';
+  disp.style.display='';
+  document.getElementById('log-'+day+'-edit').style.display='none';
+}
+
+function logRate(el){
+  var row = el.parentElement;
+  row.querySelectorAll('span').forEach(function(s){ s.style.opacity='.4'; });
+  el.style.opacity='1';
+}
+
+function suitcaseDay(pill, dayNum, label){
+  document.querySelectorAll('#tp-suitcase .dp').forEach(function(p){p.classList.remove('on');});
+  pill.classList.add('on');
+  document.getElementById('suitcase-day-title').textContent = label;
+  // show/hide item blocks
+  document.querySelectorAll('[id^="suitcase-items-"]').forEach(function(el){el.style.display='none';});
+  var block = document.getElementById('suitcase-items-'+dayNum);
+  if(block) block.style.display='';
+  // reset share toggle to private per-day
+  var tog = document.getElementById('suitcase-share-toggle');
+  tog.classList.remove('on');
+  document.getElementById('suitcase-share-label').textContent='Private';
+  document.getElementById('suitcase-share-banner').style.display='none';
+}
+
+function toggleSuitcaseShare(el){
+  el.classList.toggle('on');
+  var on = el.classList.contains('on');
+  document.getElementById('suitcase-share-label').textContent = on ? 'Shared' : 'Private';
+  var banner = document.getElementById('suitcase-share-banner');
+  banner.style.display = on ? 'flex' : 'none';
+}
+
+function showAddItem(){
+  var f = document.getElementById('add-item-form');
+  f.style.display = f.style.display==='none' ? 'block' : 'none';
+  if(f.style.display!=='none') f.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function assignDay(el, day){
+  el.classList.toggle('assigned');
+  if(el.classList.contains('assigned')){
+    el.style.background='var(--ink)';
+    el.style.color='#fffaf0';
+    el.style.fontWeight='700';
+  } else {
+    el.style.background='var(--card3)';
+    el.style.color='var(--muted)';
+    el.style.fontWeight='400';
+  }
+}
+
+function openPhoto(title, uploader, date){
+  var icons = {'✈️':'✈️','🌅':'🌅','🏛️':'🏛️','🌹':'🌹','🍝':'🍝','🌿':'🌿','🍦':'🍦'};
+  var firstChar = title.charAt(0);
+  document.getElementById('lb-icon').textContent = firstChar;
+  document.getElementById('lb-title').textContent = title;
+  var avEl = document.getElementById('lb-av');
+  avEl.className = 'av '+userColors[uploader.toLowerCase()];
+  avEl.textContent = userInitials[uploader.toLowerCase()];
+  document.getElementById('lb-meta').textContent = uploader+' · '+date;
+  document.getElementById('lightbox').classList.add('open');
+}
+
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('open');
+}
+
+function downloadPhoto(){
+  // In real app would trigger download
+  alert('Download started!');
+}
+
+function triggerUpload(){
+  // In real app would open file picker
+}
+
+// ─── CALENDAR ───────────────────────────────
+var calTarget = null, calYear = 2026, calMonth = 8;
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var MONTHS_S = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function openCal(el){
+  calTarget = el;
+  var m = document.getElementById('cal-modal');
+  m.style.display = 'flex';
+  calRender();
+}
+function closeCal(){ document.getElementById('cal-modal').style.display='none'; calTarget=null; }
+function calNav(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  calRender();
+}
+function calRender(){
+  document.getElementById('cal-header').textContent = MONTHS[calMonth]+' '+calYear;
+  var first=new Date(calYear,calMonth,1).getDay();
+  var dim=new Date(calYear,calMonth+1,0).getDate();
+  var html='';
+  for(var i=0;i<first;i++) html+='<div></div>';
+  for(var d=1;d<=dim;d++){
+    var dd=d;
+    html+='<div onclick="calSelect('+dd+')" style="text-align:center;padding:7px 2px;border-radius:9px;cursor:pointer;font-size:13px;font-weight:500;" onmouseover="this.style.background=\'var(--card2)\'" onmouseout="this.style.background=\'transparent\'">'+d+'</div>';
+  }
+  document.getElementById('cal-grid').innerHTML=html;
+}
+function calSelect(d){
+  var label = MONTHS_S[calMonth]+' '+d+', '+calYear;
+  if(calTarget){
+    if(calTarget.tagName==='INPUT') calTarget.value=label;
+    else if(calTarget.tagName==='BUTTON'||calTarget.tagName==='SPAN') calTarget.textContent=label;
+  }
+  closeCal();
+}
+
+// ─── CURRENCY CONVERSION ────────────────────
+var FX = {USD:1,EUR:1.09,GBP:1.27,JPY:0.0067,CAD:0.74,AUD:0.65,CHF:1.12,MXN:0.056,BRL:0.18,THB:0.028};
+function updateConversion(){
+  var cur = document.getElementById('exp-currency');
+  var amt = document.getElementById('exp-amount');
+  var box = document.getElementById('exp-usd');
+  var val = document.getElementById('exp-usd-val');
+  if(!cur||!amt||!box||!val) return;
+  var n = parseFloat(amt.value)||0;
+  var usd = (n * (FX[cur.value]||1)).toFixed(2);
+  if(cur.value==='USD'||n===0){ box.style.display='none'; return; }
+  box.style.display='block';
+  val.textContent = '$'+usd;
+}
+
+// ─── PAID / UNPAID TOGGLE ───────────────────
+function togglePaid(btn){
+  var row = btn.closest('.exp-item');
+  var isPaid = btn.classList.contains('paid');
+  if(isPaid){
+    btn.classList.remove('paid'); btn.classList.add('owe');
+    btn.style.background='#fee'; btn.style.color='#cc3a3a';
+    btn.textContent='Unpaid';
+    if(row) row.dataset.status='owe';
+  } else {
+    btn.classList.remove('owe'); btn.classList.add('paid');
+    btn.style.background='#d4edda'; btn.style.color='#1a5a2a';
+    btn.textContent='✓ Paid';
+    if(row) row.dataset.status='paid';
+  }
+}
+
+// ─── EXPENSE FILTER ─────────────────────────
+function filterExp(btn, type){
+  btn.closest('div').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');
+  document.querySelectorAll('.exp-item').forEach(function(row){
+    if(type==='all') row.style.display='';
+    else row.style.display = row.dataset.status===type ? '' : 'none';
+  });
+}
+
+// ─── SPLIT TYPE ─────────────────────────────
+function splitType(btn, type){
+  btn.closest('div').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
+  btn.classList.add('on');
+  var sd=document.getElementById('split-dollar');
+  var sp=document.getElementById('split-pct');
+  if(sd) sd.style.display = type==='dollar' ? 'grid' : 'none';
+  if(sp) sp.style.display = type==='pct' ? 'grid' : 'none';
+}
+
+// ─── COLLAPSIBLE GEMINI ─────────────────────
+var chatOpen = true;
+function toggleChat(){
+  chatOpen = !chatOpen;
+  var body = document.getElementById('chat-body');
+  var chevron = document.getElementById('chat-chevron');
+  if(body) body.style.display = chatOpen ? 'block' : 'none';
+  if(chevron) chevron.className = chatOpen ? 'ti ti-chevron-up' : 'ti ti-chevron-down';
+}
+
+// ─── DAYS REMAINING ─────────────────────────
+function updateTripDays(){
+  var start = new Date('2026-09-12');
+  var end   = new Date('2026-09-26');
+  var now   = new Date();
+  var badge = document.getElementById('trip-days-badge');
+  var bar   = document.getElementById('trip-progress-bar');
+  var stat  = document.getElementById('trip-stat-days');
+  var slbl  = document.getElementById('trip-stat-label');
+  var clbl  = document.getElementById('trip-countdown-label');
+  if(!badge) return;
+  if(now < start){
+    var daysAway = Math.ceil((start-now)/(1000*60*60*24));
+    badge.textContent = daysAway+' days away';
+    if(stat) stat.textContent = daysAway;
+    if(slbl) slbl.textContent = 'Days away';
+    if(bar) bar.style.width = '0%';
+    if(clbl) clbl.textContent = 'Departure countdown';
+  } else if(now <= end){
+    var total = Math.ceil((end-start)/(1000*60*60*24));
+    var elapsed = Math.ceil((now-start)/(1000*60*60*24));
+    var left = total - elapsed;
+    var pct = Math.round((elapsed/total)*100);
+    badge.textContent = 'Day '+elapsed+' of '+total;
+    if(stat) stat.textContent = left;
+    if(slbl) slbl.textContent = 'Days left';
+    if(bar) bar.style.width = pct+'%';
+    if(clbl) clbl.textContent = 'Trip in progress';
+  } else {
+    badge.textContent = 'Trip complete';
+    if(stat) stat.textContent = '✓';
+    if(slbl) slbl.textContent = 'Complete';
+    if(bar) bar.style.width = '100%';
+    if(clbl) clbl.textContent = 'Past trip';
+  }
+}
+
+// ─── ALERT BANNER ───────────────────────────
+function showAlert(){
+  var el = document.getElementById('alert-sheet');
+  if(el) el.style.display = 'flex';
+}
+function dismissAlert(){
+  var el = document.getElementById('alert-sheet');
+  if(el) el.style.display = 'none';
+}
+
+// ─── SMS TOGGLE ─────────────────────────────
+function toggleSMS(el){
+  el.classList.toggle('on');
+  var wrap = document.getElementById('sms-phone-wrap');
+  if(wrap) wrap.style.display = el.classList.contains('on') ? 'block' : 'none';
+}
+
+// Update time
+function updateTime(){
+  var now = new Date();
+  var h = now.getHours(); var m = now.getMinutes();
+  var str = h+':'+(m<10?'0':'')+m;
+  document.querySelectorAll('.sbar span:first-child').forEach(function(el){el.textContent=str;});
+  document.getElementById('home-time').textContent = str;
+}
+updateTime();
+setInterval(updateTime, 30000);
+</script>
+</body>
+</html>
