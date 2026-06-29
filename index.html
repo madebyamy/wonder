@@ -1772,6 +1772,31 @@ async function loadTrips(){
   renderHomeTrips();
 }
 
+// ── Render trips on profile screen ───────────────────────────────────────────
+function renderProfileTrips(){
+  var list = document.getElementById('prof-trips-list');
+  var countEl = document.getElementById('prof-trip-count');
+  if(!list) return;
+  if(countEl) countEl.textContent = userTrips.length;
+  if(userTrips.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:20px 16px;color:var(--muted);font-size:12px;">No trips yet — create one to get started!</div>';
+    return;
+  }
+  list.innerHTML = userTrips.map(function(t){
+    var color = t.color || '#b8a4ed';
+    var emoji = t.cover_emoji || '✈️';
+    var start = t.start_date ? new Date(t.start_date) : null;
+    var end = t.end_date ? new Date(t.end_date) : null;
+    var dateStr = start ? start.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+    if(start && end) dateStr += ' – '+end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    return '<div class="card" style="display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="openDbTrip(\''+t.id+'\')">'
+      +'<div style="width:36px;height:36px;border-radius:9px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;">'+emoji+'</div>'
+      +'<div style="flex:1;"><div style="font-size:13px;font-weight:600;">'+t.name+'</div><div style="font-size:10px;color:var(--muted);">'+dateStr+'</div></div>'
+      +'<i class="ti ti-chevron-right" style="font-size:16px;color:var(--muted);"></i>'
+      +'</div>';
+  }).join('');
+}
+
 // ── Render trips on home screen ───────────────────────────────────────────────
 function renderHomeTrips(){
   var container = document.getElementById('home-trips');
@@ -1980,6 +2005,7 @@ function go(name, skipHistory){
   var el = document.getElementById('s-'+name);
   if(el) el.classList.add('active');
   if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
+  if(name === 'profile') renderProfileTrips();
 }
 
 window.addEventListener('popstate', function(e){
