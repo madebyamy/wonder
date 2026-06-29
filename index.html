@@ -1924,6 +1924,7 @@ async function saveNewTrip() {
 // ── Trip data state ──────────────────────────────────────────────────────────
 var currentTripId = null;
 var editingPlanId = null;
+var planItemCache = {};
 var currentTripStartDate = null;
 var currentDayNum = 12;
 
@@ -1985,14 +1986,15 @@ async function loadDayPlans(dayNum) {
     listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — tap a button below to add</div>';
     return;
   }
+  planItemCache = {};
+  items.forEach(function(item){ planItemCache[item.data.id] = item; });
   listEl.innerHTML = items.map(renderPlanItem).join('');
 }
 
 function renderPlanItem(item) {
-  var actions = function(type, id, dataJson) {
-    var safe = dataJson.replace(/'/g,"&#39;");
+  var actions = function(type, id) {
     return '<div style="display:flex;gap:8px;align-items:center;">'
-      +'<button onclick="openEditSheet(\''+type+'\',\''+safe+'\')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Edit">✏️</button>'
+      +'<button onclick="openEditSheet(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Edit">✏️</button>'
       +'<button onclick="deletePlanItem(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Delete">✕</button>'
       +'</div>';
   };
@@ -2009,7 +2011,7 @@ function renderPlanItem(item) {
       +(dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr:'')+'</div>' : '')
       +(f.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+f.notes+'</div>' : '')
       +'</div>'
-      +actions('flights', f.id, JSON.stringify(f))
+      +actions('flights', f.id)
       +'</div></div>';
   }
   if (item.type === 'hotel') {
@@ -2023,7 +2025,7 @@ function renderPlanItem(item) {
       +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
       +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
       +'</div>'
-      +actions('hotels', h.id, JSON.stringify(h))
+      +actions('hotels', h.id)
       +'</div></div>';
   }
   if (item.type === 'excursion') {
@@ -2038,15 +2040,17 @@ function renderPlanItem(item) {
       +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
       +'</div>'
-      +actions('excursions', e.id, JSON.stringify(e))
+      +actions('excursions', e.id)
       +'</div></div>';
   }
   return '';
 }
 
-function openEditSheet(type, dataJson) {
-  var d = JSON.parse(dataJson);
-  editingPlanId = d.id;
+function openEditSheet(type, id) {
+  var item = planItemCache[id];
+  if (!item) return;
+  var d = item.data;
+  editingPlanId = id;
   if (type === 'flights') {
     document.getElementById('f-airline').value = d.airline || '';
     document.getElementById('f-number').value = d.flight_number || '';
@@ -2056,7 +2060,7 @@ function openEditSheet(type, dataJson) {
     document.getElementById('f-arr').value = d.arrival_time ? d.arrival_time.slice(0,5) : '';
     document.getElementById('f-notes').value = d.notes || '';
     document.querySelector('#add-flight-sheet .btn-d').textContent = 'Save changes →';
-    openAddSheet('flight');
+    document.getElementById('add-flight-sheet').style.display = 'flex';
   } else if (type === 'hotels') {
     document.getElementById('h-name').value = d.hotel_name || '';
     document.getElementById('h-addr').value = d.address || '';
@@ -2064,7 +2068,7 @@ function openEditSheet(type, dataJson) {
     document.getElementById('h-out').value = d.checkout_date || '';
     document.getElementById('h-conf').value = d.confirmation || '';
     document.querySelector('#add-hotel-sheet .btn-d').textContent = 'Save changes →';
-    openAddSheet('hotel');
+    document.getElementById('add-hotel-sheet').style.display = 'flex';
   } else if (type === 'excursions') {
     document.getElementById('e-title').value = d.title || '';
     document.getElementById('e-time').value = d.start_time ? d.start_time.slice(0,5) : '';
@@ -2072,7 +2076,7 @@ function openEditSheet(type, dataJson) {
     document.getElementById('e-desc').value = d.description || '';
     document.getElementById('e-ref').value = d.booking_ref || '';
     document.querySelector('#add-excursion-sheet .btn-d').textContent = 'Save changes →';
-    openAddSheet('excursion');
+    document.getElementById('add-excursion-sheet').style.display = 'flex';
   }
 }
 
