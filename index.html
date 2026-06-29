@@ -817,6 +817,9 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 <!-- ════════════════════════════════════
      ALERT BANNER (bottom sheet)
 ════════════════════════════════════ -->
+<!-- Hidden photo input for log -->
+<input type="file" id="log-photo-input" accept="image/*" multiple style="display:none;" onchange="logPhotoChosen(this)">
+
 <!-- ═══════════ ADD FLIGHT SHEET ═══════════ -->
 <!-- ── Trip confirm modal ───────────────────────────────────────────────── -->
 <div id="trip-confirm-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
@@ -1493,6 +1496,12 @@ function selectDay(pill, dayNum, label, city){
   all.forEach(function(el){ el.style.display='none'; });
   var target = document.getElementById('day-content-'+dayNum);
   if(target) target.style.display='block';
+  // reload notes if panel is open
+  if(planNotesOpen){
+    var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
+    var ta = document.getElementById('plan-notes-text');
+    if(ta) ta.value = localStorage.getItem(key)||'';
+  }
   // load DB plans for this day
   loadDayPlans(dayNum);
 }
@@ -1806,6 +1815,99 @@ function renderExpenses() {
 var currentLogDay = 1;
 var logTripDays = []; // [{num, date, label, weekday}]
 
+// ── Location → flag/icon ──────────────────────────────────────────────────────
+function getLocationIcon(loc){
+  if(!loc) return '🌍';
+  var l = loc.toLowerCase();
+  var map = [
+    ['italy','🇮🇹'],['rome','🇮🇹'],['florence','🇮🇹'],['venice','🇮🇹'],['milan','🇮🇹'],['naples','🇮🇹'],['sicily','🇮🇹'],['amalfi','🇮🇹'],
+    ['france','🇫🇷'],['paris','🇫🇷'],['nice','🇫🇷'],['lyon','🇫🇷'],['marseille','🇫🇷'],['bordeaux','🇫🇷'],
+    ['spain','🇪🇸'],['madrid','🇪🇸'],['barcelona','🇪🇸'],['seville','🇪🇸'],['granada','🇪🇸'],['ibiza','🇪🇸'],
+    ['japan','🇯🇵'],['tokyo','🇯🇵'],['kyoto','🇯🇵'],['osaka','🇯🇵'],['hiroshima','🇯🇵'],
+    ['uk','🇬🇧'],['london','🇬🇧'],['england','🇬🇧'],['edinburgh','🇬🇧'],['manchester','🇬🇧'],
+    ['greece','🇬🇷'],['athens','🇬🇷'],['santorini','🇬🇷'],['mykonos','🇬🇷'],['crete','🇬🇷'],
+    ['portugal','🇵🇹'],['lisbon','🇵🇹'],['porto','🇵🇹'],['algarve','🇵🇹'],
+    ['germany','🇩🇪'],['berlin','🇩🇪'],['munich','🇩🇪'],['hamburg','🇩🇪'],
+    ['netherlands','🇳🇱'],['amsterdam','🇳🇱'],
+    ['thailand','🇹🇭'],['bangkok','🇹🇭'],['phuket','🇹🇭'],['chiang mai','🇹🇭'],
+    ['indonesia','🇮🇩'],['bali','🇮🇩'],['jakarta','🇮🇩'],
+    ['mexico','🇲🇽'],['cancun','🇲🇽'],['mexico city','🇲🇽'],['oaxaca','🇲🇽'],
+    ['usa','🇺🇸'],['new york','🇺🇸'],['los angeles','🇺🇸'],['miami','🇺🇸'],['chicago','🇺🇸'],['hawaii','🇺🇸'],
+    ['australia','🇦🇺'],['sydney','🇦🇺'],['melbourne','🇦🇺'],
+    ['morocco','🇲🇦'],['marrakech','🇲🇦'],['fez','🇲🇦'],
+    ['turkey','🇹🇷'],['istanbul','🇹🇷'],['cappadocia','🇹🇷'],
+    ['croatia','🇭🇷'],['dubrovnik','🇭🇷'],['split','🇭🇷'],
+    ['austria','🇦🇹'],['vienna','🇦🇹'],['salzburg','🇦🇹'],
+    ['switzerland','🇨🇭'],['zurich','🇨🇭'],['geneva','🇨🇭'],['interlaken','🇨🇭'],
+    ['canada','🇨🇦'],['toronto','🇨🇦'],['vancouver','🇨🇦'],['montreal','🇨🇦'],
+    ['brazil','🇧🇷'],['rio','🇧🇷'],['são paulo','🇧🇷'],
+    ['india','🇮🇳'],['mumbai','🇮🇳'],['delhi','🇮🇳'],['jaipur','🇮🇳'],['goa','🇮🇳'],
+    ['china','🇨🇳'],['beijing','🇨🇳'],['shanghai','🇨🇳'],
+    ['dubai','🇦🇪'],['abu dhabi','🇦🇪'],
+    ['singapore','🇸🇬'],['ireland','🇮🇪'],['dublin','🇮🇪'],
+    ['iceland','🇮🇸'],['reykjavik','🇮🇸'],
+    ['peru','🇵🇪'],['lima','🇵🇪'],['cusco','🇵🇪'],
+    ['argentina','🇦🇷'],['buenos aires','🇦🇷'],
+    ['egypt','🇪🇬'],['cairo','🇪🇬'],
+    ['south africa','🇿🇦'],['cape town','🇿🇦'],
+    ['new zealand','🇳🇿'],['auckland','🇳🇿'],['queenstown','🇳🇿'],
+    ['vietnam','🇻🇳'],['hanoi','🇻🇳'],['hoi an','🇻🇳'],['ho chi minh','🇻🇳'],
+    ['cambodia','🇰🇭'],['siem reap','🇰🇭'],
+    ['maldives','🇲🇻'],['costa rica','🇨🇷'],
+    ['norway','🇳🇴'],['oslo','🇳🇴'],['bergen','🇳🇴'],
+    ['sweden','🇸🇪'],['stockholm','🇸🇪'],
+    ['denmark','🇩🇰'],['copenhagen','🇩🇰'],
+    ['czech','🇨🇿'],['prague','🇨🇿'],
+    ['hungary','🇭🇺'],['budapest','🇭🇺'],
+    ['poland','🇵🇱'],['warsaw','🇵🇱'],['krakow','🇵🇱'],
+    ['south korea','🇰🇷'],['seoul','🇰🇷'],
+    ['philippines','🇵🇭'],['manila','🇵🇭'],
+    ['malaysia','🇲🇾'],['kuala lumpur','🇲🇾'],
+  ];
+  for(var i=0;i<map.length;i++){ if(l.indexOf(map[i][0])>=0) return map[i][1]; }
+  return '📍';
+}
+
+// ── Log photos ────────────────────────────────────────────────────────────────
+function logPhotosKey(dayNum){ return 'wander_photos_'+(currentTripId||'x')+'_'+dayNum; }
+function logGetPhotos(dayNum){ try{ return JSON.parse(localStorage.getItem(logPhotosKey(dayNum))||'[]'); }catch(e){ return []; } }
+function logSavePhotos(dayNum, arr){ localStorage.setItem(logPhotosKey(dayNum), JSON.stringify(arr)); }
+
+function logTriggerPhoto(){
+  var inp = document.getElementById('log-photo-input');
+  if(inp) inp.click();
+}
+
+function logPhotoChosen(input){
+  var files = Array.from(input.files);
+  if(!files.length) return;
+  var dayNum = currentLogDay;
+  var photos = logGetPhotos(dayNum);
+  var toRead = files.length;
+  files.forEach(function(file){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      photos.push(e.target.result);
+      toRead--;
+      if(toRead===0){
+        logSavePhotos(dayNum, photos);
+        openLogDay(dayNum);
+        renderLogOverview();
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function logDeletePhoto(dayNum, idx){
+  var photos = logGetPhotos(dayNum);
+  photos.splice(idx,1);
+  logSavePhotos(dayNum, photos);
+  openLogDay(dayNum);
+  renderLogOverview();
+}
+
 function buildLogTripDays(){
   logTripDays = [];
   var trip = userTrips.find(function(t){ return t.id===currentTripId; });
@@ -1835,25 +1937,44 @@ function renderLogOverview(){
     return;
   }
   var gradients = [
-    'linear-gradient(135deg,#e8e0f5,#d8d0f0)',
-    'linear-gradient(135deg,#ffeadc,#ffd8c0)',
-    'linear-gradient(135deg,#d8f0e8,#c4e8d8)',
-    'linear-gradient(135deg,#e8f0d8,#d4e8c0)',
-    'linear-gradient(135deg,#f0e8d8,#e8d4c0)',
-    'linear-gradient(135deg,#d8e8f8,#c4d8f0)'
+    'linear-gradient(135deg,#ede0f7 0%,#d8cff0 100%)',
+    'linear-gradient(135deg,#ffecd8 0%,#ffd6b0 100%)',
+    'linear-gradient(135deg,#d4f0e4 0%,#b8e8d0 100%)',
+    'linear-gradient(135deg,#fde8e8 0%,#f5cece 100%)',
+    'linear-gradient(135deg,#e0eeff 0%,#c8dbff 100%)',
+    'linear-gradient(135deg,#fdf4d0 0%,#f5e8a8 100%)',
   ];
   el.innerHTML = logTripDays.map(function(day, i){
-    var key = 'wander_journal_'+(currentTripId||'x')+'_'+day.num;
-    var entry = localStorage.getItem(key)||'';
+    var jKey = 'wander_journal_'+(currentTripId||'x')+'_'+day.num;
+    var entry = localStorage.getItem(jKey)||'';
     var loc = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num)||'';
+    var mood = localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+day.num)||'';
+    var photos = logGetPhotos(day.num);
     var outfitCount = suitcaseItems.filter(function(it){ return String(it.day)===String(day.num); }).length;
-    var bg = entry ? gradients[i % gradients.length] : 'var(--card2)';
-    var border = entry ? '' : 'border:2px dashed var(--card3);';
-    return '<div onclick="logView(\'daily\');openLogDay('+day.num+')" style="background:'+bg+';'+border+'border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">'
-      +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;opacity:.6;">Day '+day.num+(loc?' · '+loc:'')+'</div>'
-      +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;line-height:1.2;">'+(entry ? '"'+entry.substring(0,60)+(entry.length>60?'…':'')+'"' : day.label)+'</div>'
-      +(entry?'':'<div style="font-size:11px;opacity:.5;">Tap to write about this day →</div>')
-      +(outfitCount ? '<div style="margin-top:6px;font-size:10px;font-weight:600;opacity:.7;">👗 '+outfitCount+' outfit'+(outfitCount>1?'s':'')+'</div>' : '')
+    var flag = getLocationIcon(loc);
+    var hasContent = entry || photos.length;
+    var bg = hasContent ? gradients[i % gradients.length] : 'var(--card2)';
+    var border = hasContent ? '' : 'border:2px dashed var(--card3);';
+    var thumb = photos.length ? '<div style="width:56px;height:56px;border-radius:10px;background:url(\''+photos[0]+'\') center/cover no-repeat;flex:0 0 auto;box-shadow:0 2px 8px rgba(0,0,0,.15);"></div>' : '';
+    var chips = '';
+    if(photos.length) chips += '<span style="font-size:10px;font-weight:600;opacity:.75;">📷 '+photos.length+'</span>';
+    if(outfitCount) chips += '<span style="font-size:10px;font-weight:600;opacity:.75;">👗 '+outfitCount+'</span>';
+    if(mood) chips += '<span style="font-size:14px;">'+mood+'</span>';
+    return '<div onclick="logView(\'daily\');openLogDay('+day.num+')" style="background:'+bg+';'+border+'border-radius:18px;padding:15px;margin-bottom:10px;cursor:pointer;">'
+      +'<div style="display:flex;align-items:flex-start;gap:11px;">'
+      +(thumb ? thumb : '')
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;">'
+      +'<span style="font-size:16px;">'+flag+'</span>'
+      +'<span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;opacity:.6;">Day '+day.num+(loc?' · '+loc:'')+'</span>'
+      +'</div>'
+      +'<div style="font-size:14px;font-weight:700;line-height:1.3;margin-bottom:4px;">'
+      +(entry ? entry.substring(0,70)+(entry.length>70?'…':'') : '<span style="opacity:.45;">'+day.label+' — tap to write ✍️</span>')
+      +'</div>'
+      +(chips ? '<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">'+chips+'</div>' : '')
+      +'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:var(--muted);opacity:.5;white-space:nowrap;">'+day.short+'</div>'
+      +'</div>'
       +'</div>';
   }).join('');
 }
@@ -1872,44 +1993,70 @@ async function openLogDay(dayNum){
   var dayMeta = logTripDays.find(function(d){ return d.num===dayNum; });
   if(!dayMeta && logTripDays.length){ buildLogTripDays(); dayMeta = logTripDays.find(function(d){ return d.num===dayNum; }); }
   var label = dayMeta ? dayMeta.label : 'Day '+dayNum;
-  var loc   = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum)||'';
+  var loc = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum)||'';
+  var flag = getLocationIcon(loc);
   document.getElementById('log-day-label').textContent = label;
-  document.getElementById('log-day-city').textContent  = loc || '';
+  document.getElementById('log-day-city').textContent = loc ? flag+' '+loc : '';
 
   var journalKey = 'wander_journal_'+(currentTripId||'x')+'_'+dayNum;
   var savedEntry = localStorage.getItem(journalKey)||'';
+  var savedMood = localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum)||'';
+  var photos = logGetPhotos(dayNum);
 
-  // Fetch plans for this day
+  // Fetch plans
   var plansHtml = '';
   if(currentTripId && currentUser){
     var dateStr = getDayDateStr(dayNum);
     var [fr,hr,er] = await Promise.all([
-      sb.from('flights').select('airline,flight_number,departure_time,origin,destination').eq('trip_id',currentTripId).eq('flight_date',dateStr),
-      sb.from('hotels').select('hotel_name,checkin_date').eq('trip_id',currentTripId).lte('checkin_date',dateStr).gte('checkout_date',dateStr),
-      sb.from('excursions').select('title,start_time').eq('trip_id',currentTripId).eq('excursion_date',dateStr)
+      sb.from('flights').select('airline,flight_number,departure_time,arrival_time,departure_airport,arrival_airport').eq('trip_id',currentTripId).eq('flight_date',dateStr),
+      sb.from('hotels').select('hotel_name,checkin_date,checkout_date').eq('trip_id',currentTripId).lte('checkin_date',dateStr).gte('checkout_date',dateStr),
+      sb.from('excursions').select('title,start_time,activity_type,cost').eq('trip_id',currentTripId).eq('excursion_date',dateStr).order('start_time')
     ]);
-    var planItems = [];
-    (fr.data||[]).forEach(function(f){ planItems.push('✈️ '+(f.airline||'')+' '+(f.flight_number||'')+' · '+(f.origin||'')+'→'+(f.destination||'')); });
-    (hr.data||[]).forEach(function(h){ planItems.push('🏨 '+h.hotel_name); });
-    (er.data||[]).forEach(function(e){ planItems.push('🎟️ '+(e.title||'Activity')+(e.start_time?' · '+e.start_time:'')); });
-    if(planItems.length){
-      plansHtml = '<div style="margin-bottom:13px;">'
-        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day\'s plans</div>'
-        +'<div style="display:flex;flex-direction:column;gap:5px;">'
-        +planItems.map(function(p){ return '<div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;font-size:12px;font-weight:600;">'+p+'</div>'; }).join('')
+    var timelineItems = [];
+    (fr.data||[]).forEach(function(f){
+      var dep = f.departure_time ? f.departure_time.slice(0,5) : '';
+      var arr = f.arrival_time ? f.arrival_time.slice(0,5) : '';
+      var route = (f.departure_airport||'')+(f.arrival_airport?' → '+f.arrival_airport:'');
+      timelineItems.push({sort:dep||'00:00', color:'rgba(74,122,222,.12)', dot:'#4a7ade',
+        icon:'✈️', title:(f.airline||'Flight')+(f.flight_number?' '+f.flight_number:''),
+        sub: (route?route+' ':'')+( dep?dep+(arr?' – '+arr:''):'')});
+    });
+    (hr.data||[]).forEach(function(h){
+      timelineItems.push({sort:'00:01', color:'rgba(100,190,160,.12)', dot:'#4ab890',
+        icon:'🏨', title:h.hotel_name, sub:'Staying here'});
+    });
+    (er.data||[]).forEach(function(e){
+      var t = e.start_time ? e.start_time.slice(0,5) : '';
+      var typeIcons = {Museum:'🏛️',Restaurant:'🍽️',Bar:'🍹',Tour:'🗺️',Transportation:'🚕',Shopping:'🛍️',Spa:'💆',Sport:'⚽',Entertainment:'🎭',Other:'✨'};
+      var ticon = e.activity_type ? (typeIcons[e.activity_type]||'🎟️') : '🎟️';
+      timelineItems.push({sort:t||'12:00', color:'rgba(232,185,74,.15)', dot:'#e8b94a',
+        icon:ticon, title:e.title, sub:(e.activity_type||'')+(t?' · '+t:'')+(e.cost?' · $'+parseFloat(e.cost).toFixed(0):'')});
+    });
+    if(timelineItems.length){
+      plansHtml = '<div style="margin-bottom:14px;">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;">Today\'s plans</div>'
+        +'<div style="display:flex;flex-direction:column;gap:7px;">'
+        +timelineItems.map(function(p){
+          return '<div style="display:flex;align-items:flex-start;gap:10px;background:'+p.color+';border-radius:13px;padding:10px 12px;">'
+            +'<span style="font-size:20px;flex:0 0 auto;line-height:1.3;">'+p.icon+'</span>'
+            +'<div style="flex:1;min-width:0;">'
+            +'<div style="font-size:12px;font-weight:700;line-height:1.3;">'+p.title+'</div>'
+            +(p.sub?'<div style="font-size:10px;color:var(--muted);margin-top:1px;">'+p.sub+'</div>':'')
+            +'</div></div>';
+        }).join('')
         +'</div></div>';
     }
   }
 
-  // Outfits for this day
+  // Outfits
   var dayOutfits = suitcaseItems.filter(function(i){ return String(i.day)===String(dayNum); });
   var outfitsHtml = '';
   if(dayOutfits.length){
-    outfitsHtml = '<div style="margin-bottom:13px;">'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">Outfits 👗</div>'
+    outfitsHtml = '<div style="margin-bottom:14px;">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">Outfits 👗</div>'
       +'<div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">'
       +dayOutfits.map(function(item){
-        var timeLabel = item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙';
+        var timeLabel = item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'All day';
         if(item.photo){
           return '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:url(\''+item.photo+'\') center/cover no-repeat;position:relative;">'
             +'<span style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.5);color:#fff;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:600;">'+timeLabel+'</span></div>';
@@ -1922,49 +2069,77 @@ async function openLogDay(dayNum){
       +'</div></div>';
   }
 
-  // Build the day content
-  document.getElementById('log-day-content').innerHTML =
-    // Header card
-    '<div style="background:var(--card2);border-radius:18px;padding:16px;margin-bottom:11px;">'
-    +'<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;">Day '+dayNum+(loc?' · '+loc:'')+'</div>'
-    +'<div style="font-size:18px;font-weight:800;line-height:1.2;margin-bottom:2px;">'+label+'</div>'
+  // Photos
+  var photosHtml = '<div style="margin-bottom:14px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Photos 📷</div>'
+    +'<button onclick="logTriggerPhoto()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:4px 10px;cursor:pointer;font-family:inherit;">+ Add</button>'
     +'</div>'
+    +'<div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">';
+  if(photos.length){
+    photos.forEach(function(src,idx){
+      photosHtml += '<div style="flex:0 0 auto;position:relative;">'
+        +'<div style="width:90px;height:90px;border-radius:12px;background:url(\''+src+'\') center/cover no-repeat;box-shadow:0 2px 8px rgba(0,0,0,.12);"></div>'
+        +'<button onclick="logDeletePhoto('+dayNum+','+idx+')" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.55);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>'
+        +'</div>';
+    });
+  }
+  photosHtml += '<button onclick="logTriggerPhoto()" style="flex:0 0 auto;width:90px;height:90px;border-radius:12px;border:2px dashed var(--card3);background:var(--card2);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);">'
+    +'<i class="ti ti-camera" style="font-size:22px;"></i>'
+    +'<span style="font-size:10px;font-weight:600;">Add photo</span>'
+    +'</button>'
+    +'</div></div>';
 
-    // Plans
-    + plansHtml
-
-    // Outfits
-    + outfitsHtml
-
-    // Journal entry
-    +'<div style="margin-bottom:11px;">'
-    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>'
+  // Journal entry
+  var moodEmojis = ['😴','😊','😍','🤩','🥹'];
+  var entryHtml = '<div style="margin-bottom:14px;">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">My journal ✍️</div>'
     +(savedEntry
-      ? '<div id="log-entry-display" style="background:var(--card2);border-radius:14px;padding:13px;">'
-          +'<p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"'+savedEntry+'"</p>'
-          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>'
+      ? '<div id="log-entry-display" style="background:var(--card2);border-radius:14px;padding:14px;">'
+          +'<p style="font-size:13px;line-height:1.8;color:var(--ink);margin:0 0 10px;white-space:pre-wrap;">'+savedEntry+'</p>'
+          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit</button>'
           +'</div>'
           +'<div id="log-entry-edit" style="display:none;">'
-          +'<textarea id="log-entry-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">'+savedEntry+'</textarea>'
+          +'<textarea id="log-entry-text" class="inp" rows="7" style="resize:none;line-height:1.8;margin-bottom:8px;font-size:13px;">'+savedEntry+'</textarea>'
           +'<div style="display:flex;gap:7px;"><button onclick="logCancel()" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave()" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save changes</button></div>'
           +'</div>'
-      : '<div id="log-entry-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;">'
-          +'<p id="log-entry-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>'
-          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>'
+      : '<div id="log-entry-display" style="display:none;background:var(--card2);border-radius:14px;padding:14px;">'
+          +'<p id="log-entry-saved" style="font-size:13px;line-height:1.8;color:var(--ink);margin:0 0 10px;white-space:pre-wrap;"></p>'
+          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit</button>'
           +'</div>'
           +'<div id="log-entry-edit">'
-          +'<textarea id="log-entry-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about this day..."></textarea>'
+          +'<textarea id="log-entry-text" class="inp" rows="7" style="resize:none;line-height:1.8;margin-bottom:8px;font-size:13px;" placeholder="What happened today? What did you see, eat, feel? Write it all down... ✍️"></textarea>'
           +'<div style="display:flex;gap:7px;"><button onclick="logCancel()" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave()" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button></div>'
           +'</div>'
     )
-    +'</div>'
+    +'</div>';
 
-    // Day rating
-    +'<div style="background:var(--card2);border-radius:13px;padding:11px;">'
-    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>'
-    +'<div style="display:flex;gap:8px;justify-content:center;">'
-    +['😴','😊','😍','🤩','🥹'].map(function(e){ return '<span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">'+e+'</span>'; }).join('')
+  // Mood
+  var moodHtml = '<div style="background:var(--card2);border-radius:14px;padding:13px;margin-bottom:14px;">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:10px;">How was your day?</div>'
+    +'<div style="display:flex;gap:8px;justify-content:space-around;">'
+    +moodEmojis.map(function(e){
+      var active = savedMood===e;
+      return '<span data-mood="'+e+'" onclick="logRate(this,'+dayNum+')" style="font-size:28px;cursor:pointer;transition:.15s;'+(active?'opacity:1;transform:scale(1.2);':'opacity:.35;')+'" title="'+e+'">'+e+'</span>';
+    }).join('')
     +'</div></div>';
+
+  // Assemble
+  var headerGradients = ['linear-gradient(135deg,#ede0f7,#d8cff0)','linear-gradient(135deg,#ffecd8,#ffd6b0)','linear-gradient(135deg,#d4f0e4,#b8e8d0)','linear-gradient(135deg,#fde8e8,#f5cece)','linear-gradient(135deg,#e0eeff,#c8dbff)','linear-gradient(135deg,#fdf4d0,#f5e8a8)'];
+  var hbg = headerGradients[(dayNum-1) % headerGradients.length];
+
+  document.getElementById('log-day-content').innerHTML =
+    '<div style="background:'+hbg+';border-radius:20px;padding:18px;margin-bottom:14px;text-align:center;">'
+    +'<div style="font-size:40px;margin-bottom:6px;">'+flag+'</div>'
+    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.55;margin-bottom:3px;">Day '+dayNum+(loc?' · '+loc:'')+'</div>'
+    +'<div style="font-size:19px;font-weight:800;line-height:1.2;">'+label+'</div>'
+    +(savedMood?'<div style="font-size:28px;margin-top:6px;">'+savedMood+'</div>':'')
+    +'</div>'
+    + plansHtml
+    + outfitsHtml
+    + photosHtml
+    + entryHtml
+    + moodHtml;
 
   document.querySelector('#s-trip .scroll').scrollTop = 0;
 }
@@ -2000,9 +2175,12 @@ function logSave(){
   renderLogOverview();
 }
 
-function logRate(el){
-  el.parentElement.querySelectorAll('span').forEach(function(s){ s.style.opacity='.4'; });
+function logRate(el, dayNum){
+  el.parentElement.querySelectorAll('span').forEach(function(s){ s.style.opacity='.35'; s.style.transform=''; });
   el.style.opacity='1';
+  el.style.transform='scale(1.2)';
+  localStorage.setItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum, el.dataset.mood);
+  renderLogOverview();
 }
 
 function suitcaseDay(pill, dayNum, label){
