@@ -373,59 +373,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       </div>
     </div>
 
-      <!-- Day picker -->
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;">
-        <div class="dp on" onclick="selectDay(this,12,'Friday, Sep 12','rome')">
-          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
-          <div style="font-size:14px;font-weight:700;">12</div>
-          <div style="font-size:9px;">Fri</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,13,'Saturday, Sep 13','rome')">
-          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
-          <div style="font-size:14px;font-weight:700;">13</div>
-          <div style="font-size:9px;">Sat</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,14,'Sunday, Sep 14','rome')">
-          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
-          <div style="font-size:14px;font-weight:700;">14</div>
-          <div style="font-size:9px;">Sun</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,15,'Monday, Sep 15','rome')">
-          <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
-          <div style="font-size:14px;font-weight:700;">15</div>
-          <div style="font-size:9px;">Mon</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,16,'Tuesday, Sep 16','naples')" style="border:2px solid var(--coral);">
-          <div style="font-size:8px;color:#cc3a20;font-weight:700;">✈️→NAP</div>
-          <div style="font-size:14px;font-weight:700;">16</div>
-          <div style="font-size:9px;">Tue</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,17,'Wednesday, Sep 17','naples')">
-          <div style="font-size:8px;color:#7a4030;font-weight:700;">NAPLES</div>
-          <div style="font-size:14px;font-weight:700;">17</div>
-          <div style="font-size:9px;">Wed</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,18,'Thursday, Sep 18','amalfi')">
-          <div style="font-size:8px;color:#0a4a30;font-weight:700;">AMALFI</div>
-          <div style="font-size:14px;font-weight:700;">18</div>
-          <div style="font-size:9px;">Thu</div>
-        </div>
-        <div class="dp" onclick="selectDay(this,19,'Friday, Sep 19','amalfi')">
-          <div style="font-size:8px;color:#0a4a30;font-weight:700;">AMALFI</div>
-          <div style="font-size:14px;font-weight:700;">19</div>
-          <div style="font-size:9px;">Fri</div>
-        </div>
-      </div>
-
-      <div style="font-size:14px;font-weight:700;margin-bottom:11px;" id="plans-day-title">Friday, September 12</div>
-
       <!-- ── DB PLANS SECTION (live data) ── -->
       <div id="plans-db-section" style="margin-bottom:4px;">
         <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;">
           <div id="plans-db-empty" style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;">
             <div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Your trip plans appear here</div>
-            <div style="font-size:11px;color:var(--muted);">Create a trip and use the buttons below to add flights, hotels & activities</div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Nothing planned for this day yet</div>
+            <div style="font-size:11px;color:var(--muted);">Use the buttons below to add flights, hotels & activities</div>
           </div>
         </div>
         <div style="display:flex;gap:6px;margin-bottom:14px;">
@@ -433,172 +387,20 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
           <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
           <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
         </div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;">
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
-          <span style="font-size:9px;font-weight:700;letter-spacing:.8px;color:var(--muted);">DEMO REFERENCE</span>
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
+
+        <!-- Notes section (collapsible) -->
+        <div style="margin-bottom:14px;">
+          <button onclick="togglePlanNotes()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:none;border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;">
+            <span style="font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;"><i class="ti ti-notes" style="font-size:14px;color:var(--muted);"></i> Day notes</span>
+            <i id="plan-notes-chevron" class="ti ti-chevron-down" style="font-size:14px;color:var(--muted);transition:transform .2s;"></i>
+          </button>
+          <div id="plan-notes-body" style="display:none;background:var(--card2);border-radius:0 0 12px 12px;padding:0 13px 13px;margin-top:-4px;">
+            <textarea id="plan-notes-text" class="inp" rows="4" style="resize:none;line-height:1.6;margin-bottom:8px;margin-top:8px;" placeholder="Add notes for this day — reminders, ideas, links..."></textarea>
+            <button onclick="savePlanNotes()" class="btn-d" style="width:100%;padding:9px;font-size:12px;">Save notes →</button>
+          </div>
         </div>
+
       </div>
-
-      <!-- (demo content removed) -->
-      <div id="day-content-12" style="display:none;">
-
-        <!-- FLIGHT with duration -->
-        <div style="background:var(--sky);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--skylt);"><i class="ti ti-plane" style="font-size:12px;"></i> International flight</div>
-            <span style="background:rgba(255,255,255,.2);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;">⏱ 11h 35m</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">PHX</div><div style="font-size:10px;color:var(--skylt);">8:40 AM</div></div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:3px;margin-bottom:3px;"><div style="flex:1;height:1px;background:rgba(147,197,253,.4);"></div><i class="ti ti-plane" style="font-size:12px;color:var(--skylt);"></i><div style="flex:1;height:1px;background:rgba(147,197,253,.4);"></div></div>
-              <div style="text-align:center;font-size:9px;color:var(--skylt);">Direct · +1 day</div>
-            </div>
-            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">FCO</div><div style="font-size:10px;color:var(--skylt);">9:15 AM</div></div>
-          </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px;">
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">AA 7842</span>
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">American Airlines</span>
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Conf: XK42A8</span>
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Seats 14A–D</span>
-          </div>
-          <!-- check-in reminder chip -->
-          <div style="background:rgba(255,255,255,.12);border-radius:9px;padding:7px 10px;display:flex;align-items:center;gap:7px;">
-            <i class="ti ti-bell" style="font-size:14px;color:var(--skylt);"></i>
-            <div style="flex:1;font-size:11px;color:#fffaf0;">Online check-in opens <strong>Sep 11 at 8:40 AM</strong></div>
-            <span style="background:#fffaf0;color:var(--sky);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;">✓ To-do added</span>
-          </div>
-        </div>
-
-        <!-- HOTEL with check-in timeline -->
-        <div class="card" style="margin-bottom:9px;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Hotel</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:2px;">Hotel de Russie</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:9px;">Via del Babuino 9, Rome · 4 nights</div>
-          <!-- timeline -->
-          <div style="display:flex;flex-direction:column;gap:0;">
-            <div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-bottom:1px solid var(--card2);">
-              <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);">3:00<br>PM</div>
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex:0 0 auto;"></div>
-              <div style="font-size:12px;font-weight:600;">Check-in</div>
-              <span style="margin-left:auto;background:rgba(74,122,222,.12);color:var(--blue);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;">Today</span>
-            </div>
-            <div style="display:flex;align-items:center;gap:9px;padding:6px 0;">
-              <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);">11:00<br>AM</div>
-              <div style="width:10px;height:10px;border-radius:50%;background:var(--card3);flex:0 0 auto;"></div>
-              <div style="font-size:12px;color:var(--muted);">Check-out</div>
-              <span style="margin-left:auto;font-size:10px;color:var(--muted);">Sep 16</span>
-            </div>
-          </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:7px;">
-            <span style="background:var(--card2);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">HTL-29847</span>
-            <span style="background:var(--card2);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Breakfast included</span>
-          </div>
-        </div>
-
-        <!-- EXCURSIONS -->
-        <div class="card" style="margin-bottom:9px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-map-pin" style="font-size:12px;"></i> Excursions</div>
-            <button class="btn-ghost">+ Add</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:7px;">
-            <div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--lav);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;color:#2a1a50;white-space:nowrap;">2:00 PM</div><div style="font-size:13px;">Colosseum & Forum tour</div></div>
-            <div style="display:flex;align-items:center;gap:8px;"><div style="background:var(--peach);border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;color:#6b3d1f;white-space:nowrap;">7:30 PM</div><div style="font-size:13px;">Dinner — Osteria dell'Enoteca</div></div>
-          </div>
-        </div>
-
-        <!-- OUTFITS FOR TODAY (from suitcase) -->
-        <div class="card" style="margin-bottom:9px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-hanger" style="font-size:12px;"></i> Outfits today</div>
-            <button class="btn-ghost" onclick="tab(document.querySelector('.tbtn:nth-child(3)'),'suitcase')">Edit →</button>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <!-- Day outfit -->
-            <div style="display:flex;align-items:center;gap:9px;background:rgba(255,200,120,.12);border-radius:10px;padding:8px 10px;">
-              <div style="font-size:16px;">🌅</div>
-              <div style="flex:1;">
-                <div style="font-size:10px;font-weight:700;color:#c8a020;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Daytime</div>
-                <div style="font-size:12px;font-weight:600;">Black linen top + wide-leg trousers</div>
-                <div style="font-size:10px;color:var(--muted);">White sneakers</div>
-              </div>
-              <div style="width:36px;height:36px;border-radius:8px;background:var(--card3);display:flex;align-items:center;justify-content:center;"><i class="ti ti-shirt" style="font-size:16px;color:#9a9a9a;"></i></div>
-            </div>
-            <!-- Evening outfit -->
-            <div style="display:flex;align-items:center;gap:9px;background:rgba(100,80,180,.08);border-radius:10px;padding:8px 10px;">
-              <div style="font-size:16px;">🌙</div>
-              <div style="flex:1;">
-                <div style="font-size:10px;font-weight:700;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Evening</div>
-                <div style="font-size:12px;font-weight:600;">Navy wrap dress</div>
-                <div style="font-size:10px;color:var(--muted);">Black heels · Gold earrings</div>
-              </div>
-              <div style="width:36px;height:36px;border-radius:8px;background:#e8e0f5;display:flex;align-items:center;justify-content:center;"><i class="ti ti-shirt" style="font-size:16px;color:#9a9a9a;"></i></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TODAY'S EXPENSES -->
-        <div class="card">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;"><i class="ti ti-coins" style="font-size:12px;"></i> Today's expenses</div>
-            <span style="font-size:13px;font-weight:700;">$380</span>
-          </div>
-          <div class="exp-row"><div class="eicon" style="background:var(--lav);">🍝</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;">Dinner</div><div style="font-size:10px;color:var(--muted);">Amy paid · ÷ 4</div></div><div style="font-size:13px;font-weight:700;">$240</div></div>
-          <div class="exp-row" style="border:none;"><div class="eicon" style="background:var(--mint);">🎟️</div><div style="flex:1;"><div style="font-size:12px;font-weight:600;">Colosseum tickets</div><div style="font-size:10px;color:var(--muted);">Amy paid · just me</div></div><div style="font-size:13px;font-weight:700;">$140</div></div>
-          <button class="btn-d" style="width:100%;margin-top:10px;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="tab(document.querySelector('.tbtn:nth-child(6)'),'expenses')"><i class="ti ti-plus" style="font-size:13px;"></i> Add expense</button>
-        </div>
-      </div>
-
-      <div id="day-content-16" style="display:none;">
-        <!-- Internal flight card -->
-        <div style="background:var(--teal);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--mint);"><i class="ti ti-plane" style="font-size:12px;"></i> Internal flight</div>
-            <span style="background:rgba(255,255,255,.2);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;">⏱ 1h 05m</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">FCO</div><div style="font-size:10px;color:var(--mint);">10:00 AM</div><div style="font-size:9px;color:var(--mint);">Rome</div></div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:3px;margin-bottom:3px;"><div style="flex:1;height:1px;background:rgba(164,212,197,.4);"></div><i class="ti ti-plane" style="font-size:12px;color:var(--mint);"></i><div style="flex:1;height:1px;background:rgba(164,212,197,.4);"></div></div>
-              <div style="text-align:center;font-size:9px;color:var(--mint);">Alitalia</div>
-            </div>
-            <div style="text-align:center;"><div style="font-size:22px;font-weight:700;color:#fffaf0;letter-spacing:-.8px;">NAP</div><div style="font-size:10px;color:var(--mint);">11:05 AM</div><div style="font-size:9px;color:var(--mint);">Naples</div></div>
-          </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">AZ 1234</span>
-            <span style="background:rgba(255,255,255,.15);color:#fffaf0;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:600;">Conf: IT9987</span>
-          </div>
-        </div>
-        <!-- Hotel check-out (Rome) -->
-        <div class="card" style="margin-bottom:9px;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#cc3a3a;margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Check-out today</div>
-          <div style="display:flex;align-items:center;gap:9px;">
-            <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:#cc3a3a;">11:00<br>AM</div>
-            <div style="width:10px;height:10px;border-radius:50%;background:#cc3a3a;flex:0 0 auto;"></div>
-            <div><div style="font-size:13px;font-weight:700;">Hotel de Russie — Rome</div><div style="font-size:10px;color:var(--muted);">Leave luggage at concierge until taxi</div></div>
-          </div>
-        </div>
-        <!-- Hotel check-in (Naples) -->
-        <div class="card" style="margin-bottom:9px;">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--blue);margin-bottom:9px;"><i class="ti ti-building" style="font-size:12px;"></i> Check-in today</div>
-          <div style="display:flex;align-items:center;gap:9px;">
-            <div style="width:34px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);">3:00<br>PM</div>
-            <div style="width:10px;height:10px;border-radius:50%;background:var(--blue);flex:0 0 auto;"></div>
-            <div><div style="font-size:13px;font-weight:700;">Grand Hotel Vesuvio — Naples</div><div style="font-size:10px;color:var(--muted);">Via Partenope 45, Naples · 2 nights</div></div>
-          </div>
-        </div>
-        <!-- Outfits for Sep 16 -->
-        <div class="card">
-          <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#9a9a9a;margin-bottom:9px;"><i class="ti ti-hanger" style="font-size:12px;"></i> Outfits today</div>
-          <div style="display:flex;align-items:center;gap:9px;background:rgba(255,200,120,.12);border-radius:10px;padding:8px 10px;">
-            <div style="font-size:16px;">🌅</div>
-            <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:#c8a020;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">Daytime (travel)</div><div style="font-size:12px;font-weight:600;">Floral sundress + denim jacket</div><div style="font-size:10px;color:var(--muted);">White sneakers</div></div>
-          </div>
-        </div>
-      </div>
-
     </div>
 
     <!-- ─── PHOTOS ─── -->
@@ -2016,6 +1818,28 @@ window.addEventListener('popstate', function(e){
 function login(user){ /* legacy mock — kept for demo compatibility */ go('home'); setTimeout(showAlert,600); }
 
 function openTrip(){go('trip');updateTripDays();}
+
+// ── Day notes (collapsible) ───────────────────────────────────────────────────
+var planNotesOpen = false;
+function togglePlanNotes(){
+  planNotesOpen = !planNotesOpen;
+  var body = document.getElementById('plan-notes-body');
+  var chevron = document.getElementById('plan-notes-chevron');
+  body.style.display = planNotesOpen ? 'block' : 'none';
+  chevron.style.transform = planNotesOpen ? 'rotate(180deg)' : '';
+  if(planNotesOpen){
+    var key = 'wander_notes_'+(currentTripId||'x')+'_'+(currentDayNum||1);
+    document.getElementById('plan-notes-text').value = localStorage.getItem(key) || '';
+  }
+}
+function savePlanNotes(){
+  var key = 'wander_notes_'+(currentTripId||'x')+'_'+(currentDayNum||1);
+  localStorage.setItem(key, document.getElementById('plan-notes-text').value.trim());
+  var btn = document.querySelector('#plan-notes-body .btn-d');
+  var orig = btn.textContent;
+  btn.textContent = 'Saved ✓';
+  setTimeout(function(){ btn.textContent = orig; }, 1500);
+}
 
 function tab(btn,name){
   document.querySelectorAll('.tbtn').forEach(function(b){b.classList.remove('on');});
