@@ -326,7 +326,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <!-- Day picker — built dynamically -->
       <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;"></div>
 
-      <div style="font-size:14px;font-weight:700;margin-bottom:11px;" id="plans-day-title">Select a day</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
+        <div style="font-size:14px;font-weight:700;" id="plans-day-title">Select a day</div>
+        <div style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:4px 10px;">
+          <i class="ti ti-map-pin" style="font-size:12px;color:var(--muted);"></i>
+          <input id="day-location" class="inp" placeholder="City, Country" onblur="saveDayLocation()" style="background:none;padding:0;font-size:11px;font-weight:600;width:130px;border:none;outline:none;">
+        </div>
+      </div>
 
       <!-- Live DB plans -->
       <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;"></div>
@@ -1824,6 +1830,18 @@ function login(user){ /* legacy mock — kept for demo compatibility */ go('home
 
 function openTrip(){go('trip');updateTripDays();}
 
+// ── Day location (city/country) ──────────────────────────────────────────────
+function loadDayLocation(dayNum) {
+  var key = 'wander_loc_' + (currentTripId||'x') + '_' + dayNum;
+  var el = document.getElementById('day-location');
+  if (el) el.value = localStorage.getItem(key) || '';
+}
+function saveDayLocation() {
+  var key = 'wander_loc_' + (currentTripId||'x') + '_' + (currentDayNum||1);
+  var el = document.getElementById('day-location');
+  if (el) localStorage.setItem(key, el.value.trim());
+}
+
 // ── Day notes (collapsible) ───────────────────────────────────────────────────
 var planNotesOpen = false;
 function togglePlanNotes(){
@@ -1959,6 +1977,7 @@ function selectDay(pill, dayNum, label, city){
 
 // ── Load day plans from Supabase ─────────────────────────────────────────────
 async function loadDayPlans(dayNum) {
+  loadDayLocation(dayNum);
   var listEl = document.getElementById('plans-db-list');
   if (!listEl) return;
 
