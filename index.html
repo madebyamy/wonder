@@ -349,6 +349,16 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
           <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
         </div>
 
+        <!-- Outfits for this day (from Suitcase) -->
+        <div id="plans-outfit-section" style="display:none;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+            <span style="font-size:14px;">👗</span>
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Outfits</span>
+            <div style="flex:1;height:1px;background:var(--card3);"></div>
+          </div>
+          <div id="plans-outfit-list" style="display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;"></div>
+        </div>
+
         <!-- Notes section (collapsible) -->
         <div style="margin-bottom:14px;">
           <button onclick="togglePlanNotes()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:none;border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;">
@@ -439,114 +449,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       </div>
 
     </div>
-    <div id="tp-photos-PLACEHOLDER" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div><div class="section-head">Shared photos</div><div style="font-size:11px;color:var(--muted);">58 photos · All travelers can upload & download</div></div>
-        <button class="btn-d" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:4px;"><i class="ti ti-upload" style="font-size:14px;"></i> Upload</button>
-      </div>
-
-      <!-- Upload options -->
-      <div style="display:flex;gap:7px;margin-bottom:14px;">
-        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:14px;"></i> Camera</button>
-        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-photo" style="font-size:14px;"></i> Gallery</button>
-        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-download" style="font-size:14px;"></i> Download all</button>
-      </div>
-
-      <!-- Filter by person -->
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;">
-        <button class="pill on" onclick="catpill(this)">All</button>
-        <button class="pill" onclick="catpill(this)" style="display:flex;align-items:center;gap:5px;"><div class="av-sm u-amy">A</div> Amy</button>
-      </div>
-
-      <!-- Filter by day -->
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;">
-        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All days</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 12</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 13</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 14</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">Sep 15</button>
-      </div>
-
-      <!-- Day group -->
-      <div class="sl">Sep 12 — Travel day · Rome arrival</div>
-      <div class="photo-grid" style="margin-bottom:16px;">
-        <div class="photo-thumb" onclick="openPhoto('✈️ Boarding at PHX','Amy','Sep 12')" style="background:#e0d8f0;">
-          <i class="ti ti-plane" style="font-size:28px;color:#b8a4ed;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🌅 Sunrise from the plane','Amy','Sep 12')" style="background:#fce8d0;">
-          <i class="ti ti-sun" style="font-size:28px;color:#e8b94a;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🏛️ First view of Rome','Amy','Sep 12')" style="background:#d0e8e0;">
-          <i class="ti ti-building-arch" style="font-size:28px;color:#1a4a4a;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🌹 Hotel lobby','Amy','Sep 12')" style="background:#f8d8c8;">
-          <i class="ti ti-home" style="font-size:28px;color:#ff7b5a;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🍝 First pasta in Rome!','Amy','Sep 12')" style="background:#e8d8f0;">
-          <i class="ti ti-cup" style="font-size:28px;color:#b8a4ed;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" style="background:var(--card2);border:1.5px dashed var(--card3);" onclick="triggerUpload()">
-          <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add photo</span></div>
-        </div>
-      </div>
-
-      <div class="sl">Sep 13 — Colosseum & Forum</div>
-      <div class="photo-grid" style="margin-bottom:16px;">
-        <div class="photo-thumb" onclick="openPhoto('🏛️ The Colosseum','Amy','Sep 13')" style="background:#c8d8f0;">
-          <i class="ti ti-building-arch" style="font-size:32px;color:var(--blue);"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🌿 Roman Forum ruins','Amy','Sep 13')" style="background:#d8e8d8;">
-          <i class="ti ti-trees" style="font-size:28px;color:#3a7a3a;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-        <div class="photo-thumb" onclick="openPhoto('🍦 Gelato time!','Amy','Sep 13')" style="background:#fce0d0;">
-          <i class="ti ti-ice-cream" style="font-size:28px;color:#ff7b5a;"></i>
-          <div class="photo-overlay">
-            <div class="av-sm u-amy">A</div>
-            <button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pending uploads from others -->
-      <div style="background:var(--card);border-radius:var(--r-card);padding:12px;margin-top:4px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:8px;"><i class="ti ti-clock" style="font-size:12px;"></i> Recently added</div>
-        <div style="display:flex;flex-direction:column;gap:7px;">
-          <div style="display:flex;align-items:center;gap:9px;">
-            <div class="av u-amy">A</div>
-            <div style="flex:1;"><div style="font-size:12px;font-weight:600;">You added 5 photos</div><div style="font-size:10px;color:var(--muted);">Colosseum & Forum · 2 hours ago</div></div>
-            <button style="background:var(--card2);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;">View</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- ─── SUITCASE ─── -->
     <div class="tp" id="tp-suitcase">
@@ -616,6 +518,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
       </div>
 
+      <!-- Message shown when "All days" is selected -->
+      <div id="suitcase-no-day-msg" style="display:none;background:var(--card2);border-radius:14px;padding:16px;text-align:center;margin-bottom:11px;">
+        <div style="font-size:22px;margin-bottom:6px;">👆</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Select a day above</div>
+        <div style="font-size:11px;color:var(--muted);">Choose a specific day to add outfits for that date</div>
+      </div>
+
       <!-- Add item form (always visible at bottom) -->
       <div id="add-item-form" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:11px;">
         <div style="font-size:12px;font-weight:700;margin-bottom:11px;color:var(--ink);">Add to suitcase</div>
@@ -665,532 +574,39 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <textarea class="inp" id="suitcase-day-notes" rows="2" style="resize:none;line-height:1.5;" placeholder="Notes for packing, outfit ideas..."></textarea>
 
     </div>
-    <div id="tp-suitcase-PLACEHOLDER" style="display:none">
-
-      <!-- Day picker -->
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;">
-        <div class="dp on" onclick="suitcaseDay(this,12,'Sep 12 — Travel day · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">12</div><div style="font-size:9px;">Fri</div></div>
-        <div class="dp" onclick="suitcaseDay(this,13,'Sep 13 — Colosseum day · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">13</div><div style="font-size:9px;">Sat</div></div>
-        <div class="dp" onclick="suitcaseDay(this,14,'Sep 14 — Vatican · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">14</div><div style="font-size:9px;">Sun</div></div>
-        <div class="dp" onclick="suitcaseDay(this,15,'Sep 15 · Rome')"><div style="font-size:8px;font-weight:700;">ROME</div><div style="font-size:14px;font-weight:700;">15</div><div style="font-size:9px;">Mon</div></div>
-        <div class="dp" onclick="suitcaseDay(this,16,'Sep 16 — Travel to Naples')"><div style="font-size:8px;font-weight:700;">→NAP</div><div style="font-size:14px;font-weight:700;">16</div><div style="font-size:9px;">Tue</div></div>
-        <div class="dp" onclick="suitcaseDay(this,0,'Extras — not assigned to a day')"><div style="font-size:8px;font-weight:700;">EXTRAS</div><div style="font-size:16px;font-weight:700;">+</div></div>
-      </div>
-
-      <!-- Day header + sharing toggle -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div id="suitcase-day-title" style="font-size:13px;font-weight:700;">Sep 12 — Travel day · Rome</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:10px;color:var(--muted);" id="suitcase-share-label">Private</span>
-          <div class="toggle" id="suitcase-share-toggle" onclick="toggleSuitcaseShare(this)"></div>
-        </div>
-      </div>
-
-      <!-- Share banner (shown when sharing is on) -->
-      <div id="suitcase-share-banner" style="display:none;background:rgba(74,122,222,.1);border-radius:10px;padding:8px 11px;margin-bottom:10px;display:none;align-items:center;gap:7px;">
-        <i class="ti ti-users" style="font-size:14px;color:var(--blue);"></i>
-        <span style="font-size:11px;color:var(--blue);font-weight:500;">Your Sep 12 outfits are shared with your travel group</span>
-      </div>
-
-      <!-- Category filter -->
-      <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
-        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
-      </div>
-
-      <!-- CLOSET ITEMS for Sep 12 -->
-      <div id="suitcase-items-12">
-
-        <!-- Section: Daytime -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">🌅</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
-          <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
-            <div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
-              <i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>
-              <span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌅 Day</span>
-            </div>
-            <div style="padding:8px;">
-              <div style="font-size:12px;font-weight:600;">Black linen top</div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">+ Wide-leg trousers</div>
-              <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span>
-                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
-                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,14)">14</span>
-              </div>
-            </div>
-          </div>
-          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
-            <div style="background:#d8f0e8;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
-              <i class="ti ti-shirt" style="font-size:28px;color:#3a8a5a;"></i>
-              <span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌅 Day</span>
-              <div style="position:absolute;bottom:5px;right:5px;background:#fffaf0;border-radius:5px;padding:1px 5px;font-size:9px;font-weight:700;">PHOTO</div>
-            </div>
-            <div style="padding:8px;">
-              <div style="font-size:12px;font-weight:600;">Floral sundress</div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Green print</div>
-              <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
-                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">15</span>
-                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">16</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section: Evening -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">🌙</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
-          <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
-            <div style="background:#e8e0f5;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
-              <i class="ti ti-shirt" style="font-size:28px;color:#7a5ab8;"></i>
-              <span style="position:absolute;top:6px;left:6px;background:#f0ebff;color:#5a4080;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌙 Eve</span>
-            </div>
-            <div style="padding:8px;">
-              <div style="font-size:12px;font-weight:600;">Navy wrap dress</div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Silk blend</div>
-              <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span>
-                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,14)">14</span>
-              </div>
-            </div>
-          </div>
-          <div style="background:var(--card2);border-radius:14px;overflow:hidden;">
-            <div style="background:#f5e8f0;height:80px;display:flex;align-items:center;justify-content:center;position:relative;">
-              <i class="ti ti-shirt" style="font-size:28px;color:#b84080;"></i>
-              <span style="position:absolute;top:6px;left:6px;background:#f0ebff;color:#5a4080;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">🌙 Eve</span>
-            </div>
-            <div style="padding:8px;">
-              <div style="font-size:12px;font-weight:600;">Coral jumpsuit</div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:5px;">Linen, wide leg</div>
-              <div style="display:flex;gap:3px;flex-wrap:wrap;">
-                <span style="background:var(--card3);color:var(--muted);border-radius:4px;padding:1px 5px;font-size:9px;cursor:pointer;" onclick="assignDay(this,13)">13</span>
-                <span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">15</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Section: Shoes -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">👟</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">
-            <div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-size:12px;font-weight:600;">White sneakers</span><span style="background:#fff8e0;color:#c8a020;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">🌅</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">All-day comfort</div>
-              <div style="display:flex;gap:3px;"><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">13</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">16</span></div>
-            </div>
-          </div>
-          <div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">
-            <div style="width:44px;height:44px;border-radius:9px;background:#1a1a2a;display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>
-            <div style="flex:1;">
-              <div style="display:flex;align-items:center;gap:5px;margin-bottom:2px;"><span style="font-size:12px;font-weight:600;">Black heels</span><span style="background:#f0ebff;color:#5a4080;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">🌙</span></div>
-              <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Pointed toe, 3in</div>
-              <div style="display:flex;gap:3px;"><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">12</span><span style="background:var(--ink);color:#fffaf0;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:700;">14</span></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Add item button -->
-        <div style="display:flex;gap:7px;margin-bottom:11px;">
-          <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-camera" style="font-size:13px;"></i> Camera</button>
-          <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-photo" style="font-size:13px;"></i> Gallery</button>
-          <button class="btn-d" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem()"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
-        </div>
-
-        <!-- Add item form (collapsed by default) -->
-        <div id="add-item-form" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
-          <div style="font-size:12px;font-weight:700;margin-bottom:10px;">New closet item</div>
-          <input class="inp" placeholder="Item name (e.g. Blue silk blouse)" style="margin-bottom:7px;">
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px;">
-            <div>
-              <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
-              <select class="inp" style="background:var(--card3);">
-                <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
-              <select class="inp" style="background:var(--card3);">
-                <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-bottom:9px;">
-            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Assign to days</div>
-            <div style="display:flex;gap:4px;flex-wrap:wrap;">
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">12</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">13</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">14</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">15</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">16</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">17</span>
-              <span class="pill" onclick="catpill(this)" style="font-size:10px;">18</span>
-            </div>
-          </div>
-          <div style="display:flex;gap:7px;">
-            <button class="btn-l" style="flex:1;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Cancel</button>
-            <button class="btn-d" style="flex:2;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Save item →</button>
-          </div>
-        </div>
-
-        <div class="sl">Day notes</div>
-        <textarea class="inp" rows="2" style="resize:none;line-height:1.5;">Comfortable shoes — lots of airport walking + dress for dinner</textarea>
-      </div>
-
-      <!-- Extras day (shown when EXTRAS selected) -->
-      <div id="suitcase-items-0" style="display:none;">
-        <div style="background:var(--card);border-radius:13px;padding:13px;margin-bottom:10px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Items in Extras are not shown in the daily plan view.</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🎒</div><div><div style="font-size:13px;font-weight:600;">Travel pillow</div><div style="font-size:10px;color:var(--muted);">Neck support</div></div></div>
-            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🧴</div><div><div style="font-size:13px;font-weight:600;">Skincare kit</div><div style="font-size:10px;color:var(--muted);">TSA-approved bottles</div></div></div>
-            <div style="display:flex;align-items:center;gap:9px;"><div style="font-size:18px;">🔌</div><div><div style="font-size:13px;font-weight:600;">Type L adapters (×2)</div><div style="font-size:10px;color:var(--muted);">Italy plug type</div></div></div>
-          </div>
-        </div>
-        <button class="btn-d" style="width:100%;padding:10px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;" onclick="showAddItem()"><i class="ti ti-plus" style="font-size:13px;"></i> Add to extras</button>
-      </div>
-
-    </div>
 
     <!-- ─── LOG ─── -->
     <div class="tp" id="tp-log">
 
-      <div style="text-align:center;padding:48px 16px 32px;">
-        <div style="font-size:40px;margin-bottom:12px;">📖</div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No log entries yet</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Your daily travel journal will appear here.<br>Entries are created as you travel.</div>
+      <!-- View toggle -->
+      <div style="display:flex;background:var(--card2);border-radius:11px;padding:3px;margin-bottom:13px;">
+        <button id="log-view-overview" onclick="logView('overview')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--ink);color:#fffaf0;">Overview</button>
+        <button id="log-view-daily" onclick="logView('daily')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:none;color:var(--muted);">Daily view</button>
       </div>
-      <div id="log-overview" style="display:none">
 
-        <!-- Destination label: Rome -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
-          <span style="font-size:20px;">🏛️</span>
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#1a3a5a;letter-spacing:.5px;">ROME</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 12–15</div>
-          </div>
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
-        </div>
-
-        <!-- Sep 12 card — has entry -->
-        <div onclick="logView('daily');openLogDay(12)" style="background:linear-gradient(135deg,#e8e0f5,#d8d0f0);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">
-          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">🏛️</div>
-          <div style="font-size:9px;font-weight:700;color:#5a4080;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Friday · Sep 12</div>
-          <div style="font-size:14px;font-weight:700;color:#1a1030;margin-bottom:6px;">Arrived in Rome ✈️</div>
-          <div style="font-size:12px;color:#3a2060;line-height:1.5;margin-bottom:9px;">"11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos."</div>
-          <!-- plan snippets pulled in -->
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
-            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#5a4080;">✈️ AA 7842 PHX→FCO</span>
-            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#5a4080;">🏨 Hotel Indigo Roma check-in</span>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;gap:4px;">
-              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#5a4080;"></i></div>
-              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#5a4080;"></i></div>
-              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#5a4080;">+2</div>
-            </div>
-            <span style="font-size:10px;color:#7a60a0;">Tap to read →</span>
+      <!-- Overview -->
+      <div id="log-overview">
+        <div id="log-overview-list">
+          <div style="text-align:center;padding:40px 16px;color:var(--muted);">
+            <div style="font-size:40px;margin-bottom:10px;">📖</div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:5px;">Open a trip to see your log</div>
+            <div style="font-size:12px;">Your daily travel journal appears here</div>
           </div>
         </div>
+      </div>
 
-        <!-- Sep 13 card — has entry -->
-        <div onclick="logView('daily');openLogDay(13)" style="background:linear-gradient(135deg,#ffeadc,#ffd8c0);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">
-          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">⚔️</div>
-          <div style="font-size:9px;font-weight:700;color:#8a4a20;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Saturday · Sep 13</div>
-          <div style="font-size:14px;font-weight:700;color:#3a1808;margin-bottom:6px;">Colosseum & Roman Forum 🏟️</div>
-          <div style="font-size:12px;color:#5a2a08;line-height:1.5;margin-bottom:9px;">"Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning."</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;">
-            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#8a4a20;">🏛️ Colosseum guided tour</span>
-            <span style="background:rgba(255,255,255,.5);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#8a4a20;">🍝 Dinner at Armando al Pantheon</span>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div style="display:flex;gap:4px;">
-              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#8a4a20;"></i></div>
-              <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#8a4a20;">+3</div>
-            </div>
-            <span style="font-size:10px;color:#9a5a30;">Tap to read →</span>
-          </div>
-        </div>
-
-        <!-- Sep 14 card — empty, tap to add -->
-        <div onclick="logView('daily');openLogDay(14)" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;border:2px dashed var(--card3);position:relative;overflow:hidden;">
-          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.1;">✝️</div>
-          <div style="font-size:9px;font-weight:700;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Sunday · Sep 14</div>
-          <div style="font-size:13px;font-weight:600;color:#bbb;margin-bottom:5px;">Vatican Museums & Sistine Chapel</div>
-          <div style="display:flex;gap:5px;margin-bottom:8px;">
-            <span style="background:var(--card3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#9a9a9a;">🎨 Vatican tour — booked</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;color:#bbb;">
-            <i class="ti ti-pencil" style="font-size:15px;"></i>
-            <span style="font-size:12px;">No entry yet — tap to write</span>
-          </div>
-        </div>
-
-        <!-- Sep 15 card — has short entry -->
-        <div onclick="logView('daily');openLogDay(15)" style="background:linear-gradient(135deg,#d8f0e8,#c4e8d8);border-radius:16px;padding:14px;margin-bottom:14px;cursor:pointer;position:relative;overflow:hidden;">
-          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.18;">🌹</div>
-          <div style="font-size:9px;font-weight:700;color:#2a6a4a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Monday · Sep 15</div>
-          <div style="font-size:14px;font-weight:700;color:#0a2a18;margin-bottom:6px;">Trastevere & Borghese Garden 🌿</div>
-          <div style="font-size:12px;color:#1a4a30;line-height:1.5;margin-bottom:9px;">"Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip."</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;">
-            <div style="width:28px;height:28px;border-radius:7px;background:rgba(255,255,255,.5);display:flex;align-items:center;justify-content:center;"><i class="ti ti-photo" style="font-size:13px;color:#2a6a4a;"></i></div>
-            <span style="font-size:10px;color:#3a7a5a;">Tap to read →</span>
-          </div>
-        </div>
-
-        <!-- Destination label: Naples -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
-          <span style="font-size:20px;">🍕</span>
-          <div>
-            <div style="font-size:11px;font-weight:700;color:#1a3a5a;letter-spacing:.5px;">NAPLES</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 16–18</div>
-          </div>
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
-        </div>
-
-        <!-- Sep 16 card — empty -->
-        <div onclick="logView('daily');openLogDay(16)" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;border:2px dashed var(--card3);position:relative;overflow:hidden;">
-          <div style="position:absolute;right:12px;top:10px;font-size:36px;opacity:.1;">🍕</div>
-          <div style="font-size:9px;font-weight:700;color:#9a9a9a;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;">Tuesday · Sep 16</div>
-          <div style="font-size:13px;font-weight:600;color:#bbb;margin-bottom:5px;">Fly Rome → Naples + Arrival</div>
-          <div style="display:flex;gap:5px;margin-bottom:8px;">
-            <span style="background:var(--card3);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:#9a9a9a;">✈️ FCO→NAP internal flight</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:6px;color:#bbb;">
-            <i class="ti ti-pencil" style="font-size:15px;"></i>
-            <span style="font-size:12px;">No entry yet — tap to write</span>
-          </div>
-        </div>
-
-        <!-- Future days placeholder -->
-        <div style="background:var(--card2);border-radius:13px;padding:13px;text-align:center;color:var(--muted);font-size:12px;margin-bottom:11px;">
-          <span style="font-size:20px;display:block;margin-bottom:5px;">✨</span>
-          Sep 17 onward — your adventure continues!<br>
-          <span style="font-size:10px;">Entries will appear here as you add them</span>
-        </div>
-
-      </div><!-- /log-overview -->
-
-      <!-- ── DAILY VIEW (full scrapbook page) ── -->
+      <!-- Daily view -->
       <div id="log-daily" style="display:none;">
-
-        <!-- Day navigator -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:13px;">
           <button onclick="logDayNav(-1)" style="width:34px;height:34px;border-radius:50%;background:var(--card2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-chevron-left" style="font-size:16px;"></i></button>
           <div style="flex:1;text-align:center;">
-            <div id="log-day-label" style="font-size:13px;font-weight:700;">Friday, Sep 12</div>
-            <div id="log-day-city" style="font-size:10px;color:var(--muted);">Rome 🏛️</div>
+            <div id="log-day-label" style="font-size:13px;font-weight:700;"></div>
+            <div id="log-day-city" style="font-size:10px;color:var(--muted);"></div>
           </div>
           <button onclick="logDayNav(1)" style="width:34px;height:34px;border-radius:50%;background:var(--card2);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i class="ti ti-chevron-right" style="font-size:16px;"></i></button>
         </div>
-
-        <!-- Sep 12 daily page -->
-        <div id="log-day-12" class="log-day-page">
-          <!-- Scrapbook header -->
-          <div style="background:linear-gradient(135deg,#e8e0f5,#d0c8f0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
-            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(15deg);">🏛️</div>
-            <div style="position:absolute;left:10px;bottom:-8px;font-size:40px;opacity:.1;transform:rotate(-10deg);">✈️</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#7a60b0;text-transform:uppercase;margin-bottom:3px;">Day 1 of 14 · Rome, Italy</div>
-            <div style="font-size:20px;font-weight:800;color:#1a1030;line-height:1.2;margin-bottom:3px;">Arrived in Rome ✈️</div>
-            <div style="font-size:11px;color:#7a60b0;">Friday, September 12, 2026</div>
-          </div>
-
-          <!-- Plan highlights pulled from that day -->
-          <div style="margin-bottom:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day's plans</div>
-            <div style="display:flex;flex-direction:column;gap:5px;">
-              <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
-                <span style="font-size:16px;">✈️</span>
-                <div><div style="font-size:12px;font-weight:600;">AA 7842 · PHX → FCO</div><div style="font-size:10px;color:var(--muted);">Dep 9:45pm → Arr 3:20pm+1 · 11h 35m</div></div>
-              </div>
-              <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
-                <span style="font-size:16px;">🏨</span>
-                <div><div style="font-size:12px;font-weight:600;">Hotel Indigo Roma — check-in</div><div style="font-size:10px;color:var(--muted);">Check-in from 3:00pm · 4 nights</div></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Journal entry -->
-          <div style="margin-bottom:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>
-            <div id="log-12-display" style="background:var(--card2);border-radius:14px;padding:13px;">
-              <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos. Cobblestone streets everywhere and the smell of espresso from every corner."</p>
-              <button onclick="logEdit(12)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
-            </div>
-            <div id="log-12-edit" style="display:none;">
-              <textarea id="log-12-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">11-hour flight felt like nothing — touched down at 8am and headed straight to the Fiumicino Express. Hotel Indigo Roma is even more beautiful than the photos. Cobblestone streets everywhere and the smell of espresso from every corner.</textarea>
-              <div style="display:flex;gap:7px;">
-                <button onclick="logCancel(12)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button>
-                <button onclick="logSave(12)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save changes</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Photos row -->
-          <div style="margin-bottom:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">Photos from this day</div>
-            <div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">
-              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#e0d8f8,#c8bce8);display:flex;align-items:center;justify-content:center;font-size:28px;">🛫</div>
-              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#f8e8d8,#e8c8b0);display:flex;align-items:center;justify-content:center;font-size:28px;">🏛️</div>
-              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:linear-gradient(135deg,#d8e8f8,#b8cce8);display:flex;align-items:center;justify-content:center;font-size:28px;">🌆</div>
-              <div style="width:80px;height:80px;flex:0 0 auto;border-radius:11px;background:var(--card2);border:1.5px dashed var(--card3);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;color:#9a9a9a;">
-                <i class="ti ti-plus" style="font-size:16px;"></i>
-                <span style="font-size:9px;font-weight:600;">Add</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mood + highlight stickers -->
-          <div style="background:var(--card2);border-radius:13px;padding:11px;margin-bottom:4px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
-            <div style="display:flex;gap:8px;justify-content:center;">
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span>
-              <span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">😍</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
-            </div>
-          </div>
-        </div><!-- /log-day-12 -->
-
-        <!-- Sep 14 daily page (empty — for demo of write flow) -->
-        <div id="log-day-14" class="log-day-page" style="display:none;">
-          <div style="background:linear-gradient(135deg,#f0ede8,#e8e4dc);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
-            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(10deg);">✝️</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#6a5a40;text-transform:uppercase;margin-bottom:3px;">Day 3 of 14 · Rome, Italy</div>
-            <div style="font-size:20px;font-weight:800;color:#1a1a10;line-height:1.2;margin-bottom:3px;">Vatican & Sistine Chapel 🎨</div>
-            <div style="font-size:11px;color:#6a5a40;">Sunday, September 14, 2026</div>
-          </div>
-
-          <!-- Plan highlights -->
-          <div style="margin-bottom:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day's plans</div>
-            <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;">
-              <span style="font-size:16px;">🎨</span>
-              <div><div style="font-size:12px;font-weight:600;">Vatican Museums + Sistine Chapel</div><div style="font-size:10px;color:var(--muted);">9:00am skip-the-line guided tour</div></div>
-            </div>
-          </div>
-
-          <!-- Empty entry — write form shown by default -->
-          <div style="margin-bottom:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>
-            <div id="log-14-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;">
-              <p id="log-14-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>
-              <button onclick="logEdit(14)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
-            </div>
-            <div id="log-14-edit">
-              <textarea id="log-14-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about your day at the Vatican..."></textarea>
-              <div style="display:flex;gap:7px;">
-                <button class="btn-l" style="flex:1;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-camera" style="font-size:12px;"></i> Photo</button>
-                <button onclick="logSave(14)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Mood -->
-          <div style="background:var(--card2);border-radius:13px;padding:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>
-            <div style="display:flex;gap:8px;justify-content:center;">
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span>
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
-            </div>
-          </div>
-        </div><!-- /log-day-14 -->
-
-        <!-- Other day pages (13, 15, 16) — minimal for demo -->
-        <div id="log-day-13" class="log-day-page" style="display:none;">
-          <div style="background:linear-gradient(135deg,#ffeadc,#ffd0b0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
-            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(12deg);">⚔️</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#8a4a20;text-transform:uppercase;margin-bottom:3px;">Day 2 of 14 · Rome, Italy</div>
-            <div style="font-size:20px;font-weight:800;color:#3a1808;margin-bottom:3px;">Colosseum & Roman Forum 🏟️</div>
-            <div style="font-size:11px;color:#8a4a20;">Saturday, September 13, 2026</div>
-          </div>
-          <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;margin-bottom:11px;">
-            <span style="font-size:16px;">🏛️</span>
-            <div><div style="font-size:12px;font-weight:600;">Colosseum + Roman Forum guided tour</div><div style="font-size:10px;color:var(--muted);">10:00am · 3 hours</div></div>
-          </div>
-          <div id="log-13-display" style="background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
-            <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning."</p>
-            <button onclick="logEdit(13)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
-          </div>
-          <div id="log-13-edit" style="display:none;">
-            <textarea id="log-13-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">Standing in the Colosseum, I could almost hear the roar of the crowd. 2000 years of history in one place. The Forum was equally stunning.</textarea>
-            <div style="display:flex;gap:7px;"><button onclick="logCancel(13)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave(13)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save</button></div>
-          </div>
-          <div style="background:var(--card2);border-radius:13px;padding:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
-            <div style="display:flex;gap:8px;justify-content:center;">
-              <span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span>
-            </div>
-          </div>
-        </div>
-
-        <div id="log-day-15" class="log-day-page" style="display:none;">
-          <div style="background:linear-gradient(135deg,#d8f0e8,#b8e0d0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
-            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(-8deg);">🌹</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#2a6a4a;text-transform:uppercase;margin-bottom:3px;">Day 4 of 14 · Rome, Italy</div>
-            <div style="font-size:20px;font-weight:800;color:#0a2a18;margin-bottom:3px;">Trastevere & Borghese 🌿</div>
-            <div style="font-size:11px;color:#2a6a4a;">Monday, September 15, 2026</div>
-          </div>
-          <div id="log-15-display" style="background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
-            <p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip."</p>
-            <button onclick="logEdit(15)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>
-          </div>
-          <div id="log-15-edit" style="display:none;">
-            <textarea id="log-15-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">Perfect lazy Rome day. Rented bikes in the Borghese, then got hopelessly lost in Trastevere — best thing that happened all trip.</textarea>
-            <div style="display:flex;gap:7px;"><button onclick="logCancel(15)" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave(15)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save</button></div>
-          </div>
-          <div style="background:var(--card2);border-radius:13px;padding:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">Day rating</div>
-            <div style="display:flex;gap:8px;justify-content:center;"><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:1;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span></div>
-          </div>
-        </div>
-
-        <div id="log-day-16" class="log-day-page" style="display:none;">
-          <div style="background:linear-gradient(135deg,#fff0d8,#ffe0b0);border-radius:18px;padding:16px;margin-bottom:11px;position:relative;overflow:hidden;">
-            <div style="position:absolute;right:-5px;top:-5px;font-size:64px;opacity:.12;transform:rotate(8deg);">🍕</div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:#7a5a20;text-transform:uppercase;margin-bottom:3px;">Day 5 of 14 · Naples, Italy</div>
-            <div style="font-size:20px;font-weight:800;color:#2a1a08;margin-bottom:3px;">Rome → Naples ✈️🍕</div>
-            <div style="font-size:11px;color:#7a5a20;">Tuesday, September 16, 2026</div>
-          </div>
-          <div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;display:flex;align-items:center;gap:8px;margin-bottom:11px;">
-            <span style="font-size:16px;">✈️</span>
-            <div><div style="font-size:12px;font-weight:600;">FCO → NAP · AZ 1234</div><div style="font-size:10px;color:var(--muted);">Dep 11:15am → Arr 12:05pm · 50m</div></div>
-          </div>
-          <div id="log-16-edit">
-            <textarea id="log-16-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about the move to Naples..."></textarea>
-            <div style="display:flex;gap:7px;"><button class="btn-l" style="flex:1;padding:9px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:5px;"><i class="ti ti-camera" style="font-size:12px;"></i> Photo</button><button onclick="logSave(16)" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button></div>
-          </div>
-          <div id="log-16-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-top:11px;">
-            <p id="log-16-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>
-            <button onclick="logEdit(16)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit</button>
-          </div>
-          <div style="background:var(--card2);border-radius:13px;padding:11px;margin-top:11px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>
-            <div style="display:flex;gap:8px;justify-content:center;"><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😴</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😊</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">😍</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🤩</span><span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">🥹</span></div>
-          </div>
-        </div>
-
-      </div><!-- /log-daily -->
+        <div id="log-day-content"></div>
+      </div>
 
     </div>
 
@@ -2003,6 +1419,7 @@ function tab(btn,name){
   if(el) el.classList.add('active');
   if(name==='suitcase'){ renderSuitcaseDayPicker(); renderSuitcaseItems(); }
   if(name==='photos'){ renderPhotosDayFilter(); }
+  if(name==='log'){ renderLogOverview(); }
 }
 
 function dp(pill){
@@ -2136,11 +1553,32 @@ async function loadDayPlans(dayNum) {
 
   if (items.length === 0) {
     listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — tap a button below to add</div>';
-    return;
+  } else {
+    planItemCache = {};
+    items.forEach(function(item){ planItemCache[item.data.id] = item; });
+    listEl.innerHTML = items.map(renderPlanItem).join('');
   }
-  planItemCache = {};
-  items.forEach(function(item){ planItemCache[item.data.id] = item; });
-  listEl.innerHTML = items.map(renderPlanItem).join('');
+  renderPlansOutfits(dayNum);
+}
+
+function renderPlansOutfits(dayNum){
+  var section = document.getElementById('plans-outfit-section');
+  var list    = document.getElementById('plans-outfit-list');
+  if(!section || !list) return;
+  var outfits = suitcaseItems.filter(function(i){ return String(i.day) === String(dayNum); });
+  if(outfits.length === 0){ section.style.display='none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = outfits.map(function(item){
+    var timeLabel = item.time==='day'?'🌅':item.time==='evening'?'🌙':'🌅🌙';
+    var inner = item.photo
+      ? '<div style="width:72px;height:90px;border-radius:10px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;position:relative;">'
+          +'<span style="position:absolute;bottom:4px;left:4px;font-size:12px;">'+timeLabel+'</span></div>'
+      : '<div style="width:72px;height:90px;border-radius:10px;background:var(--card2);flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">'
+          +'<i class="ti ti-shirt" style="font-size:22px;color:#9a9a9a;"></i>'
+          +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;padding:0 4px;line-height:1.3;">'+( item.name||item.category)+'</span>'
+          +'<span style="font-size:11px;">'+timeLabel+'</span></div>';
+    return inner;
+  }).join('');
 }
 
 function renderPlanItem(item) {
@@ -2351,65 +1789,205 @@ function catpill(btn){
   btn.classList.add('on');
 }
 
-var logDays = [12,13,14,15,16];
-var logDayMeta = {
-  12:{label:'Friday, Sep 12', city:'Rome 🏛️'},
-  13:{label:'Saturday, Sep 13', city:'Rome 🏛️'},
-  14:{label:'Sunday, Sep 14', city:'Rome 🏛️'},
-  15:{label:'Monday, Sep 15', city:'Rome 🏛️'},
-  16:{label:'Tuesday, Sep 16', city:'Naples 🍕'}
-};
-var currentLogDay = 12;
+var currentLogDay = 1;
+var logTripDays = []; // [{num, date, label, weekday}]
+
+function buildLogTripDays(){
+  logTripDays = [];
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  if(!trip || !trip.start_date || !trip.end_date) return;
+  var WD = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var MS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var d = new Date(trip.start_date+'T00:00:00');
+  var end = new Date(trip.end_date+'T00:00:00');
+  var n = 1;
+  while(d <= end){
+    logTripDays.push({
+      num: n,
+      date: new Date(d),
+      label: WD[d.getDay()]+', '+MS[d.getMonth()]+' '+d.getDate(),
+      short: MS[d.getMonth()].substr(0,3)+' '+d.getDate()
+    });
+    d.setDate(d.getDate()+1); n++;
+  }
+}
+
+function renderLogOverview(){
+  buildLogTripDays();
+  var el = document.getElementById('log-overview-list');
+  if(!el) return;
+  if(!logTripDays.length){
+    el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--muted);"><div style="font-size:40px;margin-bottom:10px;">📖</div><div style="font-size:14px;font-weight:700;margin-bottom:5px;">Open a trip to see your log</div><div style="font-size:12px;">Your daily travel journal appears here</div></div>';
+    return;
+  }
+  var gradients = [
+    'linear-gradient(135deg,#e8e0f5,#d8d0f0)',
+    'linear-gradient(135deg,#ffeadc,#ffd8c0)',
+    'linear-gradient(135deg,#d8f0e8,#c4e8d8)',
+    'linear-gradient(135deg,#e8f0d8,#d4e8c0)',
+    'linear-gradient(135deg,#f0e8d8,#e8d4c0)',
+    'linear-gradient(135deg,#d8e8f8,#c4d8f0)'
+  ];
+  el.innerHTML = logTripDays.map(function(day, i){
+    var key = 'wander_journal_'+(currentTripId||'x')+'_'+day.num;
+    var entry = localStorage.getItem(key)||'';
+    var loc = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num)||'';
+    var outfitCount = suitcaseItems.filter(function(it){ return String(it.day)===String(day.num); }).length;
+    var bg = entry ? gradients[i % gradients.length] : 'var(--card2)';
+    var border = entry ? '' : 'border:2px dashed var(--card3);';
+    return '<div onclick="logView(\'daily\');openLogDay('+day.num+')" style="background:'+bg+';'+border+'border-radius:16px;padding:14px;margin-bottom:9px;cursor:pointer;position:relative;overflow:hidden;">'
+      +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px;opacity:.6;">Day '+day.num+(loc?' · '+loc:'')+'</div>'
+      +'<div style="font-size:15px;font-weight:700;margin-bottom:4px;line-height:1.2;">'+(entry ? '"'+entry.substring(0,60)+(entry.length>60?'…':'')+'"' : day.label)+'</div>'
+      +(entry?'':'<div style="font-size:11px;opacity:.5;">Tap to write about this day →</div>')
+      +(outfitCount ? '<div style="margin-top:6px;font-size:10px;font-weight:600;opacity:.7;">👗 '+outfitCount+' outfit'+(outfitCount>1?'s':'')+'</div>' : '')
+      +'</div>';
+  }).join('');
+}
 
 function logView(v){
   document.getElementById('log-overview').style.display = v==='overview' ? '' : 'none';
-  document.getElementById('log-daily').style.display = v==='daily' ? '' : 'none';
+  document.getElementById('log-daily').style.display    = v==='daily'    ? '' : 'none';
   document.getElementById('log-view-overview').style.background = v==='overview' ? 'var(--ink)' : 'none';
-  document.getElementById('log-view-overview').style.color = v==='overview' ? '#fffaf0' : 'var(--muted)';
-  document.getElementById('log-view-daily').style.background = v==='daily' ? 'var(--ink)' : 'none';
-  document.getElementById('log-view-daily').style.color = v==='daily' ? '#fffaf0' : 'var(--muted)';
+  document.getElementById('log-view-overview').style.color      = v==='overview' ? '#fffaf0' : 'var(--muted)';
+  document.getElementById('log-view-daily').style.background    = v==='daily'    ? 'var(--ink)' : 'none';
+  document.getElementById('log-view-daily').style.color         = v==='daily'    ? '#fffaf0' : 'var(--muted)';
 }
 
-function openLogDay(day){
-  currentLogDay = day;
-  document.querySelectorAll('.log-day-page').forEach(function(p){ p.style.display='none'; });
-  var pg = document.getElementById('log-day-'+day);
-  if(pg) pg.style.display='';
-  var meta = logDayMeta[day] || {label:'Sep '+day, city:'Italy'};
-  document.getElementById('log-day-label').textContent = meta.label;
-  document.getElementById('log-day-city').textContent = meta.city;
+async function openLogDay(dayNum){
+  currentLogDay = dayNum;
+  var dayMeta = logTripDays.find(function(d){ return d.num===dayNum; });
+  if(!dayMeta && logTripDays.length){ buildLogTripDays(); dayMeta = logTripDays.find(function(d){ return d.num===dayNum; }); }
+  var label = dayMeta ? dayMeta.label : 'Day '+dayNum;
+  var loc   = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum)||'';
+  document.getElementById('log-day-label').textContent = label;
+  document.getElementById('log-day-city').textContent  = loc || '';
+
+  var journalKey = 'wander_journal_'+(currentTripId||'x')+'_'+dayNum;
+  var savedEntry = localStorage.getItem(journalKey)||'';
+
+  // Fetch plans for this day
+  var plansHtml = '';
+  if(currentTripId && currentUser){
+    var dateStr = getDayDateStr(dayNum);
+    var [fr,hr,er] = await Promise.all([
+      sb.from('flights').select('airline,flight_number,departure_time,origin,destination').eq('trip_id',currentTripId).eq('flight_date',dateStr),
+      sb.from('hotels').select('hotel_name,checkin_date').eq('trip_id',currentTripId).lte('checkin_date',dateStr).gte('checkout_date',dateStr),
+      sb.from('excursions').select('title,start_time').eq('trip_id',currentTripId).eq('excursion_date',dateStr)
+    ]);
+    var planItems = [];
+    (fr.data||[]).forEach(function(f){ planItems.push('✈️ '+(f.airline||'')+' '+(f.flight_number||'')+' · '+(f.origin||'')+'→'+(f.destination||'')); });
+    (hr.data||[]).forEach(function(h){ planItems.push('🏨 '+h.hotel_name); });
+    (er.data||[]).forEach(function(e){ planItems.push('🎟️ '+(e.title||'Activity')+(e.start_time?' · '+e.start_time:'')); });
+    if(planItems.length){
+      plansHtml = '<div style="margin-bottom:13px;">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">That day\'s plans</div>'
+        +'<div style="display:flex;flex-direction:column;gap:5px;">'
+        +planItems.map(function(p){ return '<div style="background:rgba(74,122,222,.08);border-radius:10px;padding:9px 11px;font-size:12px;font-weight:600;">'+p+'</div>'; }).join('')
+        +'</div></div>';
+    }
+  }
+
+  // Outfits for this day
+  var dayOutfits = suitcaseItems.filter(function(i){ return String(i.day)===String(dayNum); });
+  var outfitsHtml = '';
+  if(dayOutfits.length){
+    outfitsHtml = '<div style="margin-bottom:13px;">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">Outfits 👗</div>'
+      +'<div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">'
+      +dayOutfits.map(function(item){
+        var timeLabel = item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙';
+        if(item.photo){
+          return '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:url(\''+item.photo+'\') center/cover no-repeat;position:relative;">'
+            +'<span style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.5);color:#fff;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:600;">'+timeLabel+'</span></div>';
+        }
+        return '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:var(--card2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;">'
+          +'<i class="ti ti-shirt" style="font-size:22px;color:#9a9a9a;"></i>'
+          +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;line-height:1.3;">'+(item.name||item.category)+'</span>'
+          +'<span style="font-size:10px;">'+timeLabel+'</span></div>';
+      }).join('')
+      +'</div></div>';
+  }
+
+  // Build the day content
+  document.getElementById('log-day-content').innerHTML =
+    // Header card
+    '<div style="background:var(--card2);border-radius:18px;padding:16px;margin-bottom:11px;">'
+    +'<div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:3px;">Day '+dayNum+(loc?' · '+loc:'')+'</div>'
+    +'<div style="font-size:18px;font-weight:800;line-height:1.2;margin-bottom:2px;">'+label+'</div>'
+    +'</div>'
+
+    // Plans
+    + plansHtml
+
+    // Outfits
+    + outfitsHtml
+
+    // Journal entry
+    +'<div style="margin-bottom:11px;">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:7px;">My entry</div>'
+    +(savedEntry
+      ? '<div id="log-entry-display" style="background:var(--card2);border-radius:14px;padding:13px;">'
+          +'<p style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;">"'+savedEntry+'"</p>'
+          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>'
+          +'</div>'
+          +'<div id="log-entry-edit" style="display:none;">'
+          +'<textarea id="log-entry-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;">'+savedEntry+'</textarea>'
+          +'<div style="display:flex;gap:7px;"><button onclick="logCancel()" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave()" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save changes</button></div>'
+          +'</div>'
+      : '<div id="log-entry-display" style="display:none;background:var(--card2);border-radius:14px;padding:13px;">'
+          +'<p id="log-entry-saved" style="font-size:13px;line-height:1.7;color:var(--ink);margin:0 0 9px;"></p>'
+          +'<button onclick="logEdit()" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Edit entry</button>'
+          +'</div>'
+          +'<div id="log-entry-edit">'
+          +'<textarea id="log-entry-text" class="inp" rows="5" style="resize:none;line-height:1.7;margin-bottom:8px;" placeholder="Write about this day..."></textarea>'
+          +'<div style="display:flex;gap:7px;"><button onclick="logCancel()" class="btn-l" style="flex:1;padding:9px;font-size:12px;">Cancel</button><button onclick="logSave()" class="btn-d" style="flex:2;padding:9px;font-size:12px;">Save entry →</button></div>'
+          +'</div>'
+    )
+    +'</div>'
+
+    // Day rating
+    +'<div style="background:var(--card2);border-radius:13px;padding:11px;">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin-bottom:8px;">How was your day?</div>'
+    +'<div style="display:flex;gap:8px;justify-content:center;">'
+    +['😴','😊','😍','🤩','🥹'].map(function(e){ return '<span style="font-size:26px;cursor:pointer;opacity:.4;" onclick="logRate(this)">'+e+'</span>'; }).join('')
+    +'</div></div>';
+
   document.querySelector('#s-trip .scroll').scrollTop = 0;
 }
 
 function logDayNav(dir){
-  var idx = logDays.indexOf(currentLogDay);
-  var next = logDays[idx+dir];
-  if(next !== undefined) openLogDay(next);
+  var idx = logTripDays.findIndex(function(d){ return d.num===currentLogDay; });
+  var next = logTripDays[idx+dir];
+  if(next) openLogDay(next.num);
 }
 
-function logEdit(day){
-  document.getElementById('log-'+day+'-display').style.display='none';
-  document.getElementById('log-'+day+'-edit').style.display='';
+function logEdit(){
+  var disp = document.getElementById('log-entry-display');
+  var edit = document.getElementById('log-entry-edit');
+  if(disp) disp.style.display='none';
+  if(edit){ edit.style.display=''; var ta=document.getElementById('log-entry-text'); if(ta){ var key='wander_journal_'+(currentTripId||'x')+'_'+currentLogDay; ta.value=localStorage.getItem(key)||''; } }
 }
 
-function logCancel(day){
-  document.getElementById('log-'+day+'-display').style.display='';
-  document.getElementById('log-'+day+'-edit').style.display='none';
+function logCancel(){
+  var disp = document.getElementById('log-entry-display');
+  var edit = document.getElementById('log-entry-edit');
+  if(disp) disp.style.display='';
+  if(edit) edit.style.display='none';
 }
 
-function logSave(day){
-  var txt = document.getElementById('log-'+day+'-text').value.trim();
-  if(!txt) return;
-  var disp = document.getElementById('log-'+day+'-display');
-  var saved = document.getElementById('log-'+day+'-saved');
-  if(saved) saved.textContent = '"'+txt+'"';
-  disp.style.display='';
-  document.getElementById('log-'+day+'-edit').style.display='none';
+function logSave(){
+  var ta = document.getElementById('log-entry-text');
+  if(!ta) return;
+  var txt = ta.value.trim();
+  var key = 'wander_journal_'+(currentTripId||'x')+'_'+currentLogDay;
+  localStorage.setItem(key, txt);
+  // re-render the day to reflect saved entry
+  openLogDay(currentLogDay);
+  renderLogOverview();
 }
 
 function logRate(el){
-  var row = el.parentElement;
-  row.querySelectorAll('span').forEach(function(s){ s.style.opacity='.4'; });
+  el.parentElement.querySelectorAll('span').forEach(function(s){ s.style.opacity='.4'; });
   el.style.opacity='1';
 }
 
@@ -2434,7 +2012,9 @@ function toggleSuitcaseShare(el){
   document.getElementById('suitcase-share-label').textContent = on ? 'Shared' : 'Private';
 }
 
-var suitcaseItems = []; // in-memory store for this session
+var suitcaseItems = [];
+var suitcaseItemIdCounter = 0;
+var editingSuitcaseId = null;
 
 function renderSuitcaseDayPicker(){
   var picker = document.getElementById('suitcase-day-picker');
@@ -2470,29 +2050,50 @@ function suitcaseDayPick(el, dayKey, label){
   el.classList.add('on');
   suitcaseCurrentDay = dayKey;
   document.getElementById('suitcase-day-title').textContent = label;
+  // show/hide add form — only visible when a specific day is selected
+  var form = document.getElementById('add-item-form');
+  var noDay = document.getElementById('suitcase-no-day-msg');
+  if(dayKey === 'all'){
+    form.style.display = 'none';
+    noDay.style.display = 'block';
+  } else {
+    form.style.display = 'block';
+    noDay.style.display = 'none';
+  }
   renderSuitcaseItems();
 }
 
 function renderSuitcaseItems(){
-  var filtered = suitcaseCurrentDay === 'all' ? suitcaseItems : suitcaseItems.filter(function(i){
-    return !i.days || i.days.length===0 || i.days.indexOf(suitcaseCurrentDay)!==-1;
-  });
-  var daytime = filtered.filter(function(i){ return i.time==='day'||i.time==='both'; });
-  var evening = filtered.filter(function(i){ return i.time==='evening'||i.time==='both'; });
+  var filtered = suitcaseCurrentDay === 'all'
+    ? suitcaseItems
+    : suitcaseItems.filter(function(i){ return String(i.day) === String(suitcaseCurrentDay); });
+
+  var daytime = filtered.filter(function(i){ return (i.time==='day'||i.time==='both') && i.category!=='👟 Shoes'; });
+  var evening = filtered.filter(function(i){ return (i.time==='evening'||i.time==='both') && i.category!=='👟 Shoes'; });
   var shoes   = filtered.filter(function(i){ return i.category==='👟 Shoes'; });
 
+  function timeTag(item){
+    return item.time==='day' ? '🌅 Day' : item.time==='evening' ? '🌙 Eve' : '🌅🌙';
+  }
+  function editDeleteBtns(id){
+    return '<div style="display:flex;gap:5px;margin-top:5px;">'
+      +'<button onclick="editSuitcaseItem('+id+')" style="flex:1;background:var(--card3);border:none;border-radius:7px;padding:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
+      +'<button onclick="deleteSuitcaseItem('+id+')" style="background:none;border:none;border-radius:7px;padding:4px 7px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
+      +'</div>';
+  }
   function outfitCard(item){
     var imgHtml = item.photo
       ? '<div style="height:100px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;position:relative;">'
-        +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+(item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙')+'</span></div>'
+          +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>'
       : '<div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;">'
-        +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>'
-        +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+(item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙')+'</span></div>';
+          +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>'
+          +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>';
     return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'
       +imgHtml
       +'<div style="padding:8px;">'
       +(item.name?'<div style="font-size:12px;font-weight:600;line-height:1.4;">'+item.name+'</div>':'')
-      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">'+item.category+'</div>'
+      +editDeleteBtns(item.id)
       +'</div></div>';
   }
   function shoeCard(item){
@@ -2501,19 +2102,55 @@ function renderSuitcaseItems(){
       : '<div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>';
     return '<div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">'
       +thumbHtml
-      +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+(item.name||item.category)+'</div>'
+      +'<div style="flex:1;">'
+      +(item.name?'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>':'')
       +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div>'
+      +editDeleteBtns(item.id)
       +'</div></div>';
   }
 
-  var addOutfitBtn = '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem(\'manual\')">'
-    +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div></div>';
-  var addShoeBtn = '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:14px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem(\'manual\')">'
-    +'<i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>';
+  var addOutfitBtn = suitcaseCurrentDay !== 'all'
+    ? '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:70px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem(\'outfit\')">'
+        +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div></div>' : '';
+  var addShoeBtn = suitcaseCurrentDay !== 'all'
+    ? '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:12px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem(\'shoes\')">'
+        +'<i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>' : '';
 
   document.getElementById('suitcase-daytime').innerHTML = daytime.map(outfitCard).join('') + addOutfitBtn;
   document.getElementById('suitcase-evening').innerHTML = evening.map(outfitCard).join('') + addOutfitBtn;
-  document.getElementById('suitcase-shoes').innerHTML = shoes.map(shoeCard).join('') + addShoeBtn;
+  document.getElementById('suitcase-shoes').innerHTML   = shoes.map(shoeCard).join('') + addShoeBtn;
+}
+
+function editSuitcaseItem(id){
+  var item = suitcaseItems.find(function(i){ return i.id===id; });
+  if(!item) return;
+  editingSuitcaseId = id;
+  // pre-fill form
+  document.getElementById('add-item-category').value = item.category;
+  var timeVal = item.time==='day' ? '🌅 Daytime' : item.time==='evening' ? '🌙 Evening' : '🌅🌙 Both';
+  document.getElementById('add-item-time').value = timeVal;
+  if(item.photo){
+    setAddMode('photo');
+    var preview = document.getElementById('add-item-photo-preview');
+    preview.style.backgroundImage = 'url('+item.photo+')';
+    preview.style.backgroundSize = 'cover';
+    preview.style.backgroundPosition = 'center';
+    preview.style.position = 'relative';
+    preview.innerHTML = '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
+    preview._photoData = item.photo;
+  } else {
+    setAddMode('text');
+    document.getElementById('add-item-name').value = item.name||'';
+  }
+  // update save button label
+  document.querySelector('#add-item-form .btn-d').textContent = 'Save changes →';
+  document.getElementById('add-item-form').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function deleteSuitcaseItem(id){
+  suitcaseItems = suitcaseItems.filter(function(i){ return i.id!==id; });
+  renderSuitcaseItems();
+  renderPlansOutfits(currentDayNum);
 }
 
 var suitcaseAddMode = 'photo';
@@ -2527,9 +2164,9 @@ function setAddMode(mode){
 }
 
 function showAddItem(mode){
-  if(mode==='day')     document.getElementById('add-item-time').value='🌅 Daytime';
-  else if(mode==='evening') document.getElementById('add-item-time').value='🌙 Evening';
-  else if(mode==='shoes')   document.getElementById('add-item-category').value='👟 Shoes';
+  if(mode==='evening') document.getElementById('add-item-time').value='🌙 Evening';
+  else if(mode==='shoes'){ document.getElementById('add-item-category').value='👟 Shoes'; document.getElementById('add-item-time').value='🌅 Daytime'; }
+  else { document.getElementById('add-item-time').value='🌅 Daytime'; }
   document.getElementById('add-item-form').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
@@ -2554,29 +2191,42 @@ function pickSuitcasePhoto(){
 }
 
 function saveNewItem(){
-  var cat  = document.getElementById('add-item-category').value;
-  var time = document.getElementById('add-item-time').value;
+  var cat     = document.getElementById('add-item-category').value;
+  var time    = document.getElementById('add-item-time').value;
   var timeKey = time.indexOf('Daytime')!==-1 ? 'day' : time.indexOf('Evening')!==-1 ? 'evening' : 'both';
-  var item = {category:cat, time:timeKey, day:suitcaseCurrentDay};
+  var photo = null, name = '';
 
   if(suitcaseAddMode==='photo'){
     var preview = document.getElementById('add-item-photo-preview');
     if(!preview._photoData){ alert('Please add a photo first'); return; }
-    item.photo = preview._photoData;
-    item.name = '';
+    photo = preview._photoData;
     // reset preview
     preview.style.backgroundImage=''; preview.style.position='';
     preview.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
     delete preview._photoData;
   } else {
-    var name = document.getElementById('add-item-name').value.trim();
+    name = (document.getElementById('add-item-name').value||'').trim();
     if(!name){ alert('Please describe the outfit'); return; }
-    item.name = name;
     document.getElementById('add-item-name').value='';
   }
 
-  suitcaseItems.push(item);
+  if(editingSuitcaseId !== null){
+    // update existing item
+    var idx = suitcaseItems.findIndex(function(i){ return i.id===editingSuitcaseId; });
+    if(idx!==-1){
+      suitcaseItems[idx].category = cat;
+      suitcaseItems[idx].time = timeKey;
+      if(photo) suitcaseItems[idx].photo = photo;
+      if(name)  suitcaseItems[idx].name  = name;
+    }
+    editingSuitcaseId = null;
+    document.querySelector('#add-item-form .btn-d').textContent = 'Save to suitcase →';
+  } else {
+    suitcaseItems.push({id:++suitcaseItemIdCounter, category:cat, time:timeKey, photo:photo, name:name, day:suitcaseCurrentDay});
+  }
+
   renderSuitcaseItems();
+  renderPlansOutfits(currentDayNum);
 }
 
 function assignDay(el, day){
