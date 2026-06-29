@@ -313,7 +313,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   <div class="tabbar">
     <button class="tbtn on" onclick="tab(this,'plans')"><i class="ti ti-calendar-event"></i> Plans</button>
     <button class="tbtn" onclick="tab(this,'photos')"><i class="ti ti-camera"></i> Photos</button>
-    <button class="tbtn" onclick="tab(this,'suitcase')"><i class="ti ti-luggage"></i> Suitcase</button>
     <button class="tbtn" onclick="tab(this,'log')"><i class="ti ti-notebook"></i> Log</button>
     <button class="tbtn" onclick="tab(this,'tasks')"><i class="ti ti-checklist"></i> To-do</button>
     <button class="tbtn" onclick="tab(this,'expenses')"><i class="ti ti-receipt"></i> Expenses</button>
@@ -343,10 +342,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
             <div style="font-size:11px;color:var(--muted);">Use the buttons below to add flights, hotels & activities</div>
           </div>
         </div>
-        <div style="display:flex;gap:6px;margin-bottom:14px;">
-          <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
-          <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
-          <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px;">
+          <button onclick="openAddSheet('flight')" style="background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
+          <button onclick="openAddSheet('hotel')" style="background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
+          <button onclick="openAddSheet('excursion')" style="background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+          <button onclick="openOutfitSheet()" style="background:rgba(180,130,220,.15);border:1px solid rgba(180,130,220,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a3ab0;"><i class="ti ti-shirt" style="font-size:14px;"></i> + Outfits</button>
         </div>
 
         <!-- Outfits for this day (from Suitcase) -->
@@ -451,129 +451,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
 
     <!-- ─── SUITCASE ─── -->
-    <div class="tp" id="tp-suitcase">
-
-      <!-- Day picker (populated dynamically from trip dates) -->
-      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;" id="suitcase-day-picker">
-        <div class="dp on" onclick="suitcaseDayPick(this,'all','All days')"><div style="font-size:8px;font-weight:700;">ALL</div><div style="font-size:14px;font-weight:700;">★</div></div>
-      </div>
-
-      <!-- Day header + sharing toggle -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div id="suitcase-day-title" style="font-size:13px;font-weight:700;">All days</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:10px;color:var(--muted);" id="suitcase-share-label">Private</span>
-          <div class="toggle" id="suitcase-share-toggle" onclick="toggleSuitcaseShare(this)"></div>
-        </div>
-      </div>
-
-      <!-- Category filter -->
-      <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
-        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
-        <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
-      </div>
-
-      <!-- Suitcase items container -->
-      <div id="suitcase-items-list">
-
-        <!-- Section: Daytime -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">🌅</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
-          <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
-        </div>
-        <div id="suitcase-daytime" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem('day')">
-            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div>
-          </div>
-        </div>
-
-        <!-- Section: Evening -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">🌙</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
-          <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
-        </div>
-        <div id="suitcase-evening" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem('evening')">
-            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div>
-          </div>
-        </div>
-
-        <!-- Section: Shoes -->
-        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-          <span style="font-size:14px;">👟</span>
-          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
-          <div style="flex:1;height:1px;background:var(--card3);"></div>
-        </div>
-        <div id="suitcase-shoes" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
-          <div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:14px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem('shoes')">
-            <i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i>
-            <span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Message shown when "All days" is selected -->
-      <div id="suitcase-no-day-msg" style="display:none;background:var(--card2);border-radius:14px;padding:16px;text-align:center;margin-bottom:11px;">
-        <div style="font-size:22px;margin-bottom:6px;">👆</div>
-        <div style="font-size:13px;font-weight:700;margin-bottom:4px;">Select a day above</div>
-        <div style="font-size:11px;color:var(--muted);">Choose a specific day to add outfits for that date</div>
-      </div>
-
-      <!-- Add item form (always visible at bottom) -->
-      <div id="add-item-form" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:11px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:11px;color:var(--ink);">Add to suitcase</div>
-
-        <!-- Photo or text toggle -->
-        <div style="display:flex;gap:7px;margin-bottom:11px;">
-          <button id="add-mode-photo" class="btn-l on" onclick="setAddMode('photo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:13px;"></i> Add photo</button>
-          <button id="add-mode-text" class="btn-l" onclick="setAddMode('text')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-pencil" style="font-size:13px;"></i> Describe outfit</button>
-        </div>
-
-        <!-- Photo upload area -->
-        <div id="add-item-photo-area" style="margin-bottom:10px;">
-          <div id="add-item-photo-preview" style="background:var(--card3);border-radius:12px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(0,0,0,.12);" onclick="pickSuitcasePhoto()">
-            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>
-          </div>
-          <div style="display:flex;gap:7px;margin-top:7px;">
-            <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickSuitcasePhoto('camera')"><i class="ti ti-camera" style="font-size:12px;"></i> Camera</button>
-            <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickSuitcasePhoto('gallery')"><i class="ti ti-photo" style="font-size:12px;"></i> Gallery</button>
-          </div>
-        </div>
-
-        <!-- Text description area (hidden by default) -->
-        <div id="add-item-text-area" style="display:none;margin-bottom:10px;">
-          <input class="inp" id="add-item-name" placeholder="e.g. Black linen top + wide-leg trousers" style="margin-bottom:7px;">
-        </div>
-
-        <!-- Category + time of day -->
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:11px;">
-          <div>
-            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
-            <select class="inp" id="add-item-category" style="background:var(--card3);">
-              <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
-            <select class="inp" id="add-item-time" style="background:var(--card3);">
-              <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
-            </select>
-          </div>
-        </div>
-
-        <button class="btn-d" style="width:100%;padding:11px;font-size:13px;font-weight:700;" onclick="saveNewItem()">Save to suitcase →</button>
-      </div>
-
-      <div class="sl" style="margin-bottom:7px;">Day notes</div>
-      <textarea class="inp" id="suitcase-day-notes" rows="2" style="resize:none;line-height:1.5;" placeholder="Notes for packing, outfit ideas..."></textarea>
-
-    </div>
 
     <!-- ─── LOG ─── -->
     <div class="tp" id="tp-log">
@@ -1013,6 +890,97 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking ref (optional)</div><input id="e-ref" class="inp" placeholder="VIATOR-ABC123"></div>
     <div id="e-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveExcursion()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save activity →</button>
+  </div>
+</div>
+
+<!-- ═══════════ OUTFITS SHEET ═══════════ -->
+<div id="add-outfit-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeOutfitSheet()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+      <div style="font-size:16px;font-weight:700;">👗 Outfits</div>
+      <button onclick="closeOutfitSheet()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div id="outfit-sheet-day-label" style="font-size:11px;color:var(--muted);margin-bottom:16px;"></div>
+
+    <!-- Category filter -->
+    <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
+      <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
+      <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
+      <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
+      <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
+      <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
+    </div>
+
+    <!-- Daytime -->
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+      <span style="font-size:14px;">🌅</span>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
+      <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
+    </div>
+    <div id="outfit-sheet-daytime" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;"></div>
+
+    <!-- Evening -->
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+      <span style="font-size:14px;">🌙</span>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
+      <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
+    </div>
+    <div id="outfit-sheet-evening" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;"></div>
+
+    <!-- Shoes -->
+    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+      <span style="font-size:14px;">👟</span>
+      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
+      <div style="flex:1;height:1px;background:var(--card3);"></div>
+    </div>
+    <div id="outfit-sheet-shoes" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;"></div>
+
+    <!-- Add new outfit -->
+    <div style="border-top:1px solid var(--card3);padding-top:16px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:11px;">Add to this day</div>
+
+      <!-- Photo / text toggle -->
+      <div style="display:flex;gap:7px;margin-bottom:11px;">
+        <button id="outfit-mode-photo" class="btn-l on" onclick="setOutfitMode('photo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:13px;"></i> Add photo</button>
+        <button id="outfit-mode-text" class="btn-l" onclick="setOutfitMode('text')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-pencil" style="font-size:13px;"></i> Describe outfit</button>
+      </div>
+
+      <!-- Photo area -->
+      <div id="outfit-photo-area" style="margin-bottom:10px;">
+        <div id="outfit-photo-preview" style="background:var(--card3);border-radius:12px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(0,0,0,.12);" onclick="pickOutfitPhoto()">
+          <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:7px;">
+          <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickOutfitPhoto()"><i class="ti ti-camera" style="font-size:12px;"></i> Camera</button>
+          <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickOutfitPhoto()"><i class="ti ti-photo" style="font-size:12px;"></i> Gallery</button>
+        </div>
+      </div>
+
+      <!-- Text area -->
+      <div id="outfit-text-area" style="display:none;margin-bottom:10px;">
+        <input class="inp" id="outfit-item-name" placeholder="e.g. Black linen top + wide-leg trousers">
+      </div>
+
+      <!-- Category + time -->
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
+          <select class="inp" id="outfit-item-category" style="background:var(--card3);">
+            <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
+          <select class="inp" id="outfit-item-time" style="background:var(--card3);">
+            <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="outfit-save-btn-wrap">
+        <button class="btn-d" style="width:100%;padding:12px;font-size:13px;font-weight:700;" onclick="saveOutfitItem()">Save to this day →</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2150,6 +2118,160 @@ function editSuitcaseItem(id){
 function deleteSuitcaseItem(id){
   suitcaseItems = suitcaseItems.filter(function(i){ return i.id!==id; });
   renderSuitcaseItems();
+  renderPlansOutfits(currentDayNum);
+}
+
+// ── Outfit Sheet (in Plans) ──────────────────────────────────────────────────
+var outfitSheetMode = 'photo';
+var editingOutfitId = null;
+
+function openOutfitSheet(){
+  suitcaseCurrentDay = currentDayNum;
+  var label = document.getElementById('plans-day-title').textContent;
+  document.getElementById('outfit-sheet-day-label').textContent = label;
+  renderOutfitSheet();
+  resetOutfitForm();
+  document.getElementById('add-outfit-sheet').style.display = 'flex';
+}
+
+function closeOutfitSheet(){
+  document.getElementById('add-outfit-sheet').style.display = 'none';
+  editingOutfitId = null;
+  renderPlansOutfits(currentDayNum);
+}
+
+function renderOutfitSheet(){
+  var dayItems = suitcaseItems.filter(function(i){ return String(i.day)===String(currentDayNum); });
+  var daytime  = dayItems.filter(function(i){ return (i.time==='day'||i.time==='both') && i.category!=='👟 Shoes'; });
+  var evening  = dayItems.filter(function(i){ return (i.time==='evening'||i.time==='both') && i.category!=='👟 Shoes'; });
+  var shoes    = dayItems.filter(function(i){ return i.category==='👟 Shoes'; });
+
+  function timeTag(item){ return item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙'; }
+  function outfitCard(item){
+    var imgHtml = item.photo
+      ? '<div style="height:90px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;position:relative;"><span style="position:absolute;top:5px;left:5px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>'
+      : '<div style="background:var(--card3);height:72px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;"><i class="ti ti-shirt" style="font-size:26px;color:#9a9a9a;"></i><span style="position:absolute;top:5px;left:5px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>';
+    return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'+imgHtml
+      +'<div style="padding:7px;">'+(item.name?'<div style="font-size:11px;font-weight:600;line-height:1.4;margin-bottom:2px;">'+item.name+'</div>':'')
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">'+item.category+'</div>'
+      +'<div style="display:flex;gap:4px;"><button onclick="editOutfitItem('+item.id+')" style="flex:1;background:var(--card3);border:none;border-radius:6px;padding:3px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
+      +'<button onclick="deleteOutfitItem('+item.id+')" style="background:none;border:none;border-radius:6px;padding:3px 6px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
+      +'</div></div></div>';
+  }
+  function shoeCard(item){
+    var thumb = item.photo
+      ? '<div style="width:40px;height:40px;border-radius:8px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
+      : '<div style="width:40px;height:40px;border-radius:8px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:18px;color:#9a9a9a;"></i></div>';
+    return '<div style="background:var(--card2);border-radius:12px;padding:9px;display:flex;align-items:center;gap:9px;">'+thumb
+      +'<div style="flex:1;">'+(item.name?'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>':'')
+      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div></div>'
+      +'<div style="display:flex;gap:4px;align-items:center;"><button onclick="editOutfitItem('+item.id+')" style="background:var(--card3);border:none;border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer;font-family:inherit;">✏️</button>'
+      +'<button onclick="deleteOutfitItem('+item.id+')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#cc3a3a;padding:3px 5px;">✕</button>'
+      +'</div></div>';
+  }
+  var addBtn = '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:60px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="resetOutfitForm()"><div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:18px;display:block;margin-bottom:2px;"></i><span style="font-size:10px;font-weight:600;">Add</span></div></div>';
+  var addShoeBtn = '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:12px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;" onclick="resetOutfitForm()"><i class="ti ti-plus" style="font-size:14px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>';
+
+  document.getElementById('outfit-sheet-daytime').innerHTML = daytime.map(outfitCard).join('') + addBtn;
+  document.getElementById('outfit-sheet-evening').innerHTML = evening.map(outfitCard).join('') + addBtn;
+  document.getElementById('outfit-sheet-shoes').innerHTML   = shoes.map(shoeCard).join('') + addShoeBtn;
+}
+
+function editOutfitItem(id){
+  var item = suitcaseItems.find(function(i){ return i.id===id; });
+  if(!item) return;
+  editingOutfitId = id;
+  document.getElementById('outfit-item-category').value = item.category;
+  document.getElementById('outfit-item-time').value = item.time==='day'?'🌅 Daytime':item.time==='evening'?'🌙 Evening':'🌅🌙 Both';
+  if(item.photo){
+    setOutfitMode('photo');
+    var p = document.getElementById('outfit-photo-preview');
+    p.style.backgroundImage='url('+item.photo+')'; p.style.backgroundSize='cover'; p.style.backgroundPosition='center';
+    p.style.position='relative'; p.innerHTML='<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
+    p._photoData = item.photo;
+  } else {
+    setOutfitMode('text');
+    document.getElementById('outfit-item-name').value = item.name||'';
+  }
+  document.querySelector('#outfit-save-btn-wrap .btn-d').textContent = 'Save changes →';
+  document.getElementById('outfit-save-btn-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function deleteOutfitItem(id){
+  suitcaseItems = suitcaseItems.filter(function(i){ return i.id!==id; });
+  renderOutfitSheet();
+  renderPlansOutfits(currentDayNum);
+}
+
+function resetOutfitForm(){
+  editingOutfitId = null;
+  setOutfitMode('photo');
+  document.getElementById('outfit-item-name').value='';
+  document.getElementById('outfit-item-category').value='👗 Outfit';
+  document.getElementById('outfit-item-time').value='🌅 Daytime';
+  var p = document.getElementById('outfit-photo-preview');
+  p.style.backgroundImage=''; p.style.position='';
+  p.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
+  delete p._photoData;
+  var btn = document.querySelector('#outfit-save-btn-wrap .btn-d');
+  if(btn) btn.textContent='Save to this day →';
+}
+
+function setOutfitMode(mode){
+  outfitSheetMode = mode;
+  document.getElementById('outfit-photo-area').style.display = mode==='photo' ? 'block' : 'none';
+  document.getElementById('outfit-text-area').style.display  = mode==='text'  ? 'block' : 'none';
+  document.getElementById('outfit-mode-photo').classList.toggle('on', mode==='photo');
+  document.getElementById('outfit-mode-text').classList.toggle('on',  mode==='text');
+}
+
+function pickOutfitPhoto(){
+  var input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = function(e){
+    var file = e.target.files[0]; if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var p = document.getElementById('outfit-photo-preview');
+      p.style.backgroundImage='url('+ev.target.result+')'; p.style.backgroundSize='cover'; p.style.backgroundPosition='center';
+      p.style.position='relative';
+      p.innerHTML='<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
+      p._photoData = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function saveOutfitItem(){
+  var cat     = document.getElementById('outfit-item-category').value;
+  var timeVal = document.getElementById('outfit-item-time').value;
+  var timeKey = timeVal.indexOf('Daytime')!==-1 ? 'day' : timeVal.indexOf('Evening')!==-1 ? 'evening' : 'both';
+  var photo = null, name = '';
+
+  if(outfitSheetMode==='photo'){
+    var p = document.getElementById('outfit-photo-preview');
+    if(!p._photoData){ alert('Please add a photo first'); return; }
+    photo = p._photoData;
+    p.style.backgroundImage=''; p.style.position='';
+    p.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
+    delete p._photoData;
+  } else {
+    name = (document.getElementById('outfit-item-name').value||'').trim();
+    if(!name){ alert('Please describe the outfit'); return; }
+    document.getElementById('outfit-item-name').value='';
+  }
+
+  if(editingOutfitId !== null){
+    var idx = suitcaseItems.findIndex(function(i){ return i.id===editingOutfitId; });
+    if(idx!==-1){ suitcaseItems[idx].category=cat; suitcaseItems[idx].time=timeKey; if(photo) suitcaseItems[idx].photo=photo; if(name) suitcaseItems[idx].name=name; }
+    editingOutfitId = null;
+    document.querySelector('#outfit-save-btn-wrap .btn-d').textContent='Save to this day →';
+  } else {
+    suitcaseItems.push({id:++suitcaseItemIdCounter, category:cat, time:timeKey, photo:photo, name:name, day:currentDayNum});
+  }
+
+  renderOutfitSheet();
   renderPlansOutfits(currentDayNum);
 }
 
