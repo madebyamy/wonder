@@ -330,12 +330,37 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div style="font-size:14px;font-weight:700;" id="plans-day-title">Select a day</div>
         <div style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:4px 10px;">
           <i class="ti ti-map-pin" style="font-size:12px;color:var(--muted);"></i>
-          <input id="day-location" class="inp" placeholder="City, Country" onblur="saveDayLocation()" style="background:none;padding:0;font-size:11px;font-weight:600;width:130px;border:none;outline:none;">
+          <input id="day-location" class="inp" placeholder="City, Country" onblur="saveDayLocation()" onchange="saveDayLocation()" style="background:none;padding:0;font-size:11px;font-weight:600;width:130px;border:none;outline:none;">
         </div>
       </div>
 
-      <!-- Live DB plans -->
-      <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;"></div>
+      <!-- ── DB PLANS SECTION (live data) ── -->
+      <div id="plans-db-section" style="margin-bottom:4px;">
+        <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;">
+          <div id="plans-db-empty" style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;">
+            <div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div>
+            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Nothing planned for this day yet</div>
+            <div style="font-size:11px;color:var(--muted);">Use the buttons below to add flights, hotels & activities</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:14px;">
+          <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
+          <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
+          <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+        </div>
+
+        <!-- Notes section (collapsible) -->
+        <div style="margin-bottom:14px;">
+          <button onclick="togglePlanNotes()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:none;border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;">
+            <span style="font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;"><i class="ti ti-notes" style="font-size:14px;color:var(--muted);"></i> Day notes</span>
+            <i id="plan-notes-chevron" class="ti ti-chevron-down" style="font-size:14px;color:var(--muted);transition:transform .2s;"></i>
+          </button>
+          <div id="plan-notes-body" style="display:none;background:var(--card2);border-radius:0 0 12px 12px;padding:0 13px 13px;margin-top:-4px;">
+            <textarea id="plan-notes-text" class="inp" rows="4" style="resize:none;line-height:1.6;margin-bottom:8px;margin-top:8px;" placeholder="Add notes for this day — reminders, ideas, links..."></textarea>
+            <button onclick="savePlanNotes()" class="btn-d" style="width:100%;padding:9px;font-size:12px;">Save notes →</button>
+          </div>
+        </div>
+      </div>
 
       <!-- ── AI Chat (collapsible, plans-tab only) ── -->
       <div style="border-top:1px solid var(--card3);padding-top:14px;">
@@ -369,36 +394,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
             <button onclick="sendChat()" class="btn-d" style="padding:7px 14px;border-radius:9px;font-size:13px;flex:0 0 auto;line-height:1;">➤</button>
           </div>
         </div>
-      </div>
-    </div>
-
-      <!-- ── DB PLANS SECTION (live data) ── -->
-      <div id="plans-db-section" style="margin-bottom:4px;">
-        <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;">
-          <div id="plans-db-empty" style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Nothing planned for this day yet</div>
-            <div style="font-size:11px;color:var(--muted);">Use the buttons below to add flights, hotels & activities</div>
-          </div>
-        </div>
-        <div style="display:flex;gap:6px;margin-bottom:14px;">
-          <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
-          <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
-          <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
-        </div>
-
-        <!-- Notes section (collapsible) -->
-        <div style="margin-bottom:14px;">
-          <button onclick="togglePlanNotes()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:none;border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;">
-            <span style="font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;"><i class="ti ti-notes" style="font-size:14px;color:var(--muted);"></i> Day notes</span>
-            <i id="plan-notes-chevron" class="ti ti-chevron-down" style="font-size:14px;color:var(--muted);transition:transform .2s;"></i>
-          </button>
-          <div id="plan-notes-body" style="display:none;background:var(--card2);border-radius:0 0 12px 12px;padding:0 13px 13px;margin-top:-4px;">
-            <textarea id="plan-notes-text" class="inp" rows="4" style="resize:none;line-height:1.6;margin-bottom:8px;margin-top:8px;" placeholder="Add notes for this day — reminders, ideas, links..."></textarea>
-            <button onclick="savePlanNotes()" class="btn-d" style="width:100%;padding:9px;font-size:12px;">Save notes →</button>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -621,18 +616,34 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
       </div>
 
-      <!-- Add item buttons -->
-      <div style="display:flex;gap:7px;margin-bottom:11px;">
-        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('camera')"><i class="ti ti-camera" style="font-size:13px;"></i> Camera</button>
-        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('gallery')"><i class="ti ti-photo" style="font-size:13px;"></i> Gallery</button>
-        <button class="btn-d" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('manual')"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
-      </div>
+      <!-- Add item form (always visible at bottom) -->
+      <div id="add-item-form" style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:11px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:11px;color:var(--ink);">Add to suitcase</div>
 
-      <!-- Add item form (collapsed by default) -->
-      <div id="add-item-form" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
-        <div style="font-size:12px;font-weight:700;margin-bottom:10px;">New closet item</div>
-        <input class="inp" id="add-item-name" placeholder="Item name (e.g. Blue silk blouse)" style="margin-bottom:7px;">
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px;">
+        <!-- Photo or text toggle -->
+        <div style="display:flex;gap:7px;margin-bottom:11px;">
+          <button id="add-mode-photo" class="btn-l on" onclick="setAddMode('photo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:13px;"></i> Add photo</button>
+          <button id="add-mode-text" class="btn-l" onclick="setAddMode('text')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-pencil" style="font-size:13px;"></i> Describe outfit</button>
+        </div>
+
+        <!-- Photo upload area -->
+        <div id="add-item-photo-area" style="margin-bottom:10px;">
+          <div id="add-item-photo-preview" style="background:var(--card3);border-radius:12px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(0,0,0,.12);" onclick="pickSuitcasePhoto()">
+            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>
+          </div>
+          <div style="display:flex;gap:7px;margin-top:7px;">
+            <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickSuitcasePhoto('camera')"><i class="ti ti-camera" style="font-size:12px;"></i> Camera</button>
+            <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickSuitcasePhoto('gallery')"><i class="ti ti-photo" style="font-size:12px;"></i> Gallery</button>
+          </div>
+        </div>
+
+        <!-- Text description area (hidden by default) -->
+        <div id="add-item-text-area" style="display:none;margin-bottom:10px;">
+          <input class="inp" id="add-item-name" placeholder="e.g. Black linen top + wide-leg trousers" style="margin-bottom:7px;">
+        </div>
+
+        <!-- Category + time of day -->
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:11px;">
           <div>
             <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
             <select class="inp" id="add-item-category" style="background:var(--card3);">
@@ -646,17 +657,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
             </select>
           </div>
         </div>
-        <div style="margin-bottom:9px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Assign to days</div>
-          <div id="add-item-days" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
-        </div>
-        <div style="display:flex;gap:7px;">
-          <button class="btn-l" style="flex:1;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Cancel</button>
-          <button class="btn-d" style="flex:2;padding:9px;font-size:12px;" onclick="saveNewItem()">Save item →</button>
-        </div>
+
+        <button class="btn-d" style="width:100%;padding:11px;font-size:13px;font-weight:700;" onclick="saveNewItem()">Save to suitcase →</button>
       </div>
 
-      <div class="sl">Day notes</div>
+      <div class="sl" style="margin-bottom:7px;">Day notes</div>
       <textarea class="inp" id="suitcase-day-notes" rows="2" style="resize:none;line-height:1.5;" placeholder="Notes for packing, outfit ideas..."></textarea>
 
     </div>
@@ -2072,7 +2077,7 @@ var currentTripId = null;
 var editingPlanId = null;
 var planItemCache = {};
 var currentTripStartDate = null;
-var currentDayNum = 12;
+var currentDayNum = 1;
 
 // Map day number (1-based offset) to a calendar date string (YYYY-MM-DD)
 function getDayDateStr(dayNum) {
@@ -2477,18 +2482,27 @@ function renderSuitcaseItems(){
   var shoes   = filtered.filter(function(i){ return i.category==='👟 Shoes'; });
 
   function outfitCard(item){
+    var imgHtml = item.photo
+      ? '<div style="height:100px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;position:relative;">'
+        +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+(item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙')+'</span></div>'
+      : '<div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;">'
+        +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>'
+        +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+(item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙')+'</span></div>';
     return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'
-      +'<div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;">'
-      +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i></div>'
-      +'<div style="padding:8px;"><div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
-      +(item.note?'<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">'+item.note+'</div>':'')
+      +imgHtml
+      +'<div style="padding:8px;">'
+      +(item.name?'<div style="font-size:12px;font-weight:600;line-height:1.4;">'+item.name+'</div>':'')
+      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div>'
       +'</div></div>';
   }
   function shoeCard(item){
+    var thumbHtml = item.photo
+      ? '<div style="width:44px;height:44px;border-radius:9px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
+      : '<div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>';
     return '<div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">'
-      +'<div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>'
-      +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
-      +(item.note?'<div style="font-size:10px;color:var(--muted);">'+item.note+'</div>':'')
+      +thumbHtml
+      +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+(item.name||item.category)+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div>'
       +'</div></div>';
   }
 
@@ -2502,42 +2516,66 @@ function renderSuitcaseItems(){
   document.getElementById('suitcase-shoes').innerHTML = shoes.map(shoeCard).join('') + addShoeBtn;
 }
 
+var suitcaseAddMode = 'photo';
+
+function setAddMode(mode){
+  suitcaseAddMode = mode;
+  document.getElementById('add-item-photo-area').style.display = mode==='photo' ? 'block' : 'none';
+  document.getElementById('add-item-text-area').style.display  = mode==='text'  ? 'block' : 'none';
+  document.getElementById('add-mode-photo').classList.toggle('on', mode==='photo');
+  document.getElementById('add-mode-text').classList.toggle('on',  mode==='text');
+}
+
 function showAddItem(mode){
-  var f = document.getElementById('add-item-form');
-  f.style.display = 'block';
-  if(mode==='day') document.getElementById('add-item-time').value='🌅 Daytime';
+  if(mode==='day')     document.getElementById('add-item-time').value='🌅 Daytime';
   else if(mode==='evening') document.getElementById('add-item-time').value='🌙 Evening';
-  else if(mode==='shoes') document.getElementById('add-item-category').value='👟 Shoes';
-  // populate day pills
-  var daysEl = document.getElementById('add-item-days');
-  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
-  var pills = '';
-  if(trip && trip.start_date && trip.end_date){
-    var d = new Date(trip.start_date+'T00:00:00');
-    var end = new Date(trip.end_date+'T00:00:00');
-    var n = 1;
-    while(d <= end){
-      pills += '<span class="pill" onclick="this.classList.toggle(\'on\')" style="font-size:10px;">Day '+n+'</span>';
-      d.setDate(d.getDate()+1); n++;
-    }
-  }
-  daysEl.innerHTML = pills || '<span style="font-size:11px;color:var(--muted);">No trip dates set</span>';
-  f.scrollIntoView({behavior:'smooth',block:'nearest'});
+  else if(mode==='shoes')   document.getElementById('add-item-category').value='👟 Shoes';
+  document.getElementById('add-item-form').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function pickSuitcasePhoto(){
+  var input = document.createElement('input');
+  input.type='file'; input.accept='image/*';
+  input.onchange = function(e){
+    var file = e.target.files[0]; if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var preview = document.getElementById('add-item-photo-preview');
+      preview.style.backgroundImage = 'url('+ev.target.result+')';
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+      preview.innerHTML = '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
+      preview.style.position = 'relative';
+      preview._photoData = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
 }
 
 function saveNewItem(){
-  var name = document.getElementById('add-item-name').value.trim();
-  if(!name){ alert('Please enter an item name'); return; }
   var cat  = document.getElementById('add-item-category').value;
   var time = document.getElementById('add-item-time').value;
   var timeKey = time.indexOf('Daytime')!==-1 ? 'day' : time.indexOf('Evening')!==-1 ? 'evening' : 'both';
-  var days = [];
-  document.querySelectorAll('#add-item-days .pill.on').forEach(function(p){
-    days.push(p.textContent.trim());
-  });
-  suitcaseItems.push({name:name, category:cat, time:timeKey, days:days});
-  document.getElementById('add-item-name').value='';
-  document.getElementById('add-item-form').style.display='none';
+  var item = {category:cat, time:timeKey, day:suitcaseCurrentDay};
+
+  if(suitcaseAddMode==='photo'){
+    var preview = document.getElementById('add-item-photo-preview');
+    if(!preview._photoData){ alert('Please add a photo first'); return; }
+    item.photo = preview._photoData;
+    item.name = '';
+    // reset preview
+    preview.style.backgroundImage=''; preview.style.position='';
+    preview.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
+    delete preview._photoData;
+  } else {
+    var name = document.getElementById('add-item-name').value.trim();
+    if(!name){ alert('Please describe the outfit'); return; }
+    item.name = name;
+    document.getElementById('add-item-name').value='';
+  }
+
+  suitcaseItems.push(item);
   renderSuitcaseItems();
 }
 
