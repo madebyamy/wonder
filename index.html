@@ -1923,6 +1923,7 @@ async function saveNewTrip() {
 
 // ── Trip data state ──────────────────────────────────────────────────────────
 var currentTripId = null;
+var editingPlanId = null;
 var currentTripStartDate = null;
 var currentDayNum = 12;
 
@@ -1988,6 +1989,13 @@ async function loadDayPlans(dayNum) {
 }
 
 function renderPlanItem(item) {
+  var actions = function(type, id, dataJson) {
+    var safe = dataJson.replace(/'/g,"&#39;");
+    return '<div style="display:flex;gap:8px;align-items:center;">'
+      +'<button onclick="openEditSheet(\''+type+'\',\''+safe+'\')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Edit">✏️</button>'
+      +'<button onclick="deletePlanItem(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Delete">✕</button>'
+      +'</div>';
+  };
   if (item.type === 'flight') {
     var f = item.data;
     var dep = f.departure_time ? f.departure_time.slice(0,5) : '';
@@ -2001,7 +2009,7 @@ function renderPlanItem(item) {
       +(dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr:'')+'</div>' : '')
       +(f.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+f.notes+'</div>' : '')
       +'</div>'
-      +'<button onclick="deletePlanItem(\'flights\',\''+f.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +actions('flights', f.id, JSON.stringify(f))
       +'</div></div>';
   }
   if (item.type === 'hotel') {
@@ -2015,7 +2023,7 @@ function renderPlanItem(item) {
       +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
       +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
       +'</div>'
-      +'<button onclick="deletePlanItem(\'hotels\',\''+h.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +actions('hotels', h.id, JSON.stringify(h))
       +'</div></div>';
   }
   if (item.type === 'excursion') {
@@ -2030,10 +2038,42 @@ function renderPlanItem(item) {
       +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
       +'</div>'
-      +'<button onclick="deletePlanItem(\'excursions\',\''+e.id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:14px;padding:0;line-height:1;">✕</button>'
+      +actions('excursions', e.id, JSON.stringify(e))
       +'</div></div>';
   }
   return '';
+}
+
+function openEditSheet(type, dataJson) {
+  var d = JSON.parse(dataJson);
+  editingPlanId = d.id;
+  if (type === 'flights') {
+    document.getElementById('f-airline').value = d.airline || '';
+    document.getElementById('f-number').value = d.flight_number || '';
+    document.getElementById('f-from').value = d.departure_airport || '';
+    document.getElementById('f-to').value = d.arrival_airport || '';
+    document.getElementById('f-dep').value = d.departure_time ? d.departure_time.slice(0,5) : '';
+    document.getElementById('f-arr').value = d.arrival_time ? d.arrival_time.slice(0,5) : '';
+    document.getElementById('f-notes').value = d.notes || '';
+    document.querySelector('#add-flight-sheet .btn-d').textContent = 'Save changes →';
+    openAddSheet('flight');
+  } else if (type === 'hotels') {
+    document.getElementById('h-name').value = d.hotel_name || '';
+    document.getElementById('h-addr').value = d.address || '';
+    document.getElementById('h-in').value = d.checkin_date || '';
+    document.getElementById('h-out').value = d.checkout_date || '';
+    document.getElementById('h-conf').value = d.confirmation || '';
+    document.querySelector('#add-hotel-sheet .btn-d').textContent = 'Save changes →';
+    openAddSheet('hotel');
+  } else if (type === 'excursions') {
+    document.getElementById('e-title').value = d.title || '';
+    document.getElementById('e-time').value = d.start_time ? d.start_time.slice(0,5) : '';
+    document.getElementById('e-cost').value = d.cost || '';
+    document.getElementById('e-desc').value = d.description || '';
+    document.getElementById('e-ref').value = d.booking_ref || '';
+    document.querySelector('#add-excursion-sheet .btn-d').textContent = 'Save changes →';
+    openAddSheet('excursion');
+  }
 }
 
 async function deletePlanItem(table, id) {
@@ -2043,10 +2083,18 @@ async function deletePlanItem(table, id) {
 
 // ── Add sheet open/close ──────────────────────────────────────────────────────
 function openAddSheet(type) {
+  if (!editingPlanId) {
+    // reset button text when opening fresh
+    var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
+    if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
+  }
   document.getElementById('add-'+type+'-sheet').style.display = 'flex';
 }
 function closeAddSheet(type) {
   document.getElementById('add-'+type+'-sheet').style.display = 'none';
+  editingPlanId = null;
+  var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
+  if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
 }
 
 // ── Save flight ───────────────────────────────────────────────────────────────
@@ -2068,7 +2116,12 @@ async function saveFlight() {
     notes: document.getElementById('f-notes').value.trim()||null,
     created_by: currentUser.id
   };
-  var {error} = await sb.from('flights').insert(data);
+  var error;
+  if (editingPlanId) {
+    ({error} = await sb.from('flights').update(data).eq('id', editingPlanId));
+  } else {
+    ({error} = await sb.from('flights').insert(data));
+  }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
   closeAddSheet('flight');
   ['f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
@@ -2093,7 +2146,12 @@ async function saveHotel() {
     confirmation: document.getElementById('h-conf').value.trim()||null,
     created_by: currentUser.id
   };
-  var {error} = await sb.from('hotels').insert(data);
+  var error;
+  if (editingPlanId) {
+    ({error} = await sb.from('hotels').update(data).eq('id', editingPlanId));
+  } else {
+    ({error} = await sb.from('hotels').insert(data));
+  }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
   closeAddSheet('hotel');
   ['h-name','h-addr','h-in','h-out','h-conf'].forEach(function(id){ document.getElementById(id).value=''; });
@@ -2116,7 +2174,12 @@ async function saveExcursion() {
     booking_ref: document.getElementById('e-ref').value.trim()||null,
     created_by: currentUser.id
   };
-  var {error} = await sb.from('excursions').insert(data);
+  var error;
+  if (editingPlanId) {
+    ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+  } else {
+    ({error} = await sb.from('excursions').insert(data));
+  }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
   closeAddSheet('excursion');
   ['e-title','e-time','e-cost','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
