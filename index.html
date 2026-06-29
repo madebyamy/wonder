@@ -291,40 +291,36 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
      SCREEN: TRIP DETAIL
 ════════════════════════════════════ -->
 <div class="screen" id="s-trip">
-  <!-- Trip header -->
-  <div style="background:var(--lav);padding:12px 16px 14px;flex:0 0 auto;">
+  <!-- Trip header — populated dynamically by openDbTrip() -->
+  <div id="trip-header" style="padding:12px 16px 14px;flex:0 0 auto;background:var(--lav);">
     <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px;">
-      <button class="back-btn" onclick="go('home')" style="background:rgba(255,255,255,.35);"><i class="ti ti-arrow-left" style="color:#2a1a50;"></i></button>
-      <div style="flex:1;"><div style="font-size:19px;font-weight:700;color:#1a1030;letter-spacing:-.4px;">🇮🇹 Italy</div><div style="font-size:11px;color:#5a4080;">Sep 12 – Sep 26 · 14 days</div></div>
-      <button onclick="go('trip-settings')" style="background:rgba(255,255,255,.35);border:none;border-radius:9px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-settings" style="font-size:15px;color:#2a1a50;"></i></button>
+      <button class="back-btn" onclick="go('home')" style="background:rgba(255,255,255,.35);"><i class="ti ti-arrow-left"></i></button>
+      <div style="flex:1;">
+        <div id="trip-title" style="font-size:19px;font-weight:700;letter-spacing:-.4px;">Trip</div>
+        <div id="trip-subtitle" style="font-size:11px;opacity:.7;"></div>
+      </div>
     </div>
-    <!-- Countdown bar -->
-    <div style="background:rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;margin-bottom:9px;">
+    <div id="trip-countdown-wrap" style="background:rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;margin-bottom:9px;display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#5a4080;" id="trip-countdown-label">Departure countdown</div>
-        <div style="font-size:13px;font-weight:700;color:#1a1030;" id="trip-days-badge">73 days away</div>
+        <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:.7;">Departure</div>
+        <div id="trip-days-badge" style="font-size:13px;font-weight:700;"></div>
       </div>
-      <div style="background:rgba(0,0,0,.12);border-radius:99px;height:4px;"><div style="background:#3a2a6a;height:4px;border-radius:99px;width:0%;" id="trip-progress-bar"></div></div>
-      <div style="font-size:10px;color:#5a4080;margin-top:4px;">Sep 12 – Sep 26, 2026 · 14 nights</div>
+      <div style="background:rgba(0,0,0,.12);border-radius:99px;height:4px;"><div id="trip-progress-bar" style="height:4px;border-radius:99px;background:rgba(0,0,0,.4);width:0%;"></div></div>
+      <div id="trip-date-range" style="font-size:10px;opacity:.7;margin-top:4px;"></div>
     </div>
-    <div style="display:flex;gap:6px;margin-bottom:11px;">
-      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:#1a1030;" id="trip-stat-days">73</div>
-        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;" id="trip-stat-label">Days away</div>
+    <div style="display:flex;gap:6px;">
+      <div style="background:rgba(255,255,255,.28);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div id="trip-stat-days" style="font-size:16px;font-weight:700;">—</div>
+        <div id="trip-stat-label" style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;opacity:.7;">Days</div>
       </div>
-      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:#1a1030;">$840</div>
-        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;">Spent</div>
+      <div style="background:rgba(255,255,255,.28);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div id="trip-stat-nights" style="font-size:16px;font-weight:700;">—</div>
+        <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;opacity:.7;">Nights</div>
       </div>
-      <div style="background:rgba(255,255,255,.32);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:#1a1030;">58</div>
-        <div style="font-size:9px;font-weight:600;color:#5a4080;text-transform:uppercase;letter-spacing:.6px;">Photos</div>
+      <div style="background:rgba(255,255,255,.28);border-radius:9px;padding:7px 10px;flex:1;text-align:center;">
+        <div id="trip-stat-dest" style="font-size:16px;font-weight:700;">—</div>
+        <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;opacity:.7;">Stops</div>
       </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:7px;">
-      <div class="av-row"><div class="av u-amy">A</div></div>
-      <span style="font-size:11px;color:#5a4080;">Amy</span>
-      <button onclick="go('trip-settings')" style="margin-left:auto;background:rgba(255,255,255,.35);border:none;border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;cursor:pointer;color:#3a2a6a;">+ Invite</button>
     </div>
   </div>
 
@@ -342,6 +338,21 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── PLANS ─── -->
     <div class="tp active" id="tp-plans">
+      <!-- Day picker — built dynamically -->
+      <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;"></div>
+
+      <div style="font-size:14px;font-weight:700;margin-bottom:11px;" id="plans-day-title">Select a day</div>
+
+      <!-- Live DB plans -->
+      <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;"></div>
+
+      <!-- Add buttons -->
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
+        <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
+        <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+      </div>
+    </div>
 
       <!-- Route bar -->
       <div style="display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 0 11px;margin-bottom:4px;">
@@ -426,8 +437,8 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         </div>
       </div>
 
-      <!-- Sep 12 content -->
-      <div id="day-content-12">
+      <!-- (demo content removed) -->
+      <div id="day-content-12" style="display:none;">
 
         <!-- FLIGHT with duration -->
         <div style="background:var(--sky);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
@@ -537,7 +548,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         </div>
       </div>
 
-      <!-- Sep 16 — INTRA-TRIP FLIGHT DAY (hidden by default) -->
       <div id="day-content-16" style="display:none;">
         <!-- Internal flight card -->
         <div style="background:var(--teal);border-radius:var(--r-card);padding:14px;margin-bottom:9px;">
@@ -2045,9 +2055,81 @@ function openDbTrip(id){
   if(!trip) return;
   currentTripId = trip.id;
   currentTripStartDate = trip.start_date || null;
-  // Open the trip UI
-  openTrip();
-  // Load plans for whatever day is currently selected
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  var hdr = document.getElementById('trip-header');
+  var color = trip.color || '#b8a4ed';
+  hdr.style.background = color;
+
+  // Decide text color based on luminance
+  var hex = color.replace('#','');
+  var r=parseInt(hex.substr(0,2),16), g=parseInt(hex.substr(2,2),16), b=parseInt(hex.substr(4,2),16);
+  var lum = (0.299*r + 0.587*g + 0.114*b)/255;
+  var txtColor = lum > 0.55 ? '#1a1a2e' : '#fffaf0';
+  hdr.style.color = txtColor;
+
+  document.getElementById('trip-title').textContent = (trip.cover_emoji||'✈️') + ' ' + trip.name;
+  document.getElementById('trip-title').style.color = txtColor;
+
+  var dests = (trip.destinations||[]).join(' · ') || 'Destination TBD';
+  var subtitle = dests;
+  document.getElementById('trip-subtitle').textContent = subtitle;
+  document.getElementById('trip-subtitle').style.color = txtColor;
+
+  // ── Stats & countdown ────────────────────────────────────────────────────
+  var wrap = document.getElementById('trip-countdown-wrap');
+  if(trip.start_date && trip.end_date){
+    var start = new Date(trip.start_date+'T00:00:00');
+    var end   = new Date(trip.end_date+'T00:00:00');
+    var now   = new Date(); now.setHours(0,0,0,0);
+    var nights = Math.round((end-start)/(86400000));
+    var days   = nights + 1;
+    var daysAway = Math.round((start-now)/86400000);
+
+    document.getElementById('trip-stat-days').textContent = days;
+    document.getElementById('trip-stat-nights').textContent = nights;
+    document.getElementById('trip-stat-dest').textContent = (trip.destinations||[]).length || 1;
+    document.getElementById('trip-stat-label').textContent = daysAway > 0 ? 'Days away' : (daysAway < 0 ? 'Days ago' : 'Today!');
+
+    var opts = {month:'short', day:'numeric'};
+    document.getElementById('trip-date-range').textContent =
+      start.toLocaleDateString('en-US',opts) + ' – ' + end.toLocaleDateString('en-US',opts) + ' · ' + nights + ' nights';
+    document.getElementById('trip-days-badge').textContent =
+      daysAway > 0 ? daysAway+' days away' : (daysAway === 0 ? 'Starts today!' : 'In progress');
+    var progress = daysAway <= 0 ? Math.min(100, Math.round((-daysAway/days)*100)) : 0;
+    document.getElementById('trip-progress-bar').style.width = progress+'%';
+    wrap.style.display = '';
+
+    // ── Day picker ───────────────────────────────────────────────────────
+    var picker = document.getElementById('trip-day-picker');
+    var html = '';
+    var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    for(var i=0; i<days; i++){
+      var d = new Date(start); d.setDate(d.getDate()+i);
+      var dayNum = i+1;
+      var isFirst = i===0;
+      html += '<div class="dp'+(isFirst?' on':'')+'" onclick="selectDay(this,'+dayNum+',\''+
+        d.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'})+'\',\'day\')" style="flex:0 0 auto;">'
+        +'<div style="font-size:8px;font-weight:700;color:var(--lav-d);">Day '+(i+1)+'</div>'
+        +'<div style="font-size:14px;font-weight:700;">'+d.getDate()+'</div>'
+        +'<div style="font-size:9px;">'+DAYS[d.getDay()]+'</div>'
+        +'</div>';
+    }
+    picker.innerHTML = html;
+    currentDayNum = 1;
+    document.getElementById('plans-day-title').textContent =
+      start.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+  } else {
+    // No dates — show simple stat boxes
+    document.getElementById('trip-stat-days').textContent = '—';
+    document.getElementById('trip-stat-nights').textContent = '—';
+    document.getElementById('trip-stat-dest').textContent = (trip.destinations||[]).length || '—';
+    wrap.style.display = 'none';
+    document.getElementById('trip-day-picker').innerHTML =
+      '<div style="font-size:12px;color:var(--muted);padding:8px 0;">No dates set — edit trip to add dates</div>';
+  }
+
+  go('trip');
   loadDayPlans(currentDayNum);
 }
 
@@ -2178,16 +2260,16 @@ var currentTripId = null;
 var currentTripStartDate = null;
 var currentDayNum = 12;
 
-// Map day number to a calendar date string (YYYY-MM-DD)
-// Demo trip: day 12 = Sep 12 2026, day 13 = Sep 13 2026, etc.
+// Map day number (1-based offset) to a calendar date string (YYYY-MM-DD)
 function getDayDateStr(dayNum) {
   if (currentTripStartDate) {
-    var d = new Date(currentTripStartDate);
+    var d = new Date(currentTripStartDate + 'T00:00:00');
     d.setDate(d.getDate() + (dayNum - 1));
-    return d.toISOString().slice(0,10);
+    var mm = String(d.getMonth()+1).padStart(2,'0');
+    var dd = String(d.getDate()).padStart(2,'0');
+    return d.getFullYear() + '-' + mm + '-' + dd;
   }
-  // Demo fallback: Sep 2026
-  return '2026-09-' + (dayNum < 10 ? '0' : '') + dayNum;
+  return null;
 }
 
 function selectDay(pill, dayNum, label, city){
