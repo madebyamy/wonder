@@ -331,7 +331,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <button class="tbtn" onclick="tab(this,'log')"><i class="ti ti-notebook"></i> Log</button>
     <button class="tbtn" onclick="tab(this,'tasks')"><i class="ti ti-checklist"></i> To-do</button>
     <button class="tbtn" onclick="tab(this,'expenses')"><i class="ti ti-receipt"></i> Expenses</button>
-    <button class="tbtn" onclick="tab(this,'chat')"><i class="ti ti-sparkles"></i> AI chat</button>
   </div>
 
   <div class="scroll">
@@ -347,10 +346,35 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;"></div>
 
       <!-- Add buttons -->
-      <div style="display:flex;gap:6px;margin-bottom:14px;">
+      <div style="display:flex;gap:6px;margin-bottom:18px;">
         <button onclick="openAddSheet('flight')" style="flex:1;background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
         <button onclick="openAddSheet('hotel')" style="flex:1;background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
         <button onclick="openAddSheet('excursion')" style="flex:1;background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
+      </div>
+
+      <!-- ── AI Chat (collapsible, plans-tab only) ── -->
+      <div style="border-top:1px solid var(--card3);padding-top:14px;">
+        <div onclick="toggleChat()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;margin-bottom:10px;">
+          <div style="display:flex;align-items:center;gap:7px;">
+            <span style="font-size:16px;">✨</span>
+            <div>
+              <div style="font-size:12px;font-weight:700;">AI Travel Assistant</div>
+              <div style="font-size:10px;color:var(--muted);">Ask anything about your trip</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="event.stopPropagation();clearChat()" style="background:var(--card2);border:none;border-radius:7px;padding:4px 9px;font-size:10px;font-weight:600;cursor:pointer;color:var(--muted);">Clear</button>
+            <i id="chat-chevron" class="ti ti-chevron-down" style="font-size:16px;color:var(--muted);transition:.2s;"></i>
+          </div>
+        </div>
+        <div id="chat-body" style="display:none;">
+          <div id="chat-messages" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:320px;overflow-y:auto;"></div>
+          <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;" id="chat-suggestions"></div>
+          <div style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
+            <input id="chat-input" class="inp" style="background:none;padding:0;flex:1;font-size:12px;" placeholder="Ask about flights, hotels, activities..." onkeydown="if(event.key==='Enter')sendChat()">
+            <button onclick="sendChat()" class="btn-d" style="padding:7px 12px;border-radius:9px;font-size:12px;flex:0 0 auto;"><i class="ti ti-send" style="font-size:13px;"></i></button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1491,34 +1515,6 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
 
     <!-- ─── CHAT ─── -->
-    <div class="tp" id="tp-chat">
-      <!-- Collapsible header -->
-      <div onclick="toggleChat()" style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:12px;padding:11px;margin-bottom:12px;cursor:pointer;">
-        <div>
-          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:3px;"><i class="ti ti-sparkles" style="font-size:12px;"></i> AI Travel Assistant · Gemini</div>
-          <div style="font-size:12px;color:var(--body);">Ask anything about Italy</div>
-        </div>
-        <i id="chat-chevron" class="ti ti-chevron-up" style="font-size:16px;color:var(--muted);transition:.2s;"></i>
-      </div>
-      <!-- Collapsible body -->
-      <div id="chat-body">
-        <div style="display:flex;flex-direction:column;margin-bottom:11px;">
-          <div class="bubble bai">Ciao! Ready to help plan your Italy adventure. What would you like to know?</div>
-          <div class="bubble buser">What should I pack for September in Rome?</div>
-          <div class="bubble bai">September in Rome is warm (highs 27°C/80°F). Pack light linen or cotton, a layer for evenings, and a small scarf for cathedral visits. Comfortable walking shoes are essential — Rome's cobblestones are tough!</div>
-        </div>
-        <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;">
-          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">Best restaurants near Colosseum ↗</button>
-          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">3-day Rome itinerary ↗</button>
-          <button style="background:var(--card2);border:none;border-radius:var(--r-pill);padding:6px 11px;font-size:11px;font-weight:500;cursor:pointer;font-family:inherit;white-space:nowrap;color:var(--body);">Italian customs ↗</button>
-        </div>
-      </div>
-      <!-- Input always visible -->
-      <div style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
-        <input class="inp" style="background:none;padding:0;flex:1;font-size:12px;" placeholder="Ask about restaurants, packing, activities...">
-        <button class="btn-d" style="padding:7px 12px;border-radius:9px;font-size:12px;flex:0 0 auto;"><i class="ti ti-send" style="font-size:13px;"></i></button>
-      </div>
-    </div>
 
   </div><!-- end scroll -->
 </div><!-- end s-trip -->
@@ -2170,11 +2166,17 @@ window.addEventListener('DOMContentLoaded', async function(){
 });
 
 // ── Screen navigation ────────────────────────────────────────────────────────
-function go(name){
+function go(name, skipHistory){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el = document.getElementById('s-'+name);
   if(el) el.classList.add('active');
+  if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
 }
+
+window.addEventListener('popstate', function(e){
+  var screen = (e.state && e.state.screen) || 'home';
+  go(screen, true);
+});
 
 function login(user){ /* legacy mock — kept for demo compatibility */ go('home'); setTimeout(showAlert,600); }
 
@@ -2688,12 +2690,75 @@ function splitType(btn, type){
 
 // ─── COLLAPSIBLE GEMINI ─────────────────────
 var chatOpen = true;
+var chatOpen = false;
+var chatHistory = [];
+
 function toggleChat(){
   chatOpen = !chatOpen;
   var body = document.getElementById('chat-body');
   var chevron = document.getElementById('chat-chevron');
   if(body) body.style.display = chatOpen ? 'block' : 'none';
-  if(chevron) chevron.className = chatOpen ? 'ti ti-chevron-up' : 'ti ti-chevron-down';
+  if(chevron) chevron.className = 'ti ' + (chatOpen ? 'ti-chevron-up' : 'ti-chevron-down');
+  if(chatOpen && chatHistory.length === 0) addChatBubble('ai', 'Hi! I can help you plan your trip. Ask me about activities, packing, local tips, or anything else.');
+}
+
+function clearChat(){
+  chatHistory = [];
+  var msgs = document.getElementById('chat-messages');
+  if(msgs) msgs.innerHTML = '';
+  var sugg = document.getElementById('chat-suggestions');
+  if(sugg) sugg.innerHTML = '';
+}
+
+function addChatBubble(role, text){
+  var msgs = document.getElementById('chat-messages');
+  if(!msgs) return;
+  var div = document.createElement('div');
+  div.className = 'bubble ' + (role==='ai' ? 'bai' : 'buser');
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  chatHistory.push({role: role, text: text});
+}
+
+async function sendChat(){
+  var input = document.getElementById('chat-input');
+  if(!input) return;
+  var msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  addChatBubble('user', msg);
+
+  // Build trip context for the prompt
+  var tripCtx = '';
+  if(currentTripId){
+    var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+    if(trip) tripCtx = 'Trip: '+trip.name+'. Destinations: '+(trip.destinations||[]).join(', ')+'. Dates: '+(trip.start_date||'TBD')+' to '+(trip.end_date||'TBD')+'. ';
+  }
+
+  // Show typing indicator
+  var msgs = document.getElementById('chat-messages');
+  var typing = document.createElement('div');
+  typing.className = 'bubble bai';
+  typing.textContent = '…';
+  typing.id = 'chat-typing';
+  msgs.appendChild(typing);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  try {
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDemo', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({contents:[{parts:[{text: tripCtx + 'User question: ' + msg}]}]})
+    });
+    var data = await res.json();
+    var reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'I\'m not connected to an AI service yet. Ask your trip organizer to add a Gemini API key!';
+    typing.remove();
+    addChatBubble('ai', reply);
+  } catch(e) {
+    typing.remove();
+    addChatBubble('ai', 'AI chat isn\'t connected yet — a Gemini API key is needed to activate it.');
+  }
 }
 
 // ─── DAYS REMAINING ─────────────────────────
