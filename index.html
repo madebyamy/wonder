@@ -2693,6 +2693,15 @@ var chatOpen = true;
 var chatOpen = false;
 var chatHistory = [];
 
+function getGeminiKey(){
+  var k = localStorage.getItem('wander_gemini_key');
+  if(!k){
+    k = prompt('Enter your Gemini API key (from aistudio.google.com):');
+    if(k) localStorage.setItem('wander_gemini_key', k.trim());
+  }
+  return k || '';
+}
+
 function toggleChat(){
   chatOpen = !chatOpen;
   var body = document.getElementById('chat-body');
@@ -2746,18 +2755,32 @@ async function sendChat(){
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=AIzaSyDemo', {
+    // Build conversation history for context
+    var contents = [];
+    // System context
+    contents.push({role:'user', parts:[{text: 'You are a friendly travel assistant helping plan a trip. Be concise and practical. ' + tripCtx}]});
+    contents.push({role:'model', parts:[{text: 'Got it! I\'m ready to help plan this trip.'}]});
+    // Prior turns
+    for(var i=0; i<chatHistory.length; i++){
+      var h = chatHistory[i];
+      contents.push({role: h.role==='ai' ? 'model' : 'user', parts:[{text: h.text}]});
+    }
+    // Current message
+    contents.push({role:'user', parts:[{text: msg}]});
+
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+getGeminiKey(), {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({contents:[{parts:[{text: tripCtx + 'User question: ' + msg}]}]})
+      body: JSON.stringify({contents: contents})
     });
     var data = await res.json();
-    var reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'I\'m not connected to an AI service yet. Ask your trip organizer to add a Gemini API key!';
+    if(data.error) throw new Error(data.error.message);
+    var reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
     typing.remove();
     addChatBubble('ai', reply);
   } catch(e) {
     typing.remove();
-    addChatBubble('ai', 'AI chat isn\'t connected yet — a Gemini API key is needed to activate it.');
+    addChatBubble('ai', 'Error: ' + e.message + '. The API key may be invalid or expired.');
   }
 }
 
