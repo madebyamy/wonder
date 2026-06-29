@@ -1768,6 +1768,19 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
      ALERT BANNER (bottom sheet)
 ════════════════════════════════════ -->
 <!-- ═══════════ ADD FLIGHT SHEET ═══════════ -->
+<!-- ── Trip confirm modal ───────────────────────────────────────────────── -->
+<div id="trip-confirm-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+  <div style="background:var(--canvas);border-radius:22px;padding:26px 22px 22px;margin:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div id="tcm-icon" style="font-size:36px;text-align:center;margin-bottom:12px;"></div>
+    <div id="tcm-title" style="font-size:17px;font-weight:800;text-align:center;margin-bottom:8px;"></div>
+    <div id="tcm-body" style="font-size:13px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:22px;"></div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeTripConfirm()" style="flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--card2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);">Cancel</button>
+      <button id="tcm-action-btn" style="flex:1;padding:13px;border-radius:13px;border:none;font-size:14px;font-weight:700;cursor:pointer;color:#fff;"></button>
+    </div>
+  </div>
+</div>
+
 <div id="add-flight-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddSheet('flight')">
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
@@ -1976,15 +1989,64 @@ function renderHomeTrips(){
     var dests = (t.destinations||[]).join(' → ') || 'Destination TBD';
     var dateStr = start ? start.toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
     if(start && end) dateStr += ' – '+end.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var isOwner = t.created_by === currentUser.id;
+    var actionBtn = isOwner
+      ? '<button onclick="event.stopPropagation();confirmDeleteTrip(\''+t.id+'\',\''+t.name.replace(/'/g,"\\'")+'\')" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;line-height:1;color:#cc3a3a;" title="Delete trip">🗑️</button>'
+      : '<button onclick="event.stopPropagation();confirmUnfollowTrip(\''+t.id+'\',\''+t.name.replace(/'/g,"\\'")+'\')" style="background:none;border:none;cursor:pointer;font-size:18px;padding:4px;line-height:1;color:var(--muted);" title="Leave trip">🚪</button>';
     return '<div onclick="openDbTrip(\''+t.id+'\')" style="background:'+color+'22;border:1.5px solid '+color+'44;border-radius:16px;padding:14px;cursor:pointer;margin-bottom:9px;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
       +'<div style="display:flex;align-items:center;gap:9px;">'
       +'<div style="width:36px;height:36px;border-radius:10px;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:18px;">'+emoji+'</div>'
-      +'<div><div style="font-size:15px;font-weight:700;">'+t.name+'</div><div style="font-size:11px;color:var(--muted);">'+dests+'</div></div>'
-      +'</div>'+badge+'</div>'
+      +'<div><div style="font-size:15px;font-weight:700;">'+t.name+'</div><div style="font-size:11px;color:var(--muted);">'+dests+(isOwner ? '' : ' · <em>invited</em>')+'</div></div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;">'+badge+actionBtn+'</div>'
+      +'</div>'
       +'<div style="font-size:11px;color:var(--muted);">'+dateStr+'</div>'
       +'</div>';
   }).join('');
+}
+
+// ── Trip confirm modal ────────────────────────────────────────────────────────
+function closeTripConfirm() {
+  document.getElementById('trip-confirm-modal').style.display = 'none';
+}
+
+function confirmDeleteTrip(id, name) {
+  var modal = document.getElementById('trip-confirm-modal');
+  document.getElementById('tcm-icon').textContent = '🗑️';
+  document.getElementById('tcm-title').textContent = 'Delete "' + name + '"?';
+  document.getElementById('tcm-body').textContent = 'This will permanently delete the trip and ALL its data — flights, hotels, activities, log entries, and expenses. This cannot be undone.';
+  var btn = document.getElementById('tcm-action-btn');
+  btn.textContent = 'Delete forever';
+  btn.style.background = '#cc3a3a';
+  btn.onclick = function() { closeTripConfirm(); deleteTrip(id); };
+  modal.style.display = 'flex';
+}
+
+async function deleteTrip(id) {
+  var {error} = await sb.from('trips').delete().eq('id', id);
+  if (error) { alert('Error deleting trip: ' + error.message); return; }
+  userTrips = userTrips.filter(function(t){ return t.id !== id; });
+  renderHomeTrips();
+}
+
+function confirmUnfollowTrip(id, name) {
+  var modal = document.getElementById('trip-confirm-modal');
+  document.getElementById('tcm-icon').textContent = '🚪';
+  document.getElementById('tcm-title').textContent = 'Leave "' + name + '"?';
+  document.getElementById('tcm-body').textContent = 'You will no longer see this trip in your list. The trip owner and other members won\'t be affected.';
+  var btn = document.getElementById('tcm-action-btn');
+  btn.textContent = 'Leave trip';
+  btn.style.background = 'var(--sky)';
+  btn.onclick = function() { closeTripConfirm(); unfollowTrip(id); };
+  modal.style.display = 'flex';
+}
+
+async function unfollowTrip(id) {
+  var {error} = await sb.from('trip_members').delete().eq('trip_id', id).eq('user_id', currentUser.id);
+  if (error) { alert('Error leaving trip: ' + error.message); return; }
+  userTrips = userTrips.filter(function(t){ return t.id !== id; });
+  renderHomeTrips();
 }
 
 function openDbTrip(id){
