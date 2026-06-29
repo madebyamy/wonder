@@ -1090,8 +1090,26 @@ async function afterLogin(user){
   updateUserUI();
   // Load trips
   await loadTrips();
-  go('home');
-  setTimeout(showAlert, 600);
+  // Restore last navigation state
+  var lastScreen = localStorage.getItem('wander_nav_screen') || 'home';
+  var lastTripId = localStorage.getItem('wander_nav_trip');
+  var lastDay    = parseInt(localStorage.getItem('wander_nav_day')) || 1;
+  var lastTab    = localStorage.getItem('wander_nav_tab') || 'plans';
+  if(lastScreen === 'trip' && lastTripId && userTrips.find(function(t){ return t.id===lastTripId; })){
+    openDbTrip(lastTripId);
+    // restore day pill
+    if(lastDay > 1){
+      setTimeout(function(){
+        var pills = document.querySelectorAll('#trip-day-picker .dp');
+        if(pills[lastDay-1]) pills[lastDay-1].click();
+      }, 50);
+    }
+    // restore tab
+    setTimeout(function(){ tabByName(lastTab); }, 80);
+  } else {
+    go('home');
+    setTimeout(showAlert, 600);
+  }
 }
 
 // ── Load trips from Supabase ──────────────────────────────────────────────────
@@ -1295,6 +1313,7 @@ function openDbTrip(id){
   }
 
   go('trip');
+  localStorage.setItem('wander_nav_trip', currentTripId);
   loadDayPlans(currentDayNum);
 }
 
@@ -1341,6 +1360,8 @@ function go(name, skipHistory){
   if(el) el.classList.add('active');
   if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
   if(name === 'profile') renderProfileTrips();
+  // persist so refresh can restore
+  if(name !== 'login') localStorage.setItem('wander_nav_screen', name);
 }
 
 window.addEventListener('popstate', function(e){
@@ -1393,8 +1414,16 @@ function tab(btn,name){
   var el = document.getElementById('tp-'+name);
   if(el) el.classList.add('active');
   if(name==='suitcase'){ renderSuitcaseDayPicker(); renderSuitcaseItems(); }
-  if(name==='photos'){ renderPhotosDayFilter(); }
+  if(name==='photos'){ renderPhotosDayFilter(); renderPhotosGrid(); }
   if(name==='log'){ renderLogOverview(); }
+  localStorage.setItem('wander_nav_tab', name);
+}
+
+function tabByName(name){
+  var btn = Array.from(document.querySelectorAll('.tbtn')).find(function(b){
+    return b.getAttribute('onclick') && b.getAttribute('onclick').indexOf("'"+name+"'") >= 0;
+  });
+  if(btn) tab(btn, name);
 }
 
 function dp(pill){
@@ -1496,6 +1525,8 @@ function selectDay(pill, dayNum, label, city){
   all.forEach(function(el){ el.style.display='none'; });
   var target = document.getElementById('day-content-'+dayNum);
   if(target) target.style.display='block';
+  // persist selected day
+  localStorage.setItem('wander_nav_day', dayNum);
   // reload notes if panel is open
   if(planNotesOpen){
     var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
@@ -1893,6 +1924,7 @@ function logPhotoChosen(input){
         logSavePhotos(dayNum, photos);
         openLogDay(dayNum);
         renderLogOverview();
+        renderPhotosGrid();
       }
     };
     reader.readAsDataURL(file);
@@ -2613,26 +2645,56 @@ function triggerUpload(){
   input.onchange = function(e){
     var files = Array.from(e.target.files);
     if(!files.length) return;
-    var grid = document.getElementById('photos-grid');
-    var addTile = grid.querySelector('[onclick="triggerUpload()"]');
+    var dayNum = currentDayNum || 1;
+    var photos = logGetPhotos(dayNum);
+    var remaining = files.length;
     files.forEach(function(file){
       var reader = new FileReader();
       reader.onload = function(ev){
-        var div = document.createElement('div');
-        div.className = 'photo-thumb';
-        div.style.background = '#e0d8f0';
-        div.style.backgroundImage = 'url('+ev.target.result+')';
-        div.style.backgroundSize = 'cover';
-        div.style.backgroundPosition = 'center';
-        div.innerHTML = '<div class="photo-overlay"><div class="av-sm u-amy">A</div><button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button></div>';
-        if(addTile) grid.insertBefore(div, addTile); else grid.appendChild(div);
+        photos.push(ev.target.result);
+        remaining--;
+        if(remaining === 0){
+          logSavePhotos(dayNum, photos);
+          renderPhotosGrid();
+        }
       };
       reader.readAsDataURL(file);
     });
-    var label = document.getElementById('photos-count-label');
-    if(label) label.textContent = 'All travelers can upload & download';
   };
   input.click();
+}
+
+function renderPhotosGrid(){
+  var grid = document.getElementById('photos-grid');
+  if(!grid) return;
+  // Collect all photos across all days for this trip
+  var allPhotos = []; // [{src, dayNum}]
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  if(trip && trip.start_date && trip.end_date){
+    var d = new Date(trip.start_date+'T00:00:00');
+    var end = new Date(trip.end_date+'T00:00:00');
+    var n = 1;
+    while(d <= end){
+      logGetPhotos(n).forEach(function(src){ allPhotos.push({src:src, dayNum:n}); });
+      d.setDate(d.getDate()+1); n++;
+    }
+  } else {
+    // fallback: just current day
+    logGetPhotos(currentDayNum||1).forEach(function(src){ allPhotos.push({src:src, dayNum:currentDayNum||1}); });
+  }
+  // Build grid
+  var html = allPhotos.map(function(p){
+    return '<div class="photo-thumb" style="background:url(\''+p.src+'\') center/cover no-repeat;position:relative;">'
+      +'<div class="photo-overlay"><span style="font-size:9px;font-weight:700;background:rgba(0,0,0,.45);color:#fff;border-radius:4px;padding:2px 5px;">Day '+p.dayNum+'</span></div>'
+      +'</div>';
+  }).join('');
+  // Add tile
+  html += '<div class="photo-thumb" style="background:var(--card2);border:1.5px dashed var(--card3);" onclick="triggerUpload()">'
+    +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add photo</span></div>'
+    +'</div>';
+  grid.innerHTML = html;
+  var label = document.getElementById('photos-count-label');
+  if(label) label.textContent = allPhotos.length > 0 ? allPhotos.length+' photo'+(allPhotos.length>1?'s':'') : 'Add your first photo';
 }
 
 function downloadAllPhotos(){
