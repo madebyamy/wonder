@@ -603,6 +603,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── PHOTOS ─── -->
     <div class="tp" id="tp-photos">
+      <div style="text-align:center;padding:40px 16px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:10px;">📷</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:5px;">No photos yet</div>
+        <div style="font-size:12px;">Photos you upload will appear here</div>
+      </div>
+    </div>
+    <div id="tp-photos-PLACEHOLDER" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div><div class="section-head">Shared photos</div><div style="font-size:11px;color:var(--muted);">58 photos · All travelers can upload & download</div></div>
         <button class="btn-d" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:4px;"><i class="ti ti-upload" style="font-size:14px;"></i> Upload</button>
@@ -713,6 +720,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── SUITCASE ─── -->
     <div class="tp" id="tp-suitcase">
+      <div style="text-align:center;padding:40px 16px;color:var(--muted);">
+        <div style="font-size:40px;margin-bottom:10px;">🧳</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:5px;">Suitcase is empty</div>
+        <div style="font-size:12px;">Add outfits, shoes and packing items here</div>
+      </div>
+    </div>
+    <div id="tp-suitcase-PLACEHOLDER" style="display:none">
 
       <!-- Day picker -->
       <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;">
@@ -918,17 +932,12 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <!-- ─── LOG ─── -->
     <div class="tp" id="tp-log">
 
-      <!-- Log header: view toggle + back-fill button -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
-        <div style="display:flex;background:var(--card2);border-radius:11px;padding:3px;gap:2px;">
-          <button id="log-view-overview" onclick="logView('overview')" style="background:var(--ink);color:#fffaf0;border:none;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Overview</button>
-          <button id="log-view-daily" onclick="logView('daily')" style="background:none;color:var(--muted);border:none;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Daily</button>
-        </div>
-        <button onclick="logView('daily');openLogDay(12)" style="font-size:11px;font-weight:600;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px;"><i class="ti ti-pencil" style="font-size:12px;"></i> Back-fill</button>
+      <div style="text-align:center;padding:48px 16px 32px;">
+        <div style="font-size:40px;margin-bottom:12px;">📖</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No log entries yet</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Your daily travel journal will appear here.<br>Entries are created as you travel.</div>
       </div>
-
-      <!-- ── OVERVIEW (grid of day cards) ── -->
-      <div id="log-overview">
+      <div id="log-overview" style="display:none">
 
         <!-- Destination label: Rome -->
         <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;">
@@ -1248,69 +1257,16 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── TASKS ─── -->
     <div class="tp" id="tp-tasks">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div><div class="section-head">To-do</div><div style="font-size:11px;color:var(--muted);">5 of 12 done</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
+        <div class="section-head">To-do</div>
         <button class="btn-d" style="padding:7px 12px;font-size:11px;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
       </div>
-      <div style="background:var(--card2);border-radius:var(--r-pill);height:5px;margin-bottom:15px;"><div style="background:var(--ink);height:5px;border-radius:var(--r-pill);width:42%;"></div></div>
-      <div class="sl">Before you go</div>
-      <!-- auto-generated tasks from flights/hotels -->
-      <div class="check-row" style="background:rgba(74,122,222,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk done"><i class="ti ti-check" style="font-size:10px;color:#fffaf0;"></i></div>
-        <div style="flex:1;"><div style="font-size:13px;text-decoration:line-through;color:#9a9a9a;">Check passport expiry</div></div>
-        <span style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border-radius:6px;padding:2px 6px;">Done</span>
+      <div style="text-align:center;padding:32px 16px;">
+        <div style="font-size:36px;margin-bottom:10px;">✅</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:6px;">No tasks yet</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Tasks from your flights and hotels<br>will appear here automatically.</div>
       </div>
-      <div class="check-row" style="background:rgba(74,122,222,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk done"><i class="ti ti-check" style="font-size:10px;color:#fffaf0;"></i></div>
-        <div style="flex:1;"><div style="font-size:13px;text-decoration:line-through;color:#9a9a9a;">Book travel insurance</div></div>
-        <span style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border-radius:6px;padding:2px 6px;">Done</span>
-      </div>
-      <!-- auto-added from flight -->
-      <div class="check-row" style="background:rgba(26,58,90,.07);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;">
-          <div style="font-size:13px;">✈️ Online check-in opens — AA 7842</div>
-          <div style="font-size:10px;color:var(--muted);">Auto · 24h before departure</div>
-        </div>
-        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#ff6b3a;background:#fff3ee;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;">Sep 11</span>
-      </div>
-      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;"><div style="font-size:13px;">Download offline maps — Rome</div></div>
-        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#c8a020;background:#fef9e7;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;">Sep 8</span>
-      </div>
-      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;"><div style="font-size:13px;">Notify bank of travel dates</div></div>
-        <span onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#cc3a3a;background:#fee;border-radius:6px;padding:2px 7px;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:3px;"><i class="ti ti-alert-circle" style="font-size:11px;"></i> Overdue</span>
-      </div>
-      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;"><div style="font-size:13px;">Pack Type L adapter plugs</div></div>
-        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
-      </div>
-      <div class="sl" style="margin-top:13px;">At the destination</div>
-      <!-- auto-added from hotel -->
-      <div class="check-row" style="background:rgba(164,212,197,.18);border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;">
-          <div style="font-size:13px;">🏨 Hotel check-out — Hotel de Russie</div>
-          <div style="font-size:10px;color:var(--muted);">Auto · by 11:00 AM</div>
-        </div>
-        <span style="font-size:10px;font-weight:600;color:#2a6a5a;background:rgba(164,212,197,.3);border-radius:6px;padding:2px 7px;white-space:nowrap;">Sep 16</span>
-      </div>
-      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;"><div style="font-size:13px;">Get SIM card or activate eSIM</div></div>
-        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
-      </div>
-      <div class="check-row" style="border-radius:9px;padding:8px 10px;margin-bottom:3px;border:none;">
-        <div class="chk"></div>
-        <div style="flex:1;"><div style="font-size:13px;">Get Euros from ATM</div></div>
-        <button onclick="openCal(this)" style="font-size:10px;font-weight:600;color:#9a9a9a;background:var(--card2);border:none;border-radius:6px;padding:2px 7px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-calendar" style="font-size:11px;"></i> Add date</button>
-      </div>
-      <!-- add new task row -->
-      <div style="display:flex;align-items:center;gap:7px;margin-top:13px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
+      <div style="display:flex;align-items:center;gap:7px;margin-top:8px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
         <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;"></i>
         <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:12px;flex:1;" placeholder="Add a task...">
         <button onclick="openCal(this)" style="background:none;border:none;cursor:pointer;color:#9a9a9a;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:3px;white-space:nowrap;"><i class="ti ti-calendar" style="font-size:13px;"></i> Date</button>
@@ -1321,14 +1277,9 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div class="tp" id="tp-expenses">
       <div style="background:var(--sky);border-radius:17px;padding:15px;margin-bottom:13px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--skylt);margin-bottom:4px;">Total spent</div>
-        <div style="font-size:30px;font-weight:700;color:#fffaf0;letter-spacing:-1px;margin-bottom:9px;">$6,420</div>
-        <div style="background:rgba(255,255,255,.2);border-radius:var(--r-pill);height:4px;margin-bottom:5px;"><div style="background:var(--skylt);height:4px;border-radius:var(--r-pill);width:64%;"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--skylt);"><span>$6,420 of $10,000 budget</span><span>64%</span></div>
-      </div>
-
-      <div style="background:var(--mint);border-radius:13px;padding:11px;display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
-        <div style="font-size:12px;font-weight:600;color:#0a2a20;">Your total spent</div>
-        <div style="font-size:17px;font-weight:700;color:#0a3a2a;">$840</div>
+        <div style="font-size:30px;font-weight:700;color:#fffaf0;letter-spacing:-1px;margin-bottom:9px;">$0</div>
+        <div style="background:rgba(255,255,255,.2);border-radius:var(--r-pill);height:4px;margin-bottom:5px;"><div style="background:var(--skylt);height:4px;border-radius:var(--r-pill);width:0%;"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--skylt);"><span>No budget set</span><span>—</span></div>
       </div>
 
       <div class="card" style="margin-bottom:13px;">
@@ -1398,98 +1349,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <button class="btn-d" style="width:100%;padding:10px;font-size:13px;">Save expense →</button>
       </div>
 
-      <!-- Paid/unpaid summary -->
-      <div style="display:flex;gap:7px;margin-bottom:11px;">
-        <div style="flex:1;background:#d4edda;border-radius:12px;padding:9px 11px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:#1a5a2a;">$6,240</div>
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#2a7a3a;margin-top:1px;">Paid ✓</div>
-        </div>
-        <div style="flex:1;background:#fee;border-radius:12px;padding:9px 11px;text-align:center;">
-          <div style="font-size:16px;font-weight:700;color:#cc3a3a;">$180</div>
-          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#cc3a3a;margin-top:1px;">Still owe</div>
-        </div>
-      </div>
-
-      <!-- Filter pills -->
-      <div style="display:flex;gap:5px;margin-bottom:10px;">
-        <button class="pill on" onclick="filterExp(this,'all')" style="font-size:11px;">All</button>
-        <button class="pill" onclick="filterExp(this,'paid')" style="font-size:11px;">✓ Paid</button>
-        <button class="pill" onclick="filterExp(this,'owe')" style="font-size:11px;">Still owe</button>
-      </div>
-
       <div class="sl">All expenses</div>
       <div class="card" id="exp-list">
-
-        <!-- PAID expense -->
-        <div class="exp-row exp-item" data-status="paid">
-          <div class="eicon" style="background:var(--sky);"><i class="ti ti-plane" style="font-size:14px;color:var(--skylt);"></i></div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Flights (4 tickets)</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
-            <div style="font-size:10px;color:var(--muted);">€2,600 → <strong style="color:var(--ink);">$2,840</strong></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div style="font-size:13px;font-weight:700;">$2,840</div>
-            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
-          </div>
+        <div style="text-align:center;padding:24px 16px;">
+          <div style="font-size:32px;margin-bottom:10px;">💸</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:5px;">No expenses yet</div>
+          <div style="font-size:11px;color:var(--muted);">Add your first expense above.</div>
         </div>
-
-        <!-- PAID expense -->
-        <div class="exp-row exp-item" data-status="paid">
-          <div class="eicon" style="background:var(--peach);">🏨</div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Hotel de Russie (4n)</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
-            <div style="font-size:10px;color:var(--muted);">€2,930 → <strong style="color:var(--ink);">$3,200</strong></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div style="font-size:13px;font-weight:700;">$3,200</div>
-            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
-          </div>
-        </div>
-
-        <!-- PAID expense -->
-        <div class="exp-row exp-item" data-status="paid">
-          <div class="eicon" style="background:var(--lav);">🍝</div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Dinner — Osteria</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · ÷4</div>
-            <div style="font-size:10px;color:var(--muted);">€220 → <strong style="color:var(--ink);">$240</strong></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div style="font-size:13px;font-weight:700;">$240</div>
-            <button onclick="togglePaid(this)" class="paid-btn paid" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#d4edda;color:#1a5a2a;">✓ Paid</button>
-          </div>
-        </div>
-
-        <!-- STILL OWE expense -->
-        <div class="exp-row exp-item" data-status="owe" style="border:none;">
-          <div class="eicon" style="background:var(--mint);">🎟️</div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Colosseum tickets</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 13 · Amy paid · just me</div>
-            <div style="font-size:10px;color:var(--muted);">€128 → <strong style="color:var(--ink);">$140</strong></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div style="font-size:13px;font-weight:700;">$140</div>
-            <button onclick="togglePaid(this)" class="paid-btn owe" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#fee;color:#cc3a3a;">Unpaid</button>
-          </div>
-        </div>
-
-        <!-- STILL OWE expense -->
-        <div class="exp-row exp-item" data-status="owe" style="border:none;">
-          <div class="eicon" style="background:var(--ochre);">🚕</div>
-          <div style="flex:1;">
-            <div style="font-size:12px;font-weight:600;">Airport taxi — Rome</div>
-            <div style="font-size:10px;color:var(--muted);">Sep 12 · Amy paid · just me</div>
-            <div style="font-size:10px;color:var(--muted);">€37 → <strong style="color:var(--ink);">$40</strong></div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
-            <div style="font-size:13px;font-weight:700;">$40</div>
-            <button onclick="togglePaid(this)" class="paid-btn owe" style="font-size:10px;font-weight:700;border:none;border-radius:6px;padding:2px 8px;cursor:pointer;font-family:inherit;background:#fee;color:#cc3a3a;">Unpaid</button>
-          </div>
-        </div>
-
       </div>
     </div>
 
@@ -1825,23 +1691,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div style="font-size:16px;font-weight:700;">Upcoming reminders</div>
       <button onclick="dismissAlert()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
     </div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:10px;background:#fee;border-radius:12px;padding:10px 12px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#cc3a3a;flex:0 0 auto;"></div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Notify bank of travel dates</div><div style="font-size:11px;color:#cc3a3a;font-weight:500;">Overdue</div></div>
-        <i class="ti ti-alert-circle" style="font-size:16px;color:#cc3a3a;"></i>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:#fff3ee;border-radius:12px;padding:10px 12px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#ff6b3a;flex:0 0 auto;"></div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">✈️ Check-in opens — AA 7842</div><div style="font-size:11px;color:#ff6b3a;font-weight:500;">Sep 11 · 3 days away</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:#fef9e7;border-radius:12px;padding:10px 12px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#c8a020;flex:0 0 auto;"></div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Download offline maps — Rome</div><div style="font-size:11px;color:#c8a020;font-weight:500;">Sep 8 · due soon</div></div>
-      </div>
-      <div style="display:flex;align-items:center;gap:10px;background:var(--card);border-radius:12px;padding:10px 12px;">
-        <div style="width:8px;height:8px;border-radius:50%;background:#9a9a9a;flex:0 0 auto;"></div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:600;">🏨 Hotel check-out reminder</div><div style="font-size:11px;color:var(--muted);font-weight:500;">Sep 16</div></div>
+    <div style="margin-bottom:16px;">
+      <div style="text-align:center;padding:24px 16px;">
+        <div style="font-size:32px;margin-bottom:10px;">🔔</div>
+        <div style="font-size:13px;font-weight:700;margin-bottom:5px;">No upcoming reminders</div>
+        <div style="font-size:11px;color:var(--muted);">Reminders from your flights and tasks will appear here.</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;">
