@@ -183,7 +183,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   <div style="padding:4px 16px 12px;flex:0 0 auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
       <div style="display:flex;align-items:center;gap:9px;">
-        <div style="width:32px;height:32px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;"><i class="ti ti-plane" style="font-size:16px;color:#fffaf0;"></i></div>
+        <div style="width:32px;height:32px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fffaf0;letter-spacing:-.5px;">W</div>
         <span style="font-size:22px;font-weight:700;letter-spacing:-.6px;">Wander</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
@@ -381,29 +381,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
           <!-- Normal input row -->
           <div id="chat-input-row" style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
             <input id="chat-input" class="inp" style="background:none;padding:0;flex:1;font-size:12px;" placeholder="Ask about flights, hotels, activities..." onkeydown="if(event.key==='Enter')sendChat()">
-            <button onclick="sendChat()" class="btn-d" style="padding:7px 12px;border-radius:9px;font-size:12px;flex:0 0 auto;"><i class="ti ti-send" style="font-size:13px;"></i></button>
+            <button onclick="sendChat()" class="btn-d" style="padding:7px 14px;border-radius:9px;font-size:13px;flex:0 0 auto;line-height:1;">➤</button>
           </div>
         </div>
       </div>
     </div>
 
-      <!-- Route bar -->
-      <div style="display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none;padding:0 0 11px;margin-bottom:4px;">
-        <div style="display:flex;align-items:center;gap:4px;flex:0 0 auto;">
-          <div style="font-size:10px;font-weight:700;background:var(--sky);color:#fffaf0;border-radius:7px;padding:3px 8px;">PHX</div>
-          <i class="ti ti-plane" style="font-size:12px;color:var(--muted);"></i>
-          <div style="font-size:10px;font-weight:700;background:var(--lav);color:#1a1030;border-radius:7px;padding:3px 8px;">Rome</div>
-          <i class="ti ti-arrow-right" style="font-size:10px;color:var(--muted);"></i>
-          <div style="font-size:10px;font-weight:700;background:var(--peach);color:#3a1a08;border-radius:7px;padding:3px 8px;">Naples</div>
-          <i class="ti ti-arrow-right" style="font-size:10px;color:var(--muted);"></i>
-          <div style="font-size:10px;font-weight:700;background:var(--mint);color:#0a2a20;border-radius:7px;padding:3px 8px;">Amalfi</div>
-          <i class="ti ti-plane" style="font-size:12px;color:var(--muted);transform:scaleX(-1);"></i>
-          <div style="font-size:10px;font-weight:700;background:var(--sky);color:#fffaf0;border-radius:7px;padding:3px 8px;">PHX</div>
-        </div>
-        <button onclick="showAddFlight()" style="flex:0 0 auto;margin-left:6px;background:var(--card2);border:none;border-radius:7px;padding:3px 9px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:3px;"><i class="ti ti-plus" style="font-size:11px;"></i> Flight</button>
-      </div>
-
-      <!-- Day picker — shows city label -->
+      <!-- Day picker -->
       <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;">
         <div class="dp on" onclick="selectDay(this,12,'Friday, Sep 12','rome')">
           <div style="font-size:8px;color:var(--lav-d);font-weight:700;">ROME</div>
