@@ -1007,7 +1007,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
     <div style="display:flex;gap:8px;">
       <button onclick="dismissAlert()" class="btn-l" style="flex:1;padding:11px;font-size:13px;">Dismiss</button>
-      <button onclick="dismissAlert();if(currentTripId){go('trip');setTimeout(function(){tabByName('tasks');},60);}" class="btn-d" style="flex:2;padding:11px;font-size:13px;">View all tasks →</button>
+      <button onclick="goToTasks()" class="btn-d" style="flex:2;padding:11px;font-size:13px;">View all tasks →</button>
     </div>
     <button onclick="go('settings')" style="width:100%;margin-top:9px;background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;">Turn off alerts in Settings</button>
   </div>
@@ -3032,6 +3032,15 @@ function saveEditTask(id){
   if(t) t.text = text;
   saveTasks(tasks);
   renderTaskList();
+}
+
+function goToTasks(){
+  dismissAlert();
+  if(currentTripId){
+    go('trip');
+    var btn = document.querySelector('#s-trip .tbtn[onclick*="tasks"]');
+    if(btn) tab(btn,'tasks');
+  }
 }
 
 // ─── ALERT BANNER ───────────────────────────
