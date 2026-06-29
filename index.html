@@ -868,7 +868,9 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-in date</div><input id="h-in" class="inp" type="date"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-out date</div><input id="h-out" class="inp" type="date"></div>
     </div>
-    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="h-conf" class="inp" placeholder="ABC123XYZ"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="h-conf" class="inp" placeholder="ABC123XYZ"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Website / booking link</div><input id="h-link" class="inp" type="url" placeholder="https://hotels.com/..."></div>
+    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Total cost — adds to expense tracker</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="h-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
     <div id="h-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveHotel()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save hotel →</button>
   </div>
@@ -882,10 +884,12 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <button onclick="closeAddSheet('excursion')" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
     </div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Activity name</div><input id="e-title" class="inp" placeholder="Colosseum guided tour"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Activity type</div><select id="e-type" class="inp" style="appearance:none;-webkit-appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;"><option value="">Select type...</option><option value="Museum">🏛️ Museum</option><option value="Restaurant">🍽️ Restaurant</option><option value="Bar">🍹 Bar</option><option value="Tour">🎟️ Tour</option><option value="Transportation">🚕 Transportation</option><option value="Shopping">🛍️ Shopping</option><option value="Spa">💆 Spa</option><option value="Sport">⚽ Sport</option><option value="Entertainment">🎭 Entertainment</option><option value="Other">✨ Other</option></select></div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Start time</div><input id="e-time" class="inp" type="time"></div>
-      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Cost ($)</div><input id="e-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Expense — adds to tracker</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="e-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
     </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Website / booking link</div><input id="e-link" class="inp" type="url" placeholder="https://..."></div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Description / notes</div><textarea id="e-desc" class="inp" rows="3" style="resize:none;" placeholder="Meeting point, what to bring, dress code..."></textarea></div>
     <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking ref (optional)</div><input id="e-ref" class="inp" placeholder="VIATOR-ABC123"></div>
     <div id="e-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
@@ -1582,6 +1586,7 @@ function renderPlanItem(item) {
       +(h.address ? '<div style="font-size:11px;color:var(--muted);">'+h.address+'</div>' : '')
       +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
       +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
+      +(h.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+h.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
       +'</div>'
       +actions('hotels', h.id)
       +'</div></div>';
@@ -1594,9 +1599,11 @@ function renderPlanItem(item) {
       +'<span style="font-size:20px;flex:0 0 auto;">🎟️</span>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:700;">'+e.title+'</div>'
+      +(e.activity_type ? '<div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">'+e.activity_type+'</div>' : '')
       +(time ? '<div style="font-size:11px;color:var(--muted);">'+time+'</div>' : '')
       +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
+      +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
       +'</div>'
       +actions('excursions', e.id)
       +'</div></div>';
@@ -1625,12 +1632,16 @@ function openEditSheet(type, id) {
     document.getElementById('h-in').value = d.checkin_date || '';
     document.getElementById('h-out').value = d.checkout_date || '';
     document.getElementById('h-conf').value = d.confirmation || '';
+    document.getElementById('h-link').value = d.link || '';
+    document.getElementById('h-cost').value = d.cost || '';
     document.querySelector('#add-hotel-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-hotel-sheet').style.display = 'flex';
   } else if (type === 'excursions') {
     document.getElementById('e-title').value = d.title || '';
+    document.getElementById('e-type').value = d.activity_type || '';
     document.getElementById('e-time').value = d.start_time ? d.start_time.slice(0,5) : '';
     document.getElementById('e-cost').value = d.cost || '';
+    document.getElementById('e-link').value = d.link || '';
     document.getElementById('e-desc').value = d.description || '';
     document.getElementById('e-ref').value = d.booking_ref || '';
     document.querySelector('#add-excursion-sheet .btn-d').textContent = 'Save changes →';
@@ -1701,11 +1712,14 @@ async function saveHotel() {
   if (!name) { errEl.textContent='Please enter a hotel name.'; errEl.style.display=''; return; }
   if (!checkin || !checkout) { errEl.textContent='Please enter check-in and check-out dates.'; errEl.style.display=''; return; }
   if (checkout <= checkin) { errEl.textContent='Check-out must be after check-in.'; errEl.style.display=''; return; }
+  var cost = parseFloat(document.getElementById('h-cost').value)||null;
   var data = {
     trip_id: currentTripId, hotel_name: name,
     address: document.getElementById('h-addr').value.trim()||null,
     checkin_date: checkin, checkout_date: checkout,
     confirmation: document.getElementById('h-conf').value.trim()||null,
+    link: document.getElementById('h-link').value.trim()||null,
+    cost: cost,
     created_by: currentUser.id
   };
   var error;
@@ -1715,8 +1729,9 @@ async function saveHotel() {
     ({error} = await sb.from('hotels').insert(data));
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  if (cost && cost > 0 && !editingPlanId) addToExpenses(name, cost, '🏨 Hotel');
   closeAddSheet('hotel');
-  ['h-name','h-addr','h-in','h-out','h-conf'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['h-name','h-addr','h-in','h-out','h-conf','h-link','h-cost'].forEach(function(id){ document.getElementById(id).value=''; });
   loadDayPlans(currentDayNum);
 }
 
@@ -1727,11 +1742,14 @@ async function saveExcursion() {
   if (!currentTripId || !currentUser) { errEl.textContent='Please sign in and open a real trip first.'; errEl.style.display=''; return; }
   var title = document.getElementById('e-title').value.trim();
   if (!title) { errEl.textContent='Please enter an activity name.'; errEl.style.display=''; return; }
+  var cost = parseFloat(document.getElementById('e-cost').value)||null;
   var data = {
     trip_id: currentTripId, excursion_date: getDayDateStr(currentDayNum),
     title: title,
+    activity_type: document.getElementById('e-type').value||null,
     start_time: document.getElementById('e-time').value||null,
-    cost: parseFloat(document.getElementById('e-cost').value)||null,
+    cost: cost,
+    link: document.getElementById('e-link').value.trim()||null,
     description: document.getElementById('e-desc').value.trim()||null,
     booking_ref: document.getElementById('e-ref').value.trim()||null,
     created_by: currentUser.id
@@ -1743,8 +1761,10 @@ async function saveExcursion() {
     ({error} = await sb.from('excursions').insert(data));
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  if (cost && cost > 0 && !editingPlanId) addToExpenses(title, cost, '🎟️ Activity');
   closeAddSheet('excursion');
-  ['e-title','e-time','e-cost','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['e-title','e-time','e-cost','e-link','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
+  document.getElementById('e-type').value='';
   loadDayPlans(currentDayNum);
 }
 
@@ -1755,6 +1775,32 @@ function showAddFlight(){
 function catpill(btn){
   btn.closest('div').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
   btn.classList.add('on');
+}
+
+// ── Expense tracker ───────────────────────────────────────────────────────────
+var expenseItems = []; // {desc, amount, category}
+
+function addToExpenses(desc, amount, category) {
+  expenseItems.push({desc: desc, amount: amount, category: category || '🎟️ Activity'});
+  renderExpenses();
+}
+
+function renderExpenses() {
+  var el = document.getElementById('exp-list');
+  if (!el) return;
+  if (expenseItems.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:24px 16px;"><div style="font-size:32px;margin-bottom:10px;">💸</div><div style="font-size:13px;font-weight:700;margin-bottom:5px;">No expenses yet</div><div style="font-size:11px;color:var(--muted);">Add your first expense above.</div></div>';
+    return;
+  }
+  var total = expenseItems.reduce(function(s,i){ return s+i.amount; }, 0);
+  var rows = expenseItems.map(function(i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--card2);">'
+      +'<div><div style="font-size:12px;font-weight:600;">'+i.desc+'</div><div style="font-size:10px;color:var(--muted);">'+i.category+'</div></div>'
+      +'<div style="font-size:13px;font-weight:700;">$'+i.amount.toFixed(2)+'</div>'
+      +'</div>';
+  }).join('');
+  el.innerHTML = rows
+    +'<div style="display:flex;justify-content:space-between;padding:10px 0 0;"><span style="font-size:12px;font-weight:700;color:var(--muted);">Total</span><span style="font-size:15px;font-weight:800;">$'+total.toFixed(2)+'</span></div>';
 }
 
 var currentLogDay = 1;
