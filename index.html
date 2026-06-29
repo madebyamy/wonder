@@ -491,17 +491,18 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div class="tp" id="tp-tasks">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:13px;">
         <div class="section-head">To-do</div>
-        <button class="btn-d" style="padding:7px 12px;font-size:11px;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
+        <button onclick="document.getElementById('new-task-inp').focus()" class="btn-d" style="padding:7px 12px;font-size:11px;display:flex;align-items:center;gap:4px;"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
       </div>
-      <div style="text-align:center;padding:32px 16px;">
+      <div id="task-empty-state" style="text-align:center;padding:32px 16px;">
         <div style="font-size:36px;margin-bottom:10px;">✅</div>
         <div style="font-size:14px;font-weight:700;margin-bottom:6px;">No tasks yet</div>
-        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Tasks from your flights and hotels<br>will appear here automatically.</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">Add your first task below.</div>
       </div>
-      <div style="display:flex;align-items:center;gap:7px;margin-top:8px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
-        <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;"></i>
-        <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:12px;flex:1;" placeholder="Add a task...">
-        <button onclick="openCal(this)" style="background:none;border:none;cursor:pointer;color:#9a9a9a;font-size:11px;font-family:inherit;display:flex;align-items:center;gap:3px;white-space:nowrap;"><i class="ti ti-calendar" style="font-size:13px;"></i> Date</button>
+      <div id="task-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;"></div>
+      <div style="display:flex;align-items:center;gap:7px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
+        <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;flex:0 0 auto;"></i>
+        <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:12px;flex:1;" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
+        <button onclick="addTask()" class="btn-d" style="padding:5px 12px;font-size:12px;white-space:nowrap;">Add</button>
       </div>
     </div>
 
@@ -1006,7 +1007,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
     <div style="display:flex;gap:8px;">
       <button onclick="dismissAlert()" class="btn-l" style="flex:1;padding:11px;font-size:13px;">Dismiss</button>
-      <button onclick="dismissAlert();tab(document.querySelector('.tbtn:nth-child(5)'),'tasks')" class="btn-d" style="flex:2;padding:11px;font-size:13px;">View all tasks →</button>
+      <button onclick="dismissAlert();if(currentTripId){go('trip');setTimeout(function(){tabByName('tasks');},60);}" class="btn-d" style="flex:2;padding:11px;font-size:13px;">View all tasks →</button>
     </div>
     <button onclick="go('settings')" style="width:100%;margin-top:9px;background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;">Turn off alerts in Settings</button>
   </div>
@@ -1416,6 +1417,7 @@ function tab(btn,name){
   if(name==='suitcase'){ renderSuitcaseDayPicker(); renderSuitcaseItems(); }
   if(name==='photos'){ renderPhotosDayFilter(); renderPhotosGrid(); }
   if(name==='log'){ renderLogOverview(); }
+  if(name==='tasks'){ renderTaskList(); }
   localStorage.setItem('wander_nav_tab', name);
 }
 
@@ -2942,6 +2944,94 @@ function updateTripDays(){
     if(bar) bar.style.width = '100%';
     if(clbl) clbl.textContent = 'Past trip';
   }
+}
+
+// ─── TASKS ───────────────────────────────────
+var taskIdCounter = 0;
+
+function tasksKey(){ return 'wander_tasks_'+(currentTripId||'x'); }
+
+function loadTasks(){
+  try{ return JSON.parse(localStorage.getItem(tasksKey())||'[]'); }catch(e){ return []; }
+}
+
+function saveTasks(arr){ localStorage.setItem(tasksKey(), JSON.stringify(arr)); }
+
+function renderTaskList(){
+  var tasks = loadTasks();
+  var listEl = document.getElementById('task-list');
+  var emptyEl = document.getElementById('task-empty-state');
+  if(!listEl) return;
+  if(emptyEl) emptyEl.style.display = tasks.length ? 'none' : '';
+  if(!tasks.length){ listEl.innerHTML=''; return; }
+  listEl.innerHTML = tasks.map(function(t){
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:11px 12px;" id="task-row-'+t.id+'">'
+      // checkbox
+      +'<button onclick="toggleTask(\''+t.id+'\')" style="width:20px;height:20px;border-radius:6px;border:2px solid '+(t.done?'var(--blue)':'var(--card3)')+';background:'+(t.done?'var(--blue)':'transparent')+';flex:0 0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;">'
+      +(t.done?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'')
+      +'</button>'
+      // text
+      +'<div style="flex:1;min-width:0;">'
+      +'<div style="font-size:13px;font-weight:600;'+(t.done?'text-decoration:line-through;color:var(--muted);':'')+' word-break:break-word;">'+t.text+'</div>'
+      +(t.due?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">📅 '+t.due+'</div>':'')
+      +'</div>'
+      // edit
+      +'<button onclick="editTask(\''+t.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 4px;">✏️</button>'
+      // delete
+      +'<button onclick="deleteTask(\''+t.id+'\')" style="background:none;border:none;cursor:pointer;color:#cc3a3a;font-size:13px;padding:2px 4px;">✕</button>'
+      +'</div>';
+  }).join('');
+}
+
+function addTask(){
+  var inp = document.getElementById('new-task-inp');
+  if(!inp) return;
+  var text = inp.value.trim();
+  if(!text) return;
+  var tasks = loadTasks();
+  tasks.push({id: Date.now()+'_'+(++taskIdCounter), text:text, done:false, due:null});
+  saveTasks(tasks);
+  inp.value = '';
+  renderTaskList();
+}
+
+function toggleTask(id){
+  var tasks = loadTasks();
+  var t = tasks.find(function(x){ return String(x.id)===String(id); });
+  if(t) t.done = !t.done;
+  saveTasks(tasks);
+  renderTaskList();
+}
+
+function deleteTask(id){
+  var tasks = loadTasks().filter(function(x){ return String(x.id)!==String(id); });
+  saveTasks(tasks);
+  renderTaskList();
+}
+
+function editTask(id){
+  var tasks = loadTasks();
+  var t = tasks.find(function(x){ return String(x.id)===String(id); });
+  if(!t) return;
+  var row = document.getElementById('task-row-'+id);
+  if(!row) return;
+  row.innerHTML = '<input class="inp" style="flex:1;font-size:13px;padding:6px 10px;" id="edit-task-inp-'+id+'" value="'+t.text.replace(/"/g,'&quot;')+'">'
+    +'<button onclick="saveEditTask(\''+id+'\')" class="btn-d" style="padding:6px 12px;font-size:12px;">Save</button>'
+    +'<button onclick="renderTaskList()" class="btn-l" style="padding:6px 10px;font-size:12px;">Cancel</button>';
+  var einp = document.getElementById('edit-task-inp-'+id);
+  if(einp){ einp.focus(); einp.addEventListener('keydown',function(e){ if(e.key==='Enter') saveEditTask(id); }); }
+}
+
+function saveEditTask(id){
+  var einp = document.getElementById('edit-task-inp-'+id);
+  if(!einp) return;
+  var text = einp.value.trim();
+  if(!text){ renderTaskList(); return; }
+  var tasks = loadTasks();
+  var t = tasks.find(function(x){ return String(x.id)===String(id); });
+  if(t) t.text = text;
+  saveTasks(tasks);
+  renderTaskList();
 }
 
 // ─── ALERT BANNER ───────────────────────────
