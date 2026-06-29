@@ -229,9 +229,9 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   </div>
 
   <div class="bnav">
-    <button class="bni on"><i class="ti ti-map-2"></i><span>Trips</span></button>
-    <button class="bni" onclick="go('tasks-global')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
-    <button class="bni" onclick="go('expenses-global')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
+    <button class="bni on" onclick="go('home')"><i class="ti ti-map-2"></i><span>Trips</span></button>
+    <button class="bni" onclick="go('home')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="bni" onclick="go('home')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
     <button class="bni" onclick="go('profile')"><i class="ti ti-user-circle"></i><span>Profile</span></button>
   </div>
 </div>
@@ -246,53 +246,44 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <span class="page-title">New trip</span>
   </div>
   <div class="scroll" style="padding:0 16px 24px;">
-    <div style="margin-bottom:12px;"><div class="sl">Destination</div><input class="inp" placeholder="Where are you going?" value="Italy — Rome, Florence, Amalfi"></div>
+    <div id="nt-error" style="display:none;background:#fee;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#cc3a3a;font-weight:600;"></div>
+    <div style="margin-bottom:12px;">
+      <div class="sl">Trip name</div>
+      <input id="nt-name" class="inp" placeholder="e.g. Italy 2026">
+    </div>
+    <div style="margin-bottom:12px;">
+      <div class="sl">Destinations</div>
+      <input id="nt-dest" class="inp" placeholder="e.g. Rome, Florence, Amalfi">
+    </div>
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px;">
-      <div><div class="sl">Start date</div><input class="inp" value="Sep 12, 2026"></div>
-      <div><div class="sl">End date</div><input class="inp" value="Sep 26, 2026"></div>
+      <div><div class="sl">Start date</div><input id="nt-start" class="inp" type="date"></div>
+      <div><div class="sl">End date</div><input id="nt-end" class="inp" type="date"></div>
     </div>
     <div style="margin-bottom:12px;">
       <div class="sl">Card color</div>
-      <div style="display:flex;gap:7px;">
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--lav);cursor:pointer;border:3px solid var(--ink);"></div>
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--mint);cursor:pointer;"></div>
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--peach);cursor:pointer;"></div>
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--ochre);cursor:pointer;"></div>
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--sky);cursor:pointer;"></div>
-        <div style="width:26px;height:26px;border-radius:50%;background:var(--coral);cursor:pointer;"></div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;" id="nt-colors">
+        <div onclick="pickTripColor(this,'#b8a4ed')" data-color="#b8a4ed" style="width:30px;height:30px;border-radius:50%;background:#b8a4ed;cursor:pointer;border:3px solid var(--ink);box-sizing:border-box;"></div>
+        <div onclick="pickTripColor(this,'#a4d4c5')" data-color="#a4d4c5" style="width:30px;height:30px;border-radius:50%;background:#a4d4c5;cursor:pointer;box-sizing:border-box;"></div>
+        <div onclick="pickTripColor(this,'#ffb084')" data-color="#ffb084" style="width:30px;height:30px;border-radius:50%;background:#ffb084;cursor:pointer;box-sizing:border-box;"></div>
+        <div onclick="pickTripColor(this,'#e8b94a')" data-color="#e8b94a" style="width:30px;height:30px;border-radius:50%;background:#e8b94a;cursor:pointer;box-sizing:border-box;"></div>
+        <div onclick="pickTripColor(this,'#1a3a5a')" data-color="#1a3a5a" style="width:30px;height:30px;border-radius:50%;background:#1a3a5a;cursor:pointer;box-sizing:border-box;"></div>
+        <div onclick="pickTripColor(this,'#ff7b5a')" data-color="#ff7b5a" style="width:30px;height:30px;border-radius:50%;background:#ff7b5a;cursor:pointer;box-sizing:border-box;"></div>
       </div>
     </div>
-    <div style="margin-bottom:14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <div class="sl" style="margin:0;">Travelers & invites</div>
-        <button class="btn-ghost">+ Invite person</button>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        <div class="invite-chip">
-          <div class="av u-amy" style="width:32px;height:32px;font-size:13px;">A</div>
-          <div style="flex:1;"><div style="font-size:13px;font-weight:600;">Amy</div><div style="font-size:10px;color:var(--muted);">You · trip organizer</div></div>
-          <span style="background:var(--ink);color:#fffaf0;border-radius:var(--r-pill);padding:2px 8px;font-size:10px;font-weight:700;">HOST</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:7px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
-          <i class="ti ti-mail" style="font-size:16px;color:#9a9a9a;"></i>
-          <input class="inp" style="background:none;padding:0;font-size:12px;" placeholder="Enter email to invite...">
-          <button class="btn-d" style="padding:6px 12px;font-size:12px;">Send</button>
-        </div>
+    <div style="margin-bottom:12px;">
+      <div class="sl">Cover emoji</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;" id="nt-emojis">
+        <div onclick="pickTripEmoji(this,'✈️')" data-emoji="✈️" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;border:2px solid var(--ink);">✈️</div>
+        <div onclick="pickTripEmoji(this,'🏖️')" data-emoji="🏖️" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🏖️</div>
+        <div onclick="pickTripEmoji(this,'🏔️')" data-emoji="🏔️" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🏔️</div>
+        <div onclick="pickTripEmoji(this,'🌍')" data-emoji="🌍" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🌍</div>
+        <div onclick="pickTripEmoji(this,'🗺️')" data-emoji="🗺️" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🗺️</div>
+        <div onclick="pickTripEmoji(this,'🚢')" data-emoji="🚢" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🚢</div>
+        <div onclick="pickTripEmoji(this,'🎒')" data-emoji="🎒" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🎒</div>
+        <div onclick="pickTripEmoji(this,'🏯')" data-emoji="🏯" style="width:36px;height:36px;border-radius:10px;background:var(--card2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;">🏯</div>
       </div>
     </div>
-    <div style="margin-bottom:16px;">
-      <div class="sl">Shared with the group</div>
-      <div style="display:flex;flex-direction:column;gap:4px;">
-        <div class="toggle-row"><span style="font-size:13px;">Daily plans visible to all</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="toggle-row"><span style="font-size:13px;">Expenses shared with travelers</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="toggle-row"><span style="font-size:13px;">Shared photo space</span><div class="toggle on" onclick="this.classList.toggle('on')"></div></div>
-        <div class="toggle-row" style="border:none;"><span style="font-size:13px;">Travel log visible to all</span><div class="toggle" onclick="this.classList.toggle('on')"></div></div>
-      </div>
-    </div>
-    <div style="margin-bottom:16px;"><div class="sl">Trip budget (optional)</div>
-      <div style="display:flex;align-items:center;gap:6px;background:var(--card2);border-radius:10px;padding:9px 12px;"><span style="color:var(--muted);font-weight:600;">$</span><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="0.00" value="5000"></div>
-    </div>
-    <button class="btn-d" style="width:100%;padding:13px;font-size:14px;border-radius:13px;" onclick="openTrip()">Create trip →</button>
+    <button id="nt-save-btn" class="btn-d" style="width:100%;padding:13px;font-size:14px;border-radius:13px;" onclick="saveNewTrip()">Create trip →</button>
   </div>
 </div>
 
@@ -2119,6 +2110,67 @@ function dp(pill){
   var parent = pill.parentElement;
   parent.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
   pill.classList.add('on');
+}
+
+// ── New trip form ─────────────────────────────────────────────────────────────
+var selectedTripColor = '#b8a4ed';
+var selectedTripEmoji = '✈️';
+
+function pickTripColor(el, color) {
+  selectedTripColor = color;
+  document.querySelectorAll('#nt-colors div').forEach(function(d){ d.style.border = 'none'; });
+  el.style.border = '3px solid var(--ink)';
+}
+
+function pickTripEmoji(el, emoji) {
+  selectedTripEmoji = emoji;
+  document.querySelectorAll('#nt-emojis div').forEach(function(d){ d.style.border = 'none'; });
+  el.style.border = '2px solid var(--ink)';
+}
+
+async function saveNewTrip() {
+  var errEl = document.getElementById('nt-error');
+  var btn = document.getElementById('nt-save-btn');
+  errEl.style.display = 'none';
+
+  var name = document.getElementById('nt-name').value.trim();
+  var dest = document.getElementById('nt-dest').value.trim();
+  var start = document.getElementById('nt-start').value;
+  var end = document.getElementById('nt-end').value;
+
+  if (!name) { errEl.textContent = 'Please enter a trip name.'; errEl.style.display = ''; return; }
+  if (start && end && end < start) { errEl.textContent = 'End date must be after start date.'; errEl.style.display = ''; return; }
+
+  btn.textContent = 'Creating…';
+  btn.disabled = true;
+
+  var data = {
+    name: name,
+    destinations: dest ? dest.split(',').map(function(s){ return s.trim(); }).filter(Boolean) : [],
+    start_date: start || null,
+    end_date: end || null,
+    color: selectedTripColor,
+    cover_emoji: selectedTripEmoji,
+    created_by: currentUser.id
+  };
+
+  var {data: trip, error} = await sb.from('trips').insert(data).select().single();
+  if (error) {
+    errEl.textContent = 'Error: ' + error.message;
+    errEl.style.display = '';
+    btn.textContent = 'Create trip →';
+    btn.disabled = false;
+    return;
+  }
+
+  // Reset form
+  ['nt-name','nt-dest','nt-start','nt-end'].forEach(function(id){ document.getElementById(id).value = ''; });
+  selectedTripColor = '#b8a4ed';
+  selectedTripEmoji = '✈️';
+
+  // Reload trips and go home
+  await loadTrips();
+  go('home');
 }
 
 // ── Trip data state ──────────────────────────────────────────────────────────
