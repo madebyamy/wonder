@@ -197,12 +197,12 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;">
       <div style="background:var(--sky);border-radius:13px;padding:12px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:2px;">Upcoming</div>
-        <div style="font-size:24px;font-weight:700;color:#fffaf0;letter-spacing:-1px;">2</div>
+        <div id="home-upcoming-count" style="font-size:24px;font-weight:700;color:#fffaf0;letter-spacing:-1px;">0</div>
         <div style="font-size:11px;color:#7ab0e8;">trips planned</div>
       </div>
       <div style="background:var(--peach);border-radius:13px;padding:12px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--peach-d);margin-bottom:2px;">Total spent</div>
-        <div style="font-size:24px;font-weight:700;color:#3a1a08;letter-spacing:-1px;">$4,280</div>
+        <div style="font-size:24px;font-weight:700;color:#3a1a08;letter-spacing:-1px;">$0</div>
         <div style="font-size:11px;color:#8a4a20;">all trips</div>
       </div>
     </div>
@@ -1603,6 +1603,11 @@ function renderProfileTrips(){
 function renderHomeTrips(){
   var container = document.getElementById('home-trips');
   if(!container) return;
+  // Update upcoming count stat
+  var now = new Date();
+  var upcoming = userTrips.filter(function(t){ return t.start_date && new Date(t.start_date) > now; });
+  var countEl = document.getElementById('home-upcoming-count');
+  if(countEl) countEl.textContent = upcoming.length;
   if(userTrips.length === 0){
     container.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--muted);"><div style="font-size:36px;margin-bottom:10px;">🗺️</div><div style="font-size:14px;font-weight:600;margin-bottom:5px;">No trips yet</div><div style="font-size:12px;">Tap "+ New trip" to get started</div></div>';
     return;
