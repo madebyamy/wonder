@@ -499,10 +499,15 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div style="font-size:12px;color:var(--muted);line-height:1.6;">Add your first task below.</div>
       </div>
       <div id="task-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;"></div>
-      <div style="display:flex;align-items:center;gap:7px;border:1.5px dashed var(--card3);border-radius:11px;padding:9px 11px;">
-        <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;flex:0 0 auto;"></i>
-        <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:12px;flex:1;" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
-        <button onclick="addTask()" class="btn-d" style="padding:5px 12px;font-size:12px;white-space:nowrap;">Add</button>
+      <div style="background:var(--card2);border-radius:13px;padding:11px 12px;">
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <i class="ti ti-circle-plus" style="font-size:15px;color:#9a9a9a;flex:0 0 auto;"></i>
+          <input class="inp" id="new-task-inp" style="background:none;padding:0;font-size:13px;flex:1;" placeholder="Add a task..." onkeydown="if(event.key==='Enter')addTask()">
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;">
+          <input type="date" id="new-task-due" class="inp" style="flex:1;font-size:12px;color:var(--muted);">
+          <button onclick="addTask()" class="btn-d" style="padding:7px 16px;font-size:12px;white-space:nowrap;">Add task</button>
+        </div>
       </div>
     </div>
 
@@ -998,11 +1003,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div style="font-size:16px;font-weight:700;">Upcoming reminders</div>
       <button onclick="dismissAlert()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
     </div>
-    <div style="margin-bottom:16px;">
-      <div style="text-align:center;padding:24px 16px;">
+    <div id="alert-task-list" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;">
+      <div style="text-align:center;padding:20px 16px;">
         <div style="font-size:32px;margin-bottom:10px;">🔔</div>
         <div style="font-size:13px;font-weight:700;margin-bottom:5px;">No upcoming reminders</div>
-        <div style="font-size:11px;color:var(--muted);">Reminders from your flights and tasks will appear here.</div>
+        <div style="font-size:11px;color:var(--muted);">Reminders from your tasks will appear here.</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;">
@@ -2957,6 +2962,18 @@ function loadTasks(){
 
 function saveTasks(arr){ localStorage.setItem(tasksKey(), JSON.stringify(arr)); }
 
+function taskIsOverdue(due){
+  if(!due) return false;
+  var today = new Date(); today.setHours(0,0,0,0);
+  return new Date(due+'T00:00:00') < today;
+}
+
+function taskDueLabel(due){
+  if(!due) return '';
+  var d = new Date(due+'T00:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
 function renderTaskList(){
   var tasks = loadTasks();
   var listEl = document.getElementById('task-list');
@@ -2964,20 +2981,28 @@ function renderTaskList(){
   if(!listEl) return;
   if(emptyEl) emptyEl.style.display = tasks.length ? 'none' : '';
   if(!tasks.length){ listEl.innerHTML=''; return; }
-  listEl.innerHTML = tasks.map(function(t){
-    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:11px 12px;" id="task-row-'+t.id+'">'
-      // checkbox
-      +'<button onclick="toggleTask(\''+t.id+'\')" style="width:20px;height:20px;border-radius:6px;border:2px solid '+(t.done?'var(--blue)':'var(--card3)')+';background:'+(t.done?'var(--blue)':'transparent')+';flex:0 0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;">'
+  // sort: incomplete first (overdue at top), then done
+  var pending = tasks.filter(function(t){ return !t.done; });
+  var done    = tasks.filter(function(t){ return t.done; });
+  pending.sort(function(a,b){
+    var ao = taskIsOverdue(a.due)?0:1, bo = taskIsOverdue(b.due)?0:1;
+    if(ao!==bo) return ao-bo;
+    if(a.due && b.due) return a.due<b.due?-1:1;
+    return 0;
+  });
+  listEl.innerHTML = pending.concat(done).map(function(t){
+    var overdue = !t.done && taskIsOverdue(t.due);
+    var dueColor = t.done ? 'var(--muted)' : overdue ? '#cc3a3a' : 'var(--muted)';
+    var rowBg = overdue ? 'background:rgba(204,58,58,.07);' : 'background:var(--card2);';
+    return '<div style="display:flex;align-items:center;gap:10px;'+rowBg+'border-radius:12px;padding:11px 12px;" id="task-row-'+t.id+'">'
+      +'<button onclick="toggleTask(\''+t.id+'\')" style="width:22px;height:22px;border-radius:7px;border:2px solid '+(t.done?'var(--blue)':overdue?'#cc3a3a':'var(--card3)')+';background:'+(t.done?'var(--blue)':'transparent')+';flex:0 0 auto;cursor:pointer;display:flex;align-items:center;justify-content:center;">'
       +(t.done?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'')
       +'</button>'
-      // text
       +'<div style="flex:1;min-width:0;">'
-      +'<div style="font-size:13px;font-weight:600;'+(t.done?'text-decoration:line-through;color:var(--muted);':'')+' word-break:break-word;">'+t.text+'</div>'
-      +(t.due?'<div style="font-size:10px;color:var(--muted);margin-top:2px;">📅 '+t.due+'</div>':'')
+      +'<div style="font-size:13px;font-weight:600;'+(t.done?'text-decoration:line-through;color:var(--muted);':overdue?'color:#cc3a3a;':'')+' word-break:break-word;">'+t.text+'</div>'
+      +(t.due?'<div style="font-size:10px;font-weight:600;color:'+dueColor+';margin-top:2px;">'+(overdue?'⚠️ Overdue · ':'📅 ')+taskDueLabel(t.due)+'</div>':'')
       +'</div>'
-      // edit
       +'<button onclick="editTask(\''+t.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;padding:2px 4px;">✏️</button>'
-      // delete
       +'<button onclick="deleteTask(\''+t.id+'\')" style="background:none;border:none;cursor:pointer;color:#cc3a3a;font-size:13px;padding:2px 4px;">✕</button>'
       +'</div>';
   }).join('');
@@ -2985,13 +3010,16 @@ function renderTaskList(){
 
 function addTask(){
   var inp = document.getElementById('new-task-inp');
+  var dueInp = document.getElementById('new-task-due');
   if(!inp) return;
   var text = inp.value.trim();
   if(!text) return;
+  var due = dueInp ? dueInp.value || null : null;
   var tasks = loadTasks();
-  tasks.push({id: Date.now()+'_'+(++taskIdCounter), text:text, done:false, due:null});
+  tasks.push({id: Date.now()+'_'+(++taskIdCounter), text:text, done:false, due:due});
   saveTasks(tasks);
   inp.value = '';
+  if(dueInp) dueInp.value = '';
   renderTaskList();
 }
 
@@ -3015,21 +3043,27 @@ function editTask(id){
   if(!t) return;
   var row = document.getElementById('task-row-'+id);
   if(!row) return;
-  row.innerHTML = '<input class="inp" style="flex:1;font-size:13px;padding:6px 10px;" id="edit-task-inp-'+id+'" value="'+t.text.replace(/"/g,'&quot;')+'">'
-    +'<button onclick="saveEditTask(\''+id+'\')" class="btn-d" style="padding:6px 12px;font-size:12px;">Save</button>'
-    +'<button onclick="renderTaskList()" class="btn-l" style="padding:6px 10px;font-size:12px;">Cancel</button>';
+  row.style.flexDirection = 'column';
+  row.style.alignItems = 'stretch';
+  row.innerHTML = '<input class="inp" style="font-size:13px;margin-bottom:7px;" id="edit-task-inp-'+id+'" value="'+t.text.replace(/"/g,'&quot;')+'">'
+    +'<input type="date" class="inp" style="font-size:12px;margin-bottom:7px;" id="edit-task-due-'+id+'" value="'+(t.due||'')+'">'
+    +'<div style="display:flex;gap:7px;">'
+    +'<button onclick="renderTaskList()" class="btn-l" style="flex:1;padding:7px;font-size:12px;">Cancel</button>'
+    +'<button onclick="saveEditTask(\''+id+'\')" class="btn-d" style="flex:2;padding:7px;font-size:12px;">Save</button>'
+    +'</div>';
   var einp = document.getElementById('edit-task-inp-'+id);
   if(einp){ einp.focus(); einp.addEventListener('keydown',function(e){ if(e.key==='Enter') saveEditTask(id); }); }
 }
 
 function saveEditTask(id){
   var einp = document.getElementById('edit-task-inp-'+id);
+  var deInp = document.getElementById('edit-task-due-'+id);
   if(!einp) return;
   var text = einp.value.trim();
   if(!text){ renderTaskList(); return; }
   var tasks = loadTasks();
   var t = tasks.find(function(x){ return String(x.id)===String(id); });
-  if(t) t.text = text;
+  if(t){ t.text = text; t.due = deInp ? deInp.value||null : t.due; }
   saveTasks(tasks);
   renderTaskList();
 }
@@ -3046,7 +3080,31 @@ function goToTasks(){
 // ─── ALERT BANNER ───────────────────────────
 function showAlert(){
   var el = document.getElementById('alert-sheet');
-  if(el) el.style.display = 'flex';
+  if(!el) return;
+  // Populate with pending tasks
+  var tasks = loadTasks().filter(function(t){ return !t.done; });
+  var body = el.querySelector('#alert-task-list');
+  if(body){
+    if(tasks.length){
+      var today = new Date(); today.setHours(0,0,0,0);
+      body.innerHTML = tasks.map(function(t){
+        var overdue = taskIsOverdue(t.due);
+        return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:11px;padding:10px 12px;">'
+          +'<div style="width:18px;height:18px;border-radius:5px;border:2px solid '+(overdue?'#cc3a3a':'var(--card3)')+';flex:0 0 auto;"></div>'
+          +'<div style="flex:1;min-width:0;">'
+          +'<div style="font-size:13px;font-weight:600;'+(overdue?'color:#cc3a3a;':'')+' word-break:break-word;">'+t.text+'</div>'
+          +(t.due?'<div style="font-size:10px;font-weight:600;color:'+(overdue?'#cc3a3a':'var(--muted)')+';">'+(overdue?'⚠️ Overdue · ':'📅 ')+taskDueLabel(t.due)+'</div>':'')
+          +'</div></div>';
+      }).join('');
+    } else {
+      body.innerHTML = '<div style="text-align:center;padding:20px 16px;">'
+        +'<div style="font-size:32px;margin-bottom:10px;">🔔</div>'
+        +'<div style="font-size:13px;font-weight:700;margin-bottom:5px;">No upcoming reminders</div>'
+        +'<div style="font-size:11px;color:var(--muted);">Reminders from your tasks will appear here.</div>'
+        +'</div>';
+    }
+  }
+  el.style.display = 'flex';
 }
 function dismissAlert(){
   var el = document.getElementById('alert-sheet');
