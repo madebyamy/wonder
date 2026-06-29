@@ -411,11 +411,45 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── PHOTOS ─── -->
     <div class="tp" id="tp-photos">
-      <div style="text-align:center;padding:40px 16px;color:var(--muted);">
-        <div style="font-size:40px;margin-bottom:10px;">📷</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:5px;">No photos yet</div>
-        <div style="font-size:12px;">Photos you upload will appear here</div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div class="section-head">Shared photos</div>
+          <div style="font-size:11px;color:var(--muted);" id="photos-count-label">Add your first photo</div>
+        </div>
+        <button class="btn-d" style="padding:7px 12px;font-size:12px;display:flex;align-items:center;gap:4px;" onclick="triggerUpload()"><i class="ti ti-upload" style="font-size:14px;"></i> Upload</button>
       </div>
+
+      <!-- Upload options -->
+      <div style="display:flex;gap:7px;margin-bottom:14px;">
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="triggerUpload()"><i class="ti ti-camera" style="font-size:14px;"></i> Camera</button>
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="triggerUpload()"><i class="ti ti-photo" style="font-size:14px;"></i> Gallery</button>
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="downloadAllPhotos()"><i class="ti ti-download" style="font-size:14px;"></i> Download all</button>
+      </div>
+
+      <!-- Filter by person -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;" id="photos-person-filter">
+        <button class="pill on" onclick="catpill(this)">All</button>
+      </div>
+
+      <!-- Filter by day -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:14px;scrollbar-width:none;" id="photos-day-filter">
+        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All days</button>
+      </div>
+
+      <!-- Photo grid -->
+      <div class="photo-grid" id="photos-grid" style="margin-bottom:16px;">
+        <div class="photo-thumb" style="background:var(--card2);border:1.5px dashed var(--card3);" onclick="triggerUpload()">
+          <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add photo</span></div>
+        </div>
+      </div>
+
+      <!-- Recently added -->
+      <div id="photos-recent" style="display:none;background:var(--card);border-radius:var(--r-card);padding:12px;margin-top:4px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a;margin-bottom:8px;"><i class="ti ti-clock" style="font-size:12px;"></i> Recently added</div>
+        <div id="photos-recent-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
+
     </div>
     <div id="tp-photos-PLACEHOLDER" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -528,11 +562,110 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── SUITCASE ─── -->
     <div class="tp" id="tp-suitcase">
-      <div style="text-align:center;padding:40px 16px;color:var(--muted);">
-        <div style="font-size:40px;margin-bottom:10px;">🧳</div>
-        <div style="font-size:14px;font-weight:700;margin-bottom:5px;">Suitcase is empty</div>
-        <div style="font-size:12px;">Add outfits, shoes and packing items here</div>
+
+      <!-- Day picker (populated dynamically from trip dates) -->
+      <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:11px;scrollbar-width:none;" id="suitcase-day-picker">
+        <div class="dp on" onclick="suitcaseDayPick(this,'all','All days')"><div style="font-size:8px;font-weight:700;">ALL</div><div style="font-size:14px;font-weight:700;">★</div></div>
       </div>
+
+      <!-- Day header + sharing toggle -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div id="suitcase-day-title" style="font-size:13px;font-weight:700;">All days</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10px;color:var(--muted);" id="suitcase-share-label">Private</span>
+          <div class="toggle" id="suitcase-share-toggle" onclick="toggleSuitcaseShare(this)"></div>
+        </div>
+      </div>
+
+      <!-- Category filter -->
+      <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
+        <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
+        <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
+      </div>
+
+      <!-- Suitcase items container -->
+      <div id="suitcase-items-list">
+
+        <!-- Section: Daytime -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">🌅</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
+          <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
+        </div>
+        <div id="suitcase-daytime" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem('day')">
+            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div>
+          </div>
+        </div>
+
+        <!-- Section: Evening -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">🌙</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
+          <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
+        </div>
+        <div id="suitcase-evening" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem('evening')">
+            <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div>
+          </div>
+        </div>
+
+        <!-- Section: Shoes -->
+        <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+          <span style="font-size:14px;">👟</span>
+          <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
+          <div style="flex:1;height:1px;background:var(--card3);"></div>
+        </div>
+        <div id="suitcase-shoes" style="display:flex;flex-direction:column;gap:7px;margin-bottom:14px;">
+          <div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:14px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem('shoes')">
+            <i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i>
+            <span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Add item buttons -->
+      <div style="display:flex;gap:7px;margin-bottom:11px;">
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('camera')"><i class="ti ti-camera" style="font-size:13px;"></i> Camera</button>
+        <button class="btn-l" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('gallery')"><i class="ti ti-photo" style="font-size:13px;"></i> Gallery</button>
+        <button class="btn-d" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;" onclick="showAddItem('manual')"><i class="ti ti-plus" style="font-size:13px;"></i> Add</button>
+      </div>
+
+      <!-- Add item form (collapsed by default) -->
+      <div id="add-item-form" style="display:none;background:var(--card2);border-radius:14px;padding:13px;margin-bottom:11px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px;">New closet item</div>
+        <input class="inp" id="add-item-name" placeholder="Item name (e.g. Blue silk blouse)" style="margin-bottom:7px;">
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:9px;">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
+            <select class="inp" id="add-item-category" style="background:var(--card3);">
+              <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
+            <select class="inp" id="add-item-time" style="background:var(--card3);">
+              <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:9px;">
+          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Assign to days</div>
+          <div id="add-item-days" style="display:flex;gap:4px;flex-wrap:wrap;"></div>
+        </div>
+        <div style="display:flex;gap:7px;">
+          <button class="btn-l" style="flex:1;padding:9px;font-size:12px;" onclick="document.getElementById('add-item-form').style.display='none'">Cancel</button>
+          <button class="btn-d" style="flex:2;padding:9px;font-size:12px;" onclick="saveNewItem()">Save item →</button>
+        </div>
+      </div>
+
+      <div class="sl">Day notes</div>
+      <textarea class="inp" id="suitcase-day-notes" rows="2" style="resize:none;line-height:1.5;" placeholder="Notes for packing, outfit ideas..."></textarea>
+
     </div>
     <div id="tp-suitcase-PLACEHOLDER" style="display:none">
 
@@ -1870,6 +2003,8 @@ function tab(btn,name){
   document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('active');});
   var el = document.getElementById('tp-'+name);
   if(el) el.classList.add('active');
+  if(name==='suitcase'){ renderSuitcaseDayPicker(); renderSuitcaseItems(); }
+  if(name==='photos'){ renderPhotosDayFilter(); }
 }
 
 function dp(pill){
@@ -2299,26 +2434,126 @@ function toggleSuitcaseShare(el){
   el.classList.toggle('on');
   var on = el.classList.contains('on');
   document.getElementById('suitcase-share-label').textContent = on ? 'Shared' : 'Private';
-  var banner = document.getElementById('suitcase-share-banner');
-  banner.style.display = on ? 'flex' : 'none';
 }
 
-function showAddItem(){
+var suitcaseItems = []; // in-memory store for this session
+
+function renderSuitcaseDayPicker(){
+  var picker = document.getElementById('suitcase-day-picker');
+  if(!picker) return;
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  var days = [];
+  if(trip && trip.start_date && trip.end_date){
+    var d = new Date(trip.start_date+'T00:00:00');
+    var end = new Date(trip.end_date+'T00:00:00');
+    var dayN = 1;
+    while(d <= end){
+      days.push({date: new Date(d), num: dayN});
+      d.setDate(d.getDate()+1);
+      dayN++;
+    }
+  }
+  var DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS_S2 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var html = '<div class="dp on" onclick="suitcaseDayPick(this,\'all\',\'All days\')"><div style="font-size:8px;font-weight:700;">ALL</div><div style="font-size:14px;font-weight:700;">★</div></div>';
+  days.forEach(function(day){
+    var label = MONTHS_S2[day.date.getMonth()].toUpperCase();
+    var dateNum = day.date.getDate();
+    var weekday = DAYS_S[day.date.getDay()];
+    html += '<div class="dp" onclick="suitcaseDayPick(this,'+day.num+',\'Day '+day.num+'\')"><div style="font-size:8px;font-weight:700;">'+label+'</div><div style="font-size:14px;font-weight:700;">'+dateNum+'</div><div style="font-size:9px;">'+weekday+'</div></div>';
+  });
+  picker.innerHTML = html;
+}
+
+var suitcaseCurrentDay = 'all';
+
+function suitcaseDayPick(el, dayKey, label){
+  el.parentElement.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  suitcaseCurrentDay = dayKey;
+  document.getElementById('suitcase-day-title').textContent = label;
+  renderSuitcaseItems();
+}
+
+function renderSuitcaseItems(){
+  var filtered = suitcaseCurrentDay === 'all' ? suitcaseItems : suitcaseItems.filter(function(i){
+    return !i.days || i.days.length===0 || i.days.indexOf(suitcaseCurrentDay)!==-1;
+  });
+  var daytime = filtered.filter(function(i){ return i.time==='day'||i.time==='both'; });
+  var evening = filtered.filter(function(i){ return i.time==='evening'||i.time==='both'; });
+  var shoes   = filtered.filter(function(i){ return i.category==='👟 Shoes'; });
+
+  function outfitCard(item){
+    return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'
+      +'<div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;">'
+      +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i></div>'
+      +'<div style="padding:8px;"><div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
+      +(item.note?'<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">'+item.note+'</div>':'')
+      +'</div></div>';
+  }
+  function shoeCard(item){
+    return '<div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">'
+      +'<div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>'
+      +'<div style="flex:1;"><div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
+      +(item.note?'<div style="font-size:10px;color:var(--muted);">'+item.note+'</div>':'')
+      +'</div></div>';
+  }
+
+  var addOutfitBtn = '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:80px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem(\'manual\')">'
+    +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div></div>';
+  var addShoeBtn = '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:14px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem(\'manual\')">'
+    +'<i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>';
+
+  document.getElementById('suitcase-daytime').innerHTML = daytime.map(outfitCard).join('') + addOutfitBtn;
+  document.getElementById('suitcase-evening').innerHTML = evening.map(outfitCard).join('') + addOutfitBtn;
+  document.getElementById('suitcase-shoes').innerHTML = shoes.map(shoeCard).join('') + addShoeBtn;
+}
+
+function showAddItem(mode){
   var f = document.getElementById('add-item-form');
-  f.style.display = f.style.display==='none' ? 'block' : 'none';
-  if(f.style.display!=='none') f.scrollIntoView({behavior:'smooth',block:'nearest'});
+  f.style.display = 'block';
+  if(mode==='day') document.getElementById('add-item-time').value='🌅 Daytime';
+  else if(mode==='evening') document.getElementById('add-item-time').value='🌙 Evening';
+  else if(mode==='shoes') document.getElementById('add-item-category').value='👟 Shoes';
+  // populate day pills
+  var daysEl = document.getElementById('add-item-days');
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  var pills = '';
+  if(trip && trip.start_date && trip.end_date){
+    var d = new Date(trip.start_date+'T00:00:00');
+    var end = new Date(trip.end_date+'T00:00:00');
+    var n = 1;
+    while(d <= end){
+      pills += '<span class="pill" onclick="this.classList.toggle(\'on\')" style="font-size:10px;">Day '+n+'</span>';
+      d.setDate(d.getDate()+1); n++;
+    }
+  }
+  daysEl.innerHTML = pills || '<span style="font-size:11px;color:var(--muted);">No trip dates set</span>';
+  f.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function saveNewItem(){
+  var name = document.getElementById('add-item-name').value.trim();
+  if(!name){ alert('Please enter an item name'); return; }
+  var cat  = document.getElementById('add-item-category').value;
+  var time = document.getElementById('add-item-time').value;
+  var timeKey = time.indexOf('Daytime')!==-1 ? 'day' : time.indexOf('Evening')!==-1 ? 'evening' : 'both';
+  var days = [];
+  document.querySelectorAll('#add-item-days .pill.on').forEach(function(p){
+    days.push(p.textContent.trim());
+  });
+  suitcaseItems.push({name:name, category:cat, time:timeKey, days:days});
+  document.getElementById('add-item-name').value='';
+  document.getElementById('add-item-form').style.display='none';
+  renderSuitcaseItems();
 }
 
 function assignDay(el, day){
   el.classList.toggle('assigned');
   if(el.classList.contains('assigned')){
-    el.style.background='var(--ink)';
-    el.style.color='#fffaf0';
-    el.style.fontWeight='700';
+    el.style.background='var(--ink)'; el.style.color='#fffaf0'; el.style.fontWeight='700';
   } else {
-    el.style.background='var(--card3)';
-    el.style.color='var(--muted)';
-    el.style.fontWeight='400';
+    el.style.background='var(--card3)'; el.style.color='var(--muted)'; el.style.fontWeight='400';
   }
 }
 
@@ -2344,7 +2579,55 @@ function downloadPhoto(){
 }
 
 function triggerUpload(){
-  // In real app would open file picker
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.multiple = true;
+  input.onchange = function(e){
+    var files = Array.from(e.target.files);
+    if(!files.length) return;
+    var grid = document.getElementById('photos-grid');
+    var addTile = grid.querySelector('[onclick="triggerUpload()"]');
+    files.forEach(function(file){
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        var div = document.createElement('div');
+        div.className = 'photo-thumb';
+        div.style.background = '#e0d8f0';
+        div.style.backgroundImage = 'url('+ev.target.result+')';
+        div.style.backgroundSize = 'cover';
+        div.style.backgroundPosition = 'center';
+        div.innerHTML = '<div class="photo-overlay"><div class="av-sm u-amy">A</div><button style="background:none;border:none;cursor:pointer;"><i class="ti ti-download" style="font-size:14px;color:#fff;"></i></button></div>';
+        if(addTile) grid.insertBefore(div, addTile); else grid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+    var label = document.getElementById('photos-count-label');
+    if(label) label.textContent = 'All travelers can upload & download';
+  };
+  input.click();
+}
+
+function downloadAllPhotos(){
+  alert('Download all — coming soon!');
+}
+
+function renderPhotosDayFilter(){
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  var el = document.getElementById('photos-day-filter');
+  if(!el) return;
+  var html = '<button class="pill on" onclick="catpill(this)" style="font-size:11px;">All days</button>';
+  if(trip && trip.start_date && trip.end_date){
+    var d = new Date(trip.start_date+'T00:00:00');
+    var end = new Date(trip.end_date+'T00:00:00');
+    var MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var n=1;
+    while(d<=end){
+      html+='<button class="pill" onclick="catpill(this)" style="font-size:11px;">'+MS[d.getMonth()]+' '+d.getDate()+'</button>';
+      d.setDate(d.getDate()+1); n++;
+    }
+  }
+  el.innerHTML = html;
 }
 
 // ─── CALENDAR ───────────────────────────────
