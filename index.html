@@ -369,8 +369,17 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         </div>
         <div id="chat-body" style="display:none;">
           <div id="chat-messages" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:320px;overflow-y:auto;"></div>
-          <div style="display:flex;gap:5px;overflow-x:auto;margin-bottom:10px;scrollbar-width:none;" id="chat-suggestions"></div>
-          <div style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
+          <!-- API key setup (shown when no key stored) -->
+          <div id="gemini-key-setup" style="display:none;background:var(--card2);border-radius:12px;padding:12px;margin-bottom:10px;">
+            <div style="font-size:12px;font-weight:600;margin-bottom:4px;">Gemini API key required</div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:9px;">Get a free key at <strong>aistudio.google.com</strong> → Get API key. It starts with AIza.</div>
+            <div style="display:flex;gap:7px;">
+              <input id="gemini-key-input" class="inp" style="flex:1;font-size:12px;" placeholder="AIza...">
+              <button onclick="saveGeminiKey()" class="btn-d" style="padding:9px 14px;font-size:12px;flex:0 0 auto;">Save</button>
+            </div>
+          </div>
+          <!-- Normal input row -->
+          <div id="chat-input-row" style="display:flex;align-items:center;gap:7px;background:var(--card2);border-radius:13px;padding:7px 10px;">
             <input id="chat-input" class="inp" style="background:none;padding:0;flex:1;font-size:12px;" placeholder="Ask about flights, hotels, activities..." onkeydown="if(event.key==='Enter')sendChat()">
             <button onclick="sendChat()" class="btn-d" style="padding:7px 12px;border-radius:9px;font-size:12px;flex:0 0 auto;"><i class="ti ti-send" style="font-size:13px;"></i></button>
           </div>
@@ -2689,18 +2698,8 @@ function splitType(btn, type){
 }
 
 // ─── COLLAPSIBLE GEMINI ─────────────────────
-var chatOpen = true;
 var chatOpen = false;
 var chatHistory = [];
-
-function getGeminiKey(){
-  var k = localStorage.getItem('wander_gemini_key');
-  if(!k){
-    k = prompt('Enter your Gemini API key (from aistudio.google.com):');
-    if(k) localStorage.setItem('wander_gemini_key', k.trim());
-  }
-  return k || '';
-}
 
 function toggleChat(){
   chatOpen = !chatOpen;
@@ -2730,7 +2729,26 @@ function addChatBubble(role, text){
   chatHistory.push({role: role, text: text});
 }
 
+function saveGeminiKey(){
+  var inp = document.getElementById('gemini-key-input');
+  if(!inp) return;
+  var k = inp.value.trim();
+  if(!k) return;
+  localStorage.setItem('wander_gemini_key', k);
+  document.getElementById('gemini-key-setup').style.display = 'none';
+  document.getElementById('chat-input-row').style.display = 'flex';
+  addChatBubble('ai', 'API key saved! Ask me anything about your trip.');
+}
+
 async function sendChat(){
+  var apiKey = localStorage.getItem('wander_gemini_key');
+  if(!apiKey){
+    // Show inline key setup instead of browser prompt
+    document.getElementById('gemini-key-setup').style.display = 'block';
+    document.getElementById('chat-input-row').style.display = 'none';
+    return;
+  }
+
   var input = document.getElementById('chat-input');
   if(!input) return;
   var msg = input.value.trim();
@@ -2738,49 +2756,41 @@ async function sendChat(){
   input.value = '';
   addChatBubble('user', msg);
 
-  // Build trip context for the prompt
   var tripCtx = '';
   if(currentTripId){
     var trip = userTrips.find(function(t){ return t.id===currentTripId; });
     if(trip) tripCtx = 'Trip: '+trip.name+'. Destinations: '+(trip.destinations||[]).join(', ')+'. Dates: '+(trip.start_date||'TBD')+' to '+(trip.end_date||'TBD')+'. ';
   }
 
-  // Show typing indicator
   var msgs = document.getElementById('chat-messages');
   var typing = document.createElement('div');
   typing.className = 'bubble bai';
   typing.textContent = '…';
-  typing.id = 'chat-typing';
   msgs.appendChild(typing);
   msgs.scrollTop = msgs.scrollHeight;
 
   try {
-    // Build conversation history for context
     var contents = [];
-    // System context
-    contents.push({role:'user', parts:[{text: 'You are a friendly travel assistant helping plan a trip. Be concise and practical. ' + tripCtx}]});
-    contents.push({role:'model', parts:[{text: 'Got it! I\'m ready to help plan this trip.'}]});
-    // Prior turns
+    contents.push({role:'user', parts:[{text:'You are a friendly travel assistant. Be concise and practical. '+tripCtx}]});
+    contents.push({role:'model', parts:[{text:'Ready to help!'}]});
     for(var i=0; i<chatHistory.length; i++){
       var h = chatHistory[i];
-      contents.push({role: h.role==='ai' ? 'model' : 'user', parts:[{text: h.text}]});
+      contents.push({role: h.role==='ai'?'model':'user', parts:[{text:h.text}]});
     }
-    // Current message
-    contents.push({role:'user', parts:[{text: msg}]});
+    contents.push({role:'user', parts:[{text:msg}]});
 
-    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+getGeminiKey(), {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({contents: contents})
+    var res = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+apiKey, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:contents})
     });
     var data = await res.json();
     if(data.error) throw new Error(data.error.message);
-    var reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response received.';
+    var reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || 'No response.';
     typing.remove();
     addChatBubble('ai', reply);
-  } catch(e) {
+  } catch(e){
     typing.remove();
-    addChatBubble('ai', 'Error: ' + e.message + '. The API key may be invalid or expired.');
+    addChatBubble('ai', 'Error: '+e.message);
   }
 }
 
