@@ -322,55 +322,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── PLANS ─── -->
     <div class="tp active" id="tp-plans">
-      <!-- Day picker — built dynamically -->
-      <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;margin-bottom:13px;scrollbar-width:none;"></div>
+      <!-- Sticky day picker — built dynamically -->
+      <div id="trip-day-picker" style="position:sticky;top:0;z-index:10;background:var(--canvas);display:flex;gap:5px;overflow-x:auto;padding:4px 0 12px;margin:0 0 4px -16px;padding-left:16px;width:calc(100% + 32px);scrollbar-width:none;box-shadow:0 2px 8px rgba(0,0,0,.06);"></div>
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px;">
-        <div style="font-size:14px;font-weight:700;" id="plans-day-title">Select a day</div>
-        <div style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:4px 10px;">
-          <i class="ti ti-map-pin" style="font-size:12px;color:var(--muted);"></i>
-          <input id="day-location" class="inp" placeholder="City, Country" onblur="saveDayLocation()" onchange="saveDayLocation()" style="background:none;padding:0;font-size:11px;font-weight:600;width:130px;border:none;outline:none;">
-        </div>
-      </div>
-
-      <!-- ── DB PLANS SECTION (live data) ── -->
-      <div id="plans-db-section" style="margin-bottom:4px;">
-        <div id="plans-db-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:11px;">
-          <div id="plans-db-empty" style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;">
-            <div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div>
-            <div style="font-size:12px;font-weight:600;margin-bottom:3px;">Nothing planned for this day yet</div>
-            <div style="font-size:11px;color:var(--muted);">Use the buttons below to add flights, hotels & activities</div>
-          </div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px;">
-          <button onclick="openAddSheet('flight')" style="background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>
-          <button onclick="openAddSheet('hotel')" style="background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>
-          <button onclick="openAddSheet('excursion')" style="background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>
-          <button onclick="openOutfitSheet()" style="background:rgba(180,130,220,.15);border:1px solid rgba(180,130,220,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a3ab0;"><i class="ti ti-shirt" style="font-size:14px;"></i> + Outfits</button>
-        </div>
-
-        <!-- Outfits for this day (from Suitcase) -->
-        <div id="plans-outfit-section" style="display:none;margin-bottom:14px;">
-          <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-            <span style="font-size:14px;">👗</span>
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Outfits</span>
-            <div style="flex:1;height:1px;background:var(--card3);"></div>
-          </div>
-          <div id="plans-outfit-list" style="display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;"></div>
-        </div>
-
-        <!-- Notes section (collapsible) -->
-        <div style="margin-bottom:14px;">
-          <button onclick="togglePlanNotes()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--card2);border:none;border-radius:12px;padding:11px 13px;cursor:pointer;font-family:inherit;">
-            <span style="font-size:12px;font-weight:700;color:var(--ink);display:flex;align-items:center;gap:6px;"><i class="ti ti-notes" style="font-size:14px;color:var(--muted);"></i> Day notes</span>
-            <i id="plan-notes-chevron" class="ti ti-chevron-down" style="font-size:14px;color:var(--muted);transition:transform .2s;"></i>
-          </button>
-          <div id="plan-notes-body" style="display:none;background:var(--card2);border-radius:0 0 12px 12px;padding:0 13px 13px;margin-top:-4px;">
-            <textarea id="plan-notes-text" class="inp" rows="4" style="resize:none;line-height:1.6;margin-bottom:8px;margin-top:8px;" placeholder="Add notes for this day — reminders, ideas, links..."></textarea>
-            <button onclick="savePlanNotes()" class="btn-d" style="width:100%;padding:9px;font-size:12px;">Save notes →</button>
-          </div>
-        </div>
-      </div>
+      <!-- All day blocks rendered here by JS -->
+      <div id="all-days-container"></div>
 
       <!-- ── AI Chat (collapsible, plans-tab only) ── -->
       <div style="border-top:1px solid var(--card3);padding-top:14px;">
@@ -1310,8 +1266,8 @@ function openDbTrip(id){
     }
     picker.innerHTML = html;
     currentDayNum = 1;
-    document.getElementById('plans-day-title').textContent =
-      start.toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric'});
+    renderAllDayBlocks(days, start);
+    loadAllDayPlans(days);
   } else {
     // No dates — show simple stat boxes
     document.getElementById('trip-stat-days').textContent = '—';
@@ -1324,7 +1280,6 @@ function openDbTrip(id){
 
   go('trip');
   localStorage.setItem('wander_nav_trip', currentTripId);
-  loadDayPlans(currentDayNum);
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -1386,35 +1341,101 @@ function openTrip(){go('trip');updateTripDays();}
 // ── Day location (city/country) ──────────────────────────────────────────────
 function loadDayLocation(dayNum) {
   var key = 'wander_loc_' + (currentTripId||'x') + '_' + dayNum;
-  var el = document.getElementById('day-location');
+  var el = document.getElementById('day-location-'+dayNum);
   if (el) el.value = localStorage.getItem(key) || '';
 }
-function saveDayLocation() {
-  var key = 'wander_loc_' + (currentTripId||'x') + '_' + (currentDayNum||1);
-  var el = document.getElementById('day-location');
+function saveDayLocation(dayNum) {
+  var key = 'wander_loc_' + (currentTripId||'x') + '_' + dayNum;
+  var el = document.getElementById('day-location-'+dayNum);
   if (el) localStorage.setItem(key, el.value.trim());
 }
 
-// ── Day notes (collapsible) ───────────────────────────────────────────────────
-var planNotesOpen = false;
-function togglePlanNotes(){
-  planNotesOpen = !planNotesOpen;
-  var body = document.getElementById('plan-notes-body');
-  var chevron = document.getElementById('plan-notes-chevron');
-  body.style.display = planNotesOpen ? 'block' : 'none';
-  chevron.style.transform = planNotesOpen ? 'rotate(180deg)' : '';
-  if(planNotesOpen){
-    var key = 'wander_notes_'+(currentTripId||'x')+'_'+(currentDayNum||1);
-    document.getElementById('plan-notes-text').value = localStorage.getItem(key) || '';
+// ── Day notes (inline per-day) ────────────────────────────────────────────────
+function saveDayNotes(dayNum) {
+  var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
+  var ta = document.getElementById('plan-notes-'+dayNum);
+  if (ta) localStorage.setItem(key, ta.value.trim());
+}
+function loadDayNotes(dayNum) {
+  var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
+  var ta = document.getElementById('plan-notes-'+dayNum);
+  if (ta) ta.value = localStorage.getItem(key) || '';
+}
+
+// ── Set current day without scrolling (for action buttons) ───────────────────
+function setCurrentDay(n) { currentDayNum = n; }
+
+// ── Open add sheet for a specific day ────────────────────────────────────────
+function setDayAndOpen(dayNum, type) {
+  currentDayNum = dayNum;
+  var pills = document.querySelectorAll('#trip-day-picker .dp');
+  pills.forEach(function(p){p.classList.remove('on');});
+  if(pills[dayNum-1]) pills[dayNum-1].classList.add('on');
+  if(type === 'outfit') { openOutfitSheet(); } else { openAddSheet(type); }
+}
+
+// ── Render all day blocks into #all-days-container ───────────────────────────
+function renderAllDayBlocks(totalDays, startDate) {
+  var container = document.getElementById('all-days-container');
+  if (!container) return;
+  var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var html = '';
+  for (var i = 0; i < totalDays; i++) {
+    var d = new Date(startDate); d.setDate(d.getDate() + i);
+    var n = i + 1;
+    var label = DAYS[d.getDay()] + ', ' + MONTHS[d.getMonth()] + ' ' + d.getDate();
+    html += '<div id="day-block-'+n+'" style="margin-bottom:32px;scroll-margin-top:60px;">'
+      // header row
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
+        +'<div>'
+          +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Day '+n+'</div>'
+          +'<div style="font-size:16px;font-weight:700;">'+label+'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:4px 10px;">'
+          +'<i class="ti ti-map-pin" style="font-size:12px;color:var(--muted);"></i>'
+          +'<input id="day-location-'+n+'" class="inp" placeholder="City, Country" onblur="saveDayLocation('+n+')" style="background:none;padding:0;font-size:11px;font-weight:600;width:110px;border:none;outline:none;">'
+        +'</div>'
+      +'</div>'
+      // plans list
+      +'<div id="plans-db-list-'+n+'" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">'
+        +'<div style="background:var(--card2);border-radius:12px;padding:12px;text-align:center;font-size:12px;color:var(--muted);">Loading…</div>'
+      +'</div>'
+      // add buttons
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;">'
+        +'<button onclick="setDayAndOpen('+n+',\'flight\')" style="background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>'
+        +'<button onclick="setDayAndOpen('+n+',\'hotel\')" style="background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>'
+        +'<button onclick="setDayAndOpen('+n+',\'excursion\')" style="background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>'
+        +'<button onclick="setDayAndOpen('+n+',\'outfit\')" style="background:rgba(180,130,220,.15);border:1px solid rgba(180,130,220,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a3ab0;"><i class="ti ti-shirt" style="font-size:14px;"></i> + Outfits</button>'
+      +'</div>'
+      // outfits
+      +'<div id="plans-outfit-section-'+n+'" style="display:none;margin-bottom:12px;">'
+        +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">'
+          +'<span style="font-size:14px;">👗</span>'
+          +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);">Outfits</span>'
+          +'<div style="flex:1;height:1px;background:var(--card3);"></div>'
+        +'</div>'
+        +'<div id="plans-outfit-list-'+n+'" style="display:flex;gap:9px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;"></div>'
+      +'</div>'
+      // notes
+      +'<div style="background:var(--card2);border-radius:13px;padding:11px 13px;">'
+        +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:5px;"><i class="ti ti-notes" style="font-size:12px;"></i> Day notes</div>'
+        +'<textarea id="plan-notes-'+n+'" class="inp" rows="3" style="resize:none;line-height:1.6;margin:0;" placeholder="Reminders, ideas, links for this day…" onblur="saveDayNotes('+n+')"></textarea>'
+      +'</div>'
+      // day divider (not on last day)
+      +(i < totalDays-1 ? '<div style="height:1px;background:var(--card3);margin:28px 0 0;"></div>' : '')
+    +'</div>';
+  }
+  container.innerHTML = html;
+  for (var j = 1; j <= totalDays; j++) {
+    loadDayLocation(j);
+    loadDayNotes(j);
   }
 }
-function savePlanNotes(){
-  var key = 'wander_notes_'+(currentTripId||'x')+'_'+(currentDayNum||1);
-  localStorage.setItem(key, document.getElementById('plan-notes-text').value.trim());
-  var btn = document.querySelector('#plan-notes-body .btn-d');
-  var orig = btn.textContent;
-  btn.textContent = 'Saved ✓';
-  setTimeout(function(){ btn.textContent = orig; }, 1500);
+
+// ── Load plans for all days ───────────────────────────────────────────────────
+function loadAllDayPlans(totalDays) {
+  for (var i = 1; i <= totalDays; i++) { loadDayPlans(i); }
 }
 
 function tab(btn,name){
@@ -1526,41 +1547,24 @@ function getDayDateStr(dayNum) {
 
 function selectDay(pill, dayNum, label, city){
   currentDayNum = dayNum;
-  // update pill highlight
   pill.parentElement.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
   pill.classList.add('on');
-  // update title
-  var t = document.getElementById('plans-day-title');
-  if(t) t.textContent = label;
-  // show/hide day content blocks
-  var all = document.querySelectorAll('[id^="day-content-"]');
-  all.forEach(function(el){ el.style.display='none'; });
-  var target = document.getElementById('day-content-'+dayNum);
-  if(target) target.style.display='block';
-  // persist selected day
   localStorage.setItem('wander_nav_day', dayNum);
-  // reload notes if panel is open
-  if(planNotesOpen){
-    var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
-    var ta = document.getElementById('plan-notes-text');
-    if(ta) ta.value = localStorage.getItem(key)||'';
-  }
-  // load DB plans for this day
-  loadDayPlans(dayNum);
+  var block = document.getElementById('day-block-'+dayNum);
+  if(block) block.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 // ── Load day plans from Supabase ─────────────────────────────────────────────
 async function loadDayPlans(dayNum) {
-  loadDayLocation(dayNum);
-  var listEl = document.getElementById('plans-db-list');
+  var listEl = document.getElementById('plans-db-list-'+dayNum);
   if (!listEl) return;
 
   if (!currentTripId || !currentUser) {
-    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:14px;text-align:center;"><div style="font-size:22px;margin-bottom:5px;">✈️🏨🎟️</div><div style="font-size:12px;font-weight:600;margin-bottom:3px;">Your trip plans appear here</div><div style="font-size:11px;color:var(--muted);">Create a trip and use the buttons below to add flights, hotels & activities</div></div>';
+    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Sign in to see plans</div>';
     return;
   }
 
-  listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);font-size:12px;">Loading…</div>';
+  listEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--muted);font-size:12px;">Loading…</div>';
   var dateStr = getDayDateStr(dayNum);
   var prevDateStr = getDayDateStr(dayNum - 1);
 
@@ -1572,22 +1576,20 @@ async function loadDayPlans(dayNum) {
   ]);
 
   var items = [];
-  // overnight arrivals from previous day — show at top with arrival time as sort key
   (prevFr.data||[]).forEach(function(f){
     var dep = f.departure_time||'';
     var arr = f.arrival_time||'';
     var overnight = flightIsOvernight(f.notes) || (dep && arr && arr < dep);
-    if(overnight) items.push({type:'flight', data:f, sort:arr||'00:00', arrivalOnly:true});
+    if(overnight) items.push({type:'flight', data:f, sort:arr||'00:00', arrivalOnly:true, dayNum:dayNum});
   });
-  (fr.data||[]).forEach(function(f){ items.push({type:'flight',data:f,sort:f.departure_time||'00:00'}); });
-  (hr.data||[]).forEach(function(h){ items.push({type:'hotel',data:h,sort:'03:00'}); });
-  (er.data||[]).forEach(function(e){ items.push({type:'excursion',data:e,sort:e.start_time||'12:00'}); });
+  (fr.data||[]).forEach(function(f){ items.push({type:'flight',data:f,sort:f.departure_time||'00:00',dayNum:dayNum}); });
+  (hr.data||[]).forEach(function(h){ items.push({type:'hotel',data:h,sort:'03:00',dayNum:dayNum}); });
+  (er.data||[]).forEach(function(e){ items.push({type:'excursion',data:e,sort:e.start_time||'12:00',dayNum:dayNum}); });
   items.sort(function(a,b){ return a.sort.localeCompare(b.sort); });
 
   if (items.length === 0) {
-    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — tap a button below to add</div>';
+    listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — use the buttons below to add</div>';
   } else {
-    planItemCache = {};
     items.forEach(function(item){ if(!item.arrivalOnly) planItemCache[item.data.id] = item; });
     listEl.innerHTML = items.map(renderPlanItem).join('');
   }
@@ -1595,8 +1597,8 @@ async function loadDayPlans(dayNum) {
 }
 
 function renderPlansOutfits(dayNum){
-  var section = document.getElementById('plans-outfit-section');
-  var list    = document.getElementById('plans-outfit-list');
+  var section = document.getElementById('plans-outfit-section-'+dayNum);
+  var list    = document.getElementById('plans-outfit-list-'+dayNum);
   if(!section || !list) return;
   var outfits = suitcaseItems.filter(function(i){ return String(i.day) === String(dayNum); });
   if(outfits.length === 0){ section.style.display='none'; return; }
@@ -1615,10 +1617,11 @@ function renderPlansOutfits(dayNum){
 }
 
 function renderPlanItem(item) {
+  var dn = item.dayNum || currentDayNum;
   var actions = function(type, id) {
     return '<div style="display:flex;gap:8px;align-items:center;">'
-      +'<button onclick="openEditSheet(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Edit">✏️</button>'
-      +'<button onclick="deletePlanItem(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Delete">✕</button>'
+      +'<button onclick="setCurrentDay('+dn+');openEditSheet(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:var(--blue);cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Edit">✏️</button>'
+      +'<button onclick="setCurrentDay('+dn+');deletePlanItem(\''+type+'\',\''+id+'\')" style="background:none;border:none;color:#cc3a3a;cursor:pointer;font-size:13px;padding:0;line-height:1;" title="Delete">✕</button>'
       +'</div>';
   };
   if (item.type === 'flight') {
@@ -1647,8 +1650,8 @@ function renderPlanItem(item) {
     var h = item.data;
     var hTracked = h.cost ? isPlanTracked(h.id) : false;
     var hCostBtn = h.cost ? (hTracked
-      ? '<button onclick="removeFromTracker(\''+h.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
-      : '<button onclick="trackPlanExpense(\''+h.hotel_name.replace(/'/g,"\\'")+'\',' +h.cost+',\'🏨 Hotel\',\''+h.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(h.cost).toFixed(2)+' to tracker</button>'
+      ? '<button onclick="removeFromTracker(\''+h.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+h.hotel_name.replace(/'/g,"\\'")+'\',' +h.cost+',\'🏨 Hotel\',\''+h.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(h.cost).toFixed(2)+' to tracker</button>'
     ) : '';
     return '<div style="background:rgba(164,212,197,.2);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
@@ -1672,8 +1675,8 @@ function renderPlanItem(item) {
     var eCat = e.activity_type==='Transportation'?'🚕 Transport':e.activity_type==='Restaurant'||e.activity_type==='Bar'?'🍝 Food':e.activity_type==='Shopping'?'🛍️ Shopping':'🎟️ Activity';
     var eTracked = e.cost ? isPlanTracked(e.id) : false;
     var eCostBtn = e.cost ? (eTracked
-      ? '<button onclick="removeFromTracker(\''+e.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
-      : '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\''+eCat+'\',\''+e.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>'
+      ? '<button onclick="removeFromTracker(\''+e.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\''+eCat+'\',\''+e.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>'
     ) : '';
     return '<div style="background:rgba(232,185,74,.15);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
@@ -1925,7 +1928,8 @@ function loadPlanTracked(){ try{ return JSON.parse(localStorage.getItem(planTrac
 function savePlanTracked(obj){ localStorage.setItem(planTrackKey(), JSON.stringify(obj)); }
 function isPlanTracked(planItemId){ return !!loadPlanTracked()[planItemId]; }
 
-function trackPlanExpense(desc, amount, category, planItemId){
+function trackPlanExpense(desc, amount, category, planItemId, dayNum){
+  dayNum = dayNum || currentDayNum;
   var expId = Date.now()+'_e'+(Math.random()*9999|0);
   var items = loadExpenses();
   items.push({ id: expId, desc: desc, amount: amount, category: category||'🎟️ Activity', type: 'planned', split: 'even', currency: 'USD' });
@@ -1934,11 +1938,12 @@ function trackPlanExpense(desc, amount, category, planItemId){
   tracked[planItemId] = expId;
   savePlanTracked(tracked);
   renderExpenses();
-  loadDayPlans(currentDayNum); // re-render cards to show updated button
+  loadDayPlans(dayNum);
   showToast('💸 Added to expense tracker');
 }
 
-function removeFromTracker(planItemId){
+function removeFromTracker(planItemId, dayNum){
+  dayNum = dayNum || currentDayNum;
   var tracked = loadPlanTracked();
   var expId = tracked[planItemId];
   if(expId){
@@ -1947,7 +1952,7 @@ function removeFromTracker(planItemId){
     savePlanTracked(tracked);
   }
   renderExpenses();
-  loadDayPlans(currentDayNum);
+  loadDayPlans(dayNum);
   showToast('Removed from expense tracker');
 }
 
