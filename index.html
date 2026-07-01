@@ -1643,6 +1643,7 @@ function renderPlanItem(item) {
   }
   if (item.type === 'hotel') {
     var h = item.data;
+    var hCostBtn = h.cost ? '<button onclick="trackPlanExpense(\''+h.hotel_name.replace(/'/g,"\\'")+'\',' +h.cost+',\'🏨 Hotel\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(h.cost).toFixed(2)+' to tracker</button>' : '';
     return '<div style="background:rgba(164,212,197,.2);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
       +'<span style="font-size:20px;flex:0 0 auto;">🏨</span>'
@@ -1652,6 +1653,7 @@ function renderPlanItem(item) {
       +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
       +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
       +(h.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+h.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +hCostBtn
       +'</div>'
       +actions('hotels', h.id)
       +'</div></div>';
@@ -1659,9 +1661,13 @@ function renderPlanItem(item) {
   if (item.type === 'excursion') {
     var e = item.data;
     var time = e.start_time ? e.start_time.slice(0,5) : '';
+    var typeIcons = {Museum:'🏛️',Restaurant:'🍽️',Bar:'🍹',Tour:'🗺️',Transportation:'🚕',Shopping:'🛍️',Spa:'💆',Sport:'⚽',Entertainment:'🎭',Other:'✨'};
+    var eIcon = e.activity_type ? (typeIcons[e.activity_type]||'🎟️') : '🎟️';
+    var eCat = e.activity_type==='Transportation'?'🚕 Transport':e.activity_type==='Restaurant'||e.activity_type==='Bar'?'🍝 Food':e.activity_type==='Shopping'?'🛍️ Shopping':'🎟️ Activity';
+    var eCostBtn = e.cost ? '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\''+eCat+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>' : '';
     return '<div style="background:rgba(232,185,74,.15);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
-      +'<span style="font-size:20px;flex:0 0 auto;">🎟️</span>'
+      +'<span style="font-size:20px;flex:0 0 auto;">'+eIcon+'</span>'
       +'<div style="flex:1;">'
       +'<div style="font-size:13px;font-weight:700;">'+e.title+'</div>'
       +(e.activity_type ? '<div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">'+e.activity_type+'</div>' : '')
@@ -1669,6 +1675,7 @@ function renderPlanItem(item) {
       +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
       +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +eCostBtn
       +'</div>'
       +actions('excursions', e.id)
       +'</div></div>';
@@ -1839,7 +1846,7 @@ async function saveHotel() {
     ({error} = await sb.from('hotels').insert(data));
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
-  if (cost && cost > 0 && !editingPlanId) addToExpenses(name, cost, '🏨 Hotel');
+  // expense tracking is opt-in via the plan card button
   closeAddSheet('hotel');
   ['h-name','h-addr','h-in','h-out','h-conf','h-link','h-cost'].forEach(function(id){ document.getElementById(id).value=''; });
   loadDayPlans(currentDayNum);
@@ -1871,7 +1878,7 @@ async function saveExcursion() {
     ({error} = await sb.from('excursions').insert(data));
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
-  if (cost && cost > 0 && !editingPlanId) addToExpenses(title, cost, '🎟️ Activity');
+  // expense tracking is opt-in via the plan card button
   closeAddSheet('excursion');
   ['e-title','e-time','e-cost','e-link','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('e-type').value='';
@@ -1892,6 +1899,16 @@ var expSelectedCat = '✈️ Flight';
 var expCurrentSplit = 'even';
 
 function expensesKey(){ return 'wander_expenses_'+(currentTripId||'x'); }
+
+function trackPlanExpense(desc, amount, category){
+  addToExpenses(desc, amount, category);
+  // show toast
+  var t = document.createElement('div');
+  t.textContent = '💸 Added to expense tracker';
+  t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fffaf0;padding:10px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;';
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ t.remove(); },400); }, 2000);
+}
 function loadExpenses(){ try{ return JSON.parse(localStorage.getItem(expensesKey())||'[]'); }catch(e){ return []; } }
 function saveExpenses(arr){ localStorage.setItem(expensesKey(), JSON.stringify(arr)); }
 
