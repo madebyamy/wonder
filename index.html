@@ -852,6 +852,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">From (airport)</div><input id="f-from" class="inp" placeholder="PHX" style="text-transform:uppercase;"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">To (airport)</div><input id="f-to" class="inp" placeholder="FCO" style="text-transform:uppercase;"></div>
     </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Flight date</div><input id="f-date" class="inp" type="date"></div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Departure time</div><input id="f-dep" class="inp" type="time"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Arrival time</div><input id="f-arr" class="inp" type="time"></div>
@@ -896,6 +897,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Activity name</div><input id="e-title" class="inp" placeholder="Colosseum guided tour"></div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Activity type</div><select id="e-type" class="inp" style="appearance:none;-webkit-appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;"><option value="">Select type...</option><option value="Museum">🏛️ Museum</option><option value="Restaurant">🍽️ Restaurant</option><option value="Bar">🍹 Bar</option><option value="Tour">🎟️ Tour</option><option value="Transportation">🚕 Transportation</option><option value="Shopping">🛍️ Shopping</option><option value="Spa">💆 Spa</option><option value="Sport">⚽ Sport</option><option value="Entertainment">🎭 Entertainment</option><option value="Other">✨ Other</option></select></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Date</div><input id="e-date" class="inp" type="date"></div>
     <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px;">
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Start time</div><input id="e-time" class="inp" type="time"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Expense — adds to tracker</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="e-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
@@ -1738,9 +1740,18 @@ async function deletePlanItem(table, id) {
 // ── Add sheet open/close ──────────────────────────────────────────────────────
 function openAddSheet(type) {
   if (!editingPlanId) {
-    // reset button text when opening fresh
     var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
     if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
+    var dayDate = getDayDateStr(currentDayNum);
+    if (type === 'flight') {
+      document.getElementById('f-date').value = dayDate;
+    } else if (type === 'hotel') {
+      document.getElementById('h-in').value = dayDate;
+      var nextDate = getDayDateStr(currentDayNum + 1);
+      document.getElementById('h-out').value = nextDate;
+    } else if (type === 'excursion') {
+      document.getElementById('e-date').value = dayDate;
+    }
   }
   document.getElementById('add-'+type+'-sheet').style.display = 'flex';
 }
@@ -1806,7 +1817,7 @@ async function saveFlight() {
   var autoOvernight = dep && arr && arr < dep;
   var overnight = flightOvernightOn || autoOvernight;
   var data = {
-    trip_id: currentTripId, flight_date: getDayDateStr(currentDayNum),
+    trip_id: currentTripId, flight_date: document.getElementById('f-date').value || getDayDateStr(currentDayNum),
     airline: airline||null, flight_number: num||null,
     departure_airport: from||null, arrival_airport: to||null,
     departure_time: dep||null, arrival_time: arr||null,
@@ -1821,7 +1832,7 @@ async function saveFlight() {
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
   closeAddSheet('flight');
-  ['f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['f-date','f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
   resetOvernightBtn();
   loadDayPlans(currentDayNum);
 }
@@ -1869,7 +1880,7 @@ async function saveExcursion() {
   if (!title) { errEl.textContent='Please enter an activity name.'; errEl.style.display=''; return; }
   var cost = parseFloat(document.getElementById('e-cost').value)||null;
   var data = {
-    trip_id: currentTripId, excursion_date: getDayDateStr(currentDayNum),
+    trip_id: currentTripId, excursion_date: document.getElementById('e-date').value || getDayDateStr(currentDayNum),
     title: title,
     activity_type: document.getElementById('e-type').value||null,
     start_time: document.getElementById('e-time').value||null,
