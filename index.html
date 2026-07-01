@@ -1643,7 +1643,11 @@ function renderPlanItem(item) {
   }
   if (item.type === 'hotel') {
     var h = item.data;
-    var hCostBtn = h.cost ? '<button onclick="trackPlanExpense(\''+h.hotel_name.replace(/'/g,"\\'")+'\',' +h.cost+',\'🏨 Hotel\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(h.cost).toFixed(2)+' to tracker</button>' : '';
+    var hTracked = h.cost ? isPlanTracked(h.id) : false;
+    var hCostBtn = h.cost ? (hTracked
+      ? '<button onclick="removeFromTracker(\''+h.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+h.hotel_name.replace(/'/g,"\\'")+'\',' +h.cost+',\'🏨 Hotel\',\''+h.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(h.cost).toFixed(2)+' to tracker</button>'
+    ) : '';
     return '<div style="background:rgba(164,212,197,.2);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
       +'<span style="font-size:20px;flex:0 0 auto;">🏨</span>'
@@ -1664,7 +1668,11 @@ function renderPlanItem(item) {
     var typeIcons = {Museum:'🏛️',Restaurant:'🍽️',Bar:'🍹',Tour:'🗺️',Transportation:'🚕',Shopping:'🛍️',Spa:'💆',Sport:'⚽',Entertainment:'🎭',Other:'✨'};
     var eIcon = e.activity_type ? (typeIcons[e.activity_type]||'🎟️') : '🎟️';
     var eCat = e.activity_type==='Transportation'?'🚕 Transport':e.activity_type==='Restaurant'||e.activity_type==='Bar'?'🍝 Food':e.activity_type==='Shopping'?'🛍️ Shopping':'🎟️ Activity';
-    var eCostBtn = e.cost ? '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\''+eCat+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>' : '';
+    var eTracked = e.cost ? isPlanTracked(e.id) : false;
+    var eCostBtn = e.cost ? (eTracked
+      ? '<button onclick="removeFromTracker(\''+e.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\''+eCat+'\',\''+e.id+'\')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>'
+    ) : '';
     return '<div style="background:rgba(232,185,74,.15);border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
       +'<span style="font-size:20px;flex:0 0 auto;">'+eIcon+'</span>'
@@ -1900,11 +1908,41 @@ var expCurrentSplit = 'even';
 
 function expensesKey(){ return 'wander_expenses_'+(currentTripId||'x'); }
 
-function trackPlanExpense(desc, amount, category){
-  addToExpenses(desc, amount, category);
-  // show toast
+// Map of planItemId → expenseId so we can toggle tracked state
+function planTrackKey(){ return 'wander_plan_tracked_'+(currentTripId||'x'); }
+function loadPlanTracked(){ try{ return JSON.parse(localStorage.getItem(planTrackKey())||'{}'); }catch(e){ return {}; } }
+function savePlanTracked(obj){ localStorage.setItem(planTrackKey(), JSON.stringify(obj)); }
+function isPlanTracked(planItemId){ return !!loadPlanTracked()[planItemId]; }
+
+function trackPlanExpense(desc, amount, category, planItemId){
+  var expId = Date.now()+'_e'+(Math.random()*9999|0);
+  var items = loadExpenses();
+  items.push({ id: expId, desc: desc, amount: amount, category: category||'🎟️ Activity', type: 'planned', split: 'even', currency: 'USD' });
+  saveExpenses(items);
+  var tracked = loadPlanTracked();
+  tracked[planItemId] = expId;
+  savePlanTracked(tracked);
+  renderExpenses();
+  loadDayPlans(currentDayNum); // re-render cards to show updated button
+  showToast('💸 Added to expense tracker');
+}
+
+function removeFromTracker(planItemId){
+  var tracked = loadPlanTracked();
+  var expId = tracked[planItemId];
+  if(expId){
+    saveExpenses(loadExpenses().filter(function(i){ return i.id !== expId; }));
+    delete tracked[planItemId];
+    savePlanTracked(tracked);
+  }
+  renderExpenses();
+  loadDayPlans(currentDayNum);
+  showToast('Removed from expense tracker');
+}
+
+function showToast(msg){
   var t = document.createElement('div');
-  t.textContent = '💸 Added to expense tracker';
+  t.textContent = msg;
   t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fffaf0;padding:10px 18px;border-radius:99px;font-size:12px;font-weight:700;z-index:9999;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.25);pointer-events:none;';
   document.body.appendChild(t);
   setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ t.remove(); },400); }, 2000);
