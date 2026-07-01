@@ -858,7 +858,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Departure time</div><input id="f-dep" class="inp" type="time"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Arrival time</div><input id="f-arr" class="inp" type="time"></div>
     </div>
-    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Notes / confirmation #</div><input id="f-notes" class="inp" placeholder="Seat 14A · conf ABC123"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Notes / confirmation #</div><input id="f-notes" class="inp" placeholder="Seat 14A · conf ABC123"></div>
+    <button id="f-overnight-btn" onclick="toggleOvernightBtn()" style="width:100%;display:flex;align-items:center;gap:9px;background:var(--card2);border:2px solid var(--card3);border-radius:11px;padding:10px 13px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:.15s;" type="button">
+      <span id="f-overnight-icon" style="width:20px;height:20px;border-radius:6px;border:2px solid var(--card3);background:transparent;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;"></span>
+      <span style="font-size:12px;font-weight:600;color:var(--ink);">🌙 Overnight flight — lands next day</span>
+    </button>
     <div id="f-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveFlight()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save flight →</button>
   </div>
@@ -1557,14 +1561,23 @@ async function loadDayPlans(dayNum) {
 
   listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--muted);font-size:12px;">Loading…</div>';
   var dateStr = getDayDateStr(dayNum);
+  var prevDateStr = getDayDateStr(dayNum - 1);
 
-  var [fr, hr, er] = await Promise.all([
+  var [fr, hr, er, prevFr] = await Promise.all([
     sb.from('flights').select('*').eq('trip_id', currentTripId).eq('flight_date', dateStr).order('departure_time'),
     sb.from('hotels').select('*').eq('trip_id', currentTripId).lte('checkin_date', dateStr).gte('checkout_date', dateStr),
-    sb.from('excursions').select('*').eq('trip_id', currentTripId).eq('excursion_date', dateStr).order('start_time')
+    sb.from('excursions').select('*').eq('trip_id', currentTripId).eq('excursion_date', dateStr).order('start_time'),
+    dayNum > 1 ? sb.from('flights').select('*').eq('trip_id', currentTripId).eq('flight_date', prevDateStr) : Promise.resolve({data:[]})
   ]);
 
   var items = [];
+  // overnight arrivals from previous day — show at top with arrival time as sort key
+  (prevFr.data||[]).forEach(function(f){
+    var dep = f.departure_time||'';
+    var arr = f.arrival_time||'';
+    var overnight = flightIsOvernight(f.notes) || (dep && arr && arr < dep);
+    if(overnight) items.push({type:'flight', data:f, sort:arr||'00:00', arrivalOnly:true});
+  });
   (fr.data||[]).forEach(function(f){ items.push({type:'flight',data:f,sort:f.departure_time||'00:00'}); });
   (hr.data||[]).forEach(function(h){ items.push({type:'hotel',data:h,sort:'03:00'}); });
   (er.data||[]).forEach(function(e){ items.push({type:'excursion',data:e,sort:e.start_time||'12:00'}); });
@@ -1574,7 +1587,7 @@ async function loadDayPlans(dayNum) {
     listEl.innerHTML = '<div style="background:var(--card2);border-radius:12px;padding:13px;text-align:center;font-size:12px;color:var(--muted);">Nothing added yet — tap a button below to add</div>';
   } else {
     planItemCache = {};
-    items.forEach(function(item){ planItemCache[item.data.id] = item; });
+    items.forEach(function(item){ if(!item.arrivalOnly) planItemCache[item.data.id] = item; });
     listEl.innerHTML = items.map(renderPlanItem).join('');
   }
   renderPlansOutfits(dayNum);
@@ -1611,16 +1624,22 @@ function renderPlanItem(item) {
     var f = item.data;
     var dep = f.departure_time ? f.departure_time.slice(0,5) : '';
     var arr = f.arrival_time ? f.arrival_time.slice(0,5) : '';
-    return '<div style="background:rgba(74,122,222,.09);border-radius:13px;padding:12px 13px;">'
+    var overnight = flightIsOvernight(f.notes) || (dep && arr && arr < dep);
+    var displayNotes = flightNotesDisplay(f.notes);
+    var isArrival = item.arrivalOnly;
+    return '<div style="background:'+(isArrival?'rgba(100,80,180,.1)':'rgba(74,122,222,.09)')+';border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
-      +'<span style="font-size:20px;flex:0 0 auto;">✈️</span>'
+      +'<span style="font-size:20px;flex:0 0 auto;">'+(isArrival?'🛬':'✈️')+'</span>'
       +'<div style="flex:1;">'
+      +(overnight&&!isArrival ? '<div style="font-size:9px;font-weight:700;color:#7a5af8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">🌙 Overnight flight</div>' : '')
+      +(isArrival ? '<div style="font-size:9px;font-weight:700;color:#7a5af8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px;">🌙 Overnight arrival</div>' : '')
       +'<div style="font-size:13px;font-weight:700;">'+(f.airline||'')+(f.flight_number?' · '+f.flight_number:'')+'</div>'
       +(f.departure_airport||f.arrival_airport ? '<div style="font-size:11px;color:var(--muted);">'+(f.departure_airport||'?')+' → '+(f.arrival_airport||'?')+'</div>' : '')
-      +(dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr:'')+'</div>' : '')
-      +(f.notes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+f.notes+'</div>' : '')
+      +(isArrival && arr ? '<div style="font-size:11px;color:var(--muted);">Arrives '+arr+'</div>'
+        : dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr+(overnight?' +1':''):'')+'</div>' : '')
+      +(displayNotes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+displayNotes+'</div>' : '')
       +'</div>'
-      +actions('flights', f.id)
+      +(isArrival ? '' : actions('flights', f.id))
       +'</div></div>';
   }
   if (item.type === 'hotel') {
@@ -1670,7 +1689,8 @@ function openEditSheet(type, id) {
     document.getElementById('f-to').value = d.arrival_airport || '';
     document.getElementById('f-dep').value = d.departure_time ? d.departure_time.slice(0,5) : '';
     document.getElementById('f-arr').value = d.arrival_time ? d.arrival_time.slice(0,5) : '';
-    document.getElementById('f-notes').value = d.notes || '';
+    document.getElementById('f-notes').value = flightNotesDisplay(d.notes);
+    setOvernightBtn(flightIsOvernight(d.notes));
     document.querySelector('#add-flight-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-flight-sheet').style.display = 'flex';
   } else if (type === 'hotels') {
@@ -1715,7 +1735,46 @@ function closeAddSheet(type) {
   editingPlanId = null;
   var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
   if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
+  if (type === 'flight') resetOvernightBtn();
 }
+
+// ── Overnight toggle ──────────────────────────────────────────────────────────
+var flightOvernightOn = false;
+function toggleOvernightBtn(){
+  flightOvernightOn = !flightOvernightOn;
+  var btn = document.getElementById('f-overnight-btn');
+  var icon = document.getElementById('f-overnight-icon');
+  if(flightOvernightOn){
+    btn.style.borderColor = 'var(--blue)';
+    btn.style.background = 'rgba(74,122,222,.08)';
+    icon.style.background = 'var(--blue)';
+    icon.style.borderColor = 'var(--blue)';
+    icon.innerHTML = '<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>';
+  } else {
+    btn.style.borderColor = 'var(--card3)';
+    btn.style.background = 'var(--card2)';
+    icon.style.background = 'transparent';
+    icon.style.borderColor = 'var(--card3)';
+    icon.innerHTML = '';
+  }
+}
+function setOvernightBtn(val){
+  flightOvernightOn = !val; // flip so toggleOvernightBtn sets correctly
+  toggleOvernightBtn();
+}
+function resetOvernightBtn(){
+  flightOvernightOn = true;
+  toggleOvernightBtn();
+}
+
+function flightNotesWithOvernight(rawNotes, overnight){
+  var notes = rawNotes || '';
+  // strip any existing marker first
+  notes = notes.replace(/^\[overnight\]\s*/,'');
+  return overnight ? '[overnight] '+notes : notes||null;
+}
+function flightIsOvernight(notes){ return notes && notes.indexOf('[overnight]') === 0; }
+function flightNotesDisplay(notes){ return notes ? notes.replace(/^\[overnight\]\s*/,'') : ''; }
 
 // ── Save flight ───────────────────────────────────────────────────────────────
 async function saveFlight() {
@@ -1727,13 +1786,17 @@ async function saveFlight() {
   var from = document.getElementById('f-from').value.trim().toUpperCase();
   var to = document.getElementById('f-to').value.trim().toUpperCase();
   if (!from && !num) { errEl.textContent='Please enter at least a flight number or departure airport.'; errEl.style.display=''; return; }
+  // auto-detect overnight if times suggest it
+  var dep = document.getElementById('f-dep').value;
+  var arr = document.getElementById('f-arr').value;
+  var autoOvernight = dep && arr && arr < dep;
+  var overnight = flightOvernightOn || autoOvernight;
   var data = {
     trip_id: currentTripId, flight_date: getDayDateStr(currentDayNum),
     airline: airline||null, flight_number: num||null,
     departure_airport: from||null, arrival_airport: to||null,
-    departure_time: document.getElementById('f-dep').value||null,
-    arrival_time: document.getElementById('f-arr').value||null,
-    notes: document.getElementById('f-notes').value.trim()||null,
+    departure_time: dep||null, arrival_time: arr||null,
+    notes: flightNotesWithOvernight(document.getElementById('f-notes').value.trim(), overnight),
     created_by: currentUser.id
   };
   var error;
@@ -1745,6 +1808,7 @@ async function saveFlight() {
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
   closeAddSheet('flight');
   ['f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  resetOvernightBtn();
   loadDayPlans(currentDayNum);
 }
 
