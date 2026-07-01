@@ -513,86 +513,84 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── EXPENSES ─── -->
     <div class="tp" id="tp-expenses">
-      <div style="background:var(--sky);border-radius:17px;padding:15px;margin-bottom:13px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--skylt);margin-bottom:4px;">Total spent</div>
-        <div style="font-size:30px;font-weight:700;color:#fffaf0;letter-spacing:-1px;margin-bottom:9px;">$0</div>
-        <div style="background:rgba(255,255,255,.2);border-radius:var(--r-pill);height:4px;margin-bottom:5px;"><div style="background:var(--skylt);height:4px;border-radius:var(--r-pill);width:0%;"></div></div>
-        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--skylt);"><span>No budget set</span><span>—</span></div>
+
+      <!-- Summary header -->
+      <div style="background:var(--sky);border-radius:18px;padding:16px;margin-bottom:13px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Planned</div>
+            <div id="exp-total-planned" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
+            <div id="exp-total-actual" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.2);border-radius:99px;height:5px;margin-bottom:6px;">
+          <div id="exp-progress-bar" style="background:#fffaf0;height:5px;border-radius:99px;width:0%;transition:.4s;"></div>
+        </div>
+        <div id="exp-progress-label" style="font-size:11px;color:var(--skylt);">No expenses yet — add one below</div>
       </div>
 
-      <div class="card" style="margin-bottom:13px;">
-        <div class="sl">Add expense</div>
-        <input class="inp" placeholder="Description (e.g. Dinner at Trattoria)" style="margin-bottom:7px;">
-        <!-- Amount + Currency + Conversion -->
-        <div style="margin-bottom:7px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Amount</div>
-          <div style="display:flex;align-items:center;gap:6px;">
-            <select id="exp-currency" onchange="updateConversion()" class="inp" style="background:var(--card2);width:auto;flex:0 0 auto;padding-right:8px;">
-              <option value="USD">🇺🇸 USD</option>
-              <option value="EUR" selected>🇪🇺 EUR</option>
-              <option value="GBP">🇬🇧 GBP</option>
-              <option value="JPY">🇯🇵 JPY</option>
-              <option value="CAD">🇨🇦 CAD</option>
-              <option value="AUD">🇦🇺 AUD</option>
-              <option value="CHF">🇨🇭 CHF</option>
-              <option value="MXN">🇲🇽 MXN</option>
-              <option value="BRL">🇧🇷 BRL</option>
-              <option value="THB">🇹🇭 THB</option>
-            </select>
-            <input id="exp-amount" oninput="updateConversion()" class="inp" style="background:var(--card2);flex:1;" placeholder="0.00" type="number" min="0" step="0.01">
-          </div>
-          <!-- Live USD conversion -->
-          <div id="exp-usd" style="display:none;margin-top:5px;font-size:11px;color:var(--muted);padding:5px 9px;background:var(--card2);border-radius:8px;">
-            ≈ <strong id="exp-usd-val">$0.00</strong> USD · rate updated today
-          </div>
+      <!-- Add expense form -->
+      <div style="background:var(--card2);border-radius:16px;padding:14px;margin-bottom:13px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:11px;">+ Add expense</div>
+        <input id="exp-desc" class="inp" placeholder="e.g. Dinner at Trattoria" style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <select id="exp-currency" onchange="updateConversion()" class="inp" style="width:auto;flex:0 0 auto;">
+            <option value="USD">🇺🇸 USD</option>
+            <option value="EUR" selected>🇪🇺 EUR</option>
+            <option value="GBP">🇬🇧 GBP</option>
+            <option value="JPY">🇯🇵 JPY</option>
+            <option value="CAD">🇨🇦 CAD</option>
+            <option value="AUD">🇦🇺 AUD</option>
+            <option value="CHF">🇨🇭 CHF</option>
+            <option value="MXN">🇲🇽 MXN</option>
+            <option value="BRL">🇧🇷 BRL</option>
+            <option value="THB">🇹🇭 THB</option>
+          </select>
+          <input id="exp-amount" oninput="updateConversion()" class="inp" style="flex:1;" placeholder="0.00" type="number" min="0" step="0.01">
         </div>
-        <div style="margin-bottom:7px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Paid by</div>
-          <select class="inp" style="background:var(--card2);"><option>Amy (you)</option></select>
+        <div id="exp-usd" style="display:none;margin-bottom:8px;font-size:11px;color:var(--muted);padding:5px 9px;background:var(--card3);border-radius:8px;">≈ <strong id="exp-usd-val">$0.00</strong> USD</div>
+
+        <!-- Category -->
+        <div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;">Category</div>
+        <div id="exp-cat-row" style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-bottom:10px;">
+          <button class="pill on" style="font-size:11px;" onclick="expCatPill(this,'✈️ Flight')">✈️ Flight</button>
+          <button class="pill" style="font-size:11px;" onclick="expCatPill(this,'🏨 Hotel')">🏨 Hotel</button>
+          <button class="pill" style="font-size:11px;" onclick="expCatPill(this,'🍝 Food')">🍝 Food</button>
+          <button class="pill" style="font-size:11px;" onclick="expCatPill(this,'🎟️ Activity')">🎟️ Activity</button>
+          <button class="pill" style="font-size:11px;" onclick="expCatPill(this,'🚕 Transport')">🚕 Transport</button>
+          <button class="pill" style="font-size:11px;" onclick="expCatPill(this,'🛍️ Shopping')">🛍️ Shopping</button>
         </div>
-        <div style="margin-bottom:7px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Split type</div>
-          <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;">
-            <button class="pill on" onclick="splitType(this,'even')" style="font-size:11px;">Even split</button>
-            <button class="pill" onclick="splitType(this,'dollar')" style="font-size:11px;">Custom $</button>
-            <button class="pill" onclick="splitType(this,'pct')" style="font-size:11px;">Custom %</button>
-            <button class="pill" onclick="splitType(this,'me')" style="font-size:11px;">Just me</button>
-          </div>
-          <!-- Custom $ inputs -->
-          <div id="split-dollar" style="display:none;margin-top:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
-            <div style="background:var(--card3);border-radius:9px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;color:#9a9a9a;margin-bottom:3px;">Amy</div><div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:12px;font-weight:600;">$</span><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="0.00"></div></div>
-          </div>
-          <!-- Custom % inputs -->
-          <div id="split-pct" style="display:none;margin-top:9px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;">
-            <div style="background:var(--card3);border-radius:9px;padding:7px 10px;"><div style="font-size:9px;font-weight:700;color:#9a9a9a;margin-bottom:3px;">Amy</div><div style="display:flex;align-items:center;gap:3px;"><input class="inp" style="background:none;padding:0;font-size:13px;" placeholder="100"><span style="color:var(--muted);font-size:12px;font-weight:600;">%</span></div></div>
-          </div>
+
+        <!-- Split -->
+        <div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;">Split</div>
+        <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;margin-bottom:8px;">
+          <button class="pill on" id="split-btn-even" onclick="splitType(this,'even')" style="font-size:11px;">Even</button>
+          <button class="pill" id="split-btn-dollar" onclick="splitType(this,'dollar')" style="font-size:11px;">Custom $</button>
+          <button class="pill" id="split-btn-pct" onclick="splitType(this,'pct')" style="font-size:11px;">Custom %</button>
+          <button class="pill" id="split-btn-me" onclick="splitType(this,'me')" style="font-size:11px;">Just me</button>
         </div>
-        <div style="margin-bottom:7px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Include in split</div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <div style="display:flex;align-items:center;gap:4px;background:var(--ink);color:#fffaf0;border-radius:var(--r-pill);padding:4px 9px;cursor:pointer;"><div class="av-sm u-amy">A</div><span style="font-size:11px;font-weight:600;">Amy</span></div>
-          </div>
+        <div id="split-dollar" style="display:none;margin-bottom:8px;background:var(--card3);border-radius:9px;padding:8px 10px;">
+          <div style="font-size:9px;font-weight:700;color:var(--muted);margin-bottom:3px;">Amy</div>
+          <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:12px;">$</span><input class="inp" id="split-dollar-amy" style="background:none;padding:0;font-size:13px;" placeholder="0.00"></div>
         </div>
-        <div style="margin-bottom:10px;">
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Category</div>
-          <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;">
-            <button class="pill on" style="font-size:11px;" onclick="catpill(this)">✈️ Flight</button>
-            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🏨 Hotel</button>
-            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🍝 Food</button>
-            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🎟️ Activity</button>
-            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🚕 Transport</button>
-            <button class="pill" style="font-size:11px;" onclick="catpill(this)">🛍️ Shopping</button>
-          </div>
+        <div id="split-pct" style="display:none;margin-bottom:8px;background:var(--card3);border-radius:9px;padding:8px 10px;">
+          <div style="font-size:9px;font-weight:700;color:var(--muted);margin-bottom:3px;">Amy</div>
+          <div style="display:flex;align-items:center;gap:3px;"><input class="inp" id="split-pct-amy" style="background:none;padding:0;font-size:13px;" placeholder="100"><span style="color:var(--muted);font-size:12px;"> %</span></div>
         </div>
-        <button class="btn-d" style="width:100%;padding:10px;font-size:13px;">Save expense →</button>
+
+        <button onclick="saveManualExpense()" class="btn-d" style="width:100%;padding:11px;font-size:13px;font-weight:700;">Save expense →</button>
       </div>
 
-      <div class="sl">All expenses</div>
-      <div class="card" id="exp-list">
-        <div style="text-align:center;padding:24px 16px;">
-          <div style="font-size:32px;margin-bottom:10px;">💸</div>
-          <div style="font-size:13px;font-weight:700;margin-bottom:5px;">No expenses yet</div>
-          <div style="font-size:11px;color:var(--muted);">Add your first expense above.</div>
+      <!-- Expense list -->
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">All expenses</div>
+      <div id="exp-list">
+        <div style="text-align:center;padding:28px 16px;background:var(--card2);border-radius:14px;">
+          <div style="font-size:32px;margin-bottom:8px;">💸</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;">No expenses yet</div>
+          <div style="font-size:11px;color:var(--muted);">Add expenses above or enter costs on activity cards.</div>
         </div>
       </div>
     </div>
@@ -1427,6 +1425,7 @@ function tab(btn,name){
   if(name==='photos'){ renderPhotosDayFilter(); renderPhotosGrid(); }
   if(name==='log'){ renderLogOverview(); }
   if(name==='tasks'){ renderTaskList(); }
+  if(name==='expenses'){ renderExpenses(); }
   localStorage.setItem('wander_nav_tab', name);
 }
 
@@ -1889,29 +1888,140 @@ function catpill(btn){
 }
 
 // ── Expense tracker ───────────────────────────────────────────────────────────
-var expenseItems = []; // {desc, amount, category}
+var expSelectedCat = '✈️ Flight';
+var expCurrentSplit = 'even';
 
+function expensesKey(){ return 'wander_expenses_'+(currentTripId||'x'); }
+function loadExpenses(){ try{ return JSON.parse(localStorage.getItem(expensesKey())||'[]'); }catch(e){ return []; } }
+function saveExpenses(arr){ localStorage.setItem(expensesKey(), JSON.stringify(arr)); }
+
+// Called from hotel/activity save — adds a "planned" item
 function addToExpenses(desc, amount, category) {
-  expenseItems.push({desc: desc, amount: amount, category: category || '🎟️ Activity'});
+  var items = loadExpenses();
+  items.push({
+    id: Date.now()+'_e'+(Math.random()*9999|0),
+    desc: desc, amount: amount,
+    category: category || '🎟️ Activity',
+    type: 'planned', // planned = from plan cards
+    split: 'even', currency: 'USD'
+  });
+  saveExpenses(items);
   renderExpenses();
+}
+
+function saveManualExpense() {
+  var desc = (document.getElementById('exp-desc')||{}).value||'';
+  var amt  = parseFloat((document.getElementById('exp-amount')||{}).value)||0;
+  var cur  = (document.getElementById('exp-currency')||{}).value||'USD';
+  if(!desc.trim() && amt===0) return;
+  var usdAmt = +(amt * (FX[cur]||1)).toFixed(2);
+  var items = loadExpenses();
+  items.push({
+    id: Date.now()+'_e'+(Math.random()*9999|0),
+    desc: desc.trim()||expSelectedCat,
+    amount: usdAmt, origAmount: amt, origCurrency: cur,
+    category: expSelectedCat,
+    type: 'actual', // actual = manually confirmed spend
+    split: expCurrentSplit
+  });
+  saveExpenses(items);
+  // clear form
+  var d=document.getElementById('exp-desc'); if(d) d.value='';
+  var a=document.getElementById('exp-amount'); if(a) a.value='';
+  var u=document.getElementById('exp-usd'); if(u) u.style.display='none';
+  renderExpenses();
+}
+
+function markExpensePaid(id) {
+  var items = loadExpenses();
+  var item = items.find(function(i){ return i.id===id; });
+  if(item){ item.type='actual'; }
+  saveExpenses(items);
+  renderExpenses();
+}
+
+function deleteExpense(id) {
+  saveExpenses(loadExpenses().filter(function(i){ return i.id!==id; }));
+  renderExpenses();
+}
+
+function expCatPill(btn, cat) {
+  expSelectedCat = cat;
+  document.getElementById('exp-cat-row').querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+  btn.classList.add('on');
 }
 
 function renderExpenses() {
   var el = document.getElementById('exp-list');
   if (!el) return;
-  if (expenseItems.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:24px 16px;"><div style="font-size:32px;margin-bottom:10px;">💸</div><div style="font-size:13px;font-weight:700;margin-bottom:5px;">No expenses yet</div><div style="font-size:11px;color:var(--muted);">Add your first expense above.</div></div>';
+  var items = loadExpenses();
+
+  // Totals
+  var planned = items.filter(function(i){ return i.type==='planned'; }).reduce(function(s,i){ return s+i.amount; },0);
+  var actual  = items.filter(function(i){ return i.type==='actual';  }).reduce(function(s,i){ return s+i.amount; },0);
+
+  // Update header
+  var tp = document.getElementById('exp-total-planned');
+  var ta = document.getElementById('exp-total-actual');
+  var pb = document.getElementById('exp-progress-bar');
+  var pl = document.getElementById('exp-progress-label');
+  if(tp) tp.textContent = '$'+planned.toFixed(2);
+  if(ta) ta.textContent = '$'+actual.toFixed(2);
+  if(pb){
+    var pct = planned > 0 ? Math.min(100, (actual/planned)*100) : (actual>0?100:0);
+    pb.style.width = pct+'%';
+    pb.style.background = pct > 100 ? '#ff8080' : '#fffaf0';
+  }
+  if(pl){
+    if(items.length === 0) pl.textContent = 'No expenses yet — add one below';
+    else if(planned === 0 && actual > 0) pl.textContent = '$'+actual.toFixed(2)+' spent';
+    else if(actual === 0) pl.textContent = '$'+planned.toFixed(2)+' planned · nothing confirmed yet';
+    else {
+      var diff = planned - actual;
+      pl.textContent = diff >= 0
+        ? '$'+actual.toFixed(2)+' of $'+planned.toFixed(2)+' spent · $'+diff.toFixed(2)+' under'
+        : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(diff)).toFixed(2)+' over planned';
+    }
+  }
+
+  if (items.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:28px 16px;background:var(--card2);border-radius:14px;"><div style="font-size:32px;margin-bottom:8px;">💸</div><div style="font-size:13px;font-weight:700;margin-bottom:4px;">No expenses yet</div><div style="font-size:11px;color:var(--muted);">Add expenses above or enter costs on activity cards.</div></div>';
     return;
   }
-  var total = expenseItems.reduce(function(s,i){ return s+i.amount; }, 0);
-  var rows = expenseItems.map(function(i){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--card2);">'
-      +'<div><div style="font-size:12px;font-weight:600;">'+i.desc+'</div><div style="font-size:10px;color:var(--muted);">'+i.category+'</div></div>'
-      +'<div style="font-size:13px;font-weight:700;">$'+i.amount.toFixed(2)+'</div>'
+
+  // Group: planned first, then actual
+  var planItems   = items.filter(function(i){ return i.type==='planned'; });
+  var actualItems = items.filter(function(i){ return i.type==='actual'; });
+
+  function renderGroup(list, label, color, bgColor) {
+    if(!list.length) return '';
+    var subtotal = list.reduce(function(s,i){ return s+i.amount; },0);
+    var rows = list.map(function(i){
+      var currNote = (i.origCurrency && i.origCurrency!=='USD') ? ' ('+i.origAmount+' '+i.origCurrency+')' : '';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--card3);">'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:12px;font-weight:600;word-break:break-word;">'+i.desc+'</div>'
+        +'<div style="font-size:10px;color:var(--muted);margin-top:1px;">'+i.category+(i.split&&i.split!=='even'?' · '+i.split+' split':'')+(currNote?'<span style="color:var(--muted);">'+currNote+'</span>':'')+'</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex:0 0 auto;">'
+        +'<div style="font-size:13px;font-weight:700;color:'+color+';">$'+i.amount.toFixed(2)+'</div>'
+        +(i.type==='planned'?'<button onclick="markExpensePaid(\''+i.id+'\')" style="font-size:9px;font-weight:700;color:var(--blue);background:rgba(74,122,222,.1);border:none;border-radius:5px;padding:2px 6px;cursor:pointer;margin-top:2px;">Mark paid</button>':'')
+        +'</div>'
+        +'<button onclick="deleteExpense(\''+i.id+'\')" style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:13px;padding:2px 4px;flex:0 0 auto;">✕</button>'
+        +'</div>';
+    }).join('');
+    return '<div style="background:'+bgColor+';border-radius:13px;padding:11px 12px;margin-bottom:9px;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+      +'<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:'+color+';">'+label+'</span>'
+      +'<span style="font-size:12px;font-weight:700;color:'+color+';">$'+subtotal.toFixed(2)+'</span>'
+      +'</div>'
+      +rows
       +'</div>';
-  }).join('');
-  el.innerHTML = rows
-    +'<div style="display:flex;justify-content:space-between;padding:10px 0 0;"><span style="font-size:12px;font-weight:700;color:var(--muted);">Total</span><span style="font-size:15px;font-weight:800;">$'+total.toFixed(2)+'</span></div>';
+  }
+
+  el.innerHTML =
+    renderGroup(planItems,   'Planned',      '#7a5af8', 'rgba(122,90,248,.07)') +
+    renderGroup(actualItems, 'Actual spent', '#1a8a4a', 'rgba(26,138,74,.07)');
 }
 
 var currentLogDay = 1;
@@ -2873,12 +2983,13 @@ function filterExp(btn, type){
 
 // ─── SPLIT TYPE ─────────────────────────────
 function splitType(btn, type){
+  expCurrentSplit = type;
   btn.closest('div').querySelectorAll('.pill').forEach(function(p){p.classList.remove('on');});
   btn.classList.add('on');
   var sd=document.getElementById('split-dollar');
   var sp=document.getElementById('split-pct');
-  if(sd) sd.style.display = type==='dollar' ? 'grid' : 'none';
-  if(sp) sp.style.display = type==='pct' ? 'grid' : 'none';
+  if(sd) sd.style.display = type==='dollar' ? 'block' : 'none';
+  if(sp) sp.style.display = type==='pct'    ? 'block' : 'none';
 }
 
 // ─── COLLAPSIBLE GEMINI ─────────────────────
