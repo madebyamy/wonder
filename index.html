@@ -1053,6 +1053,8 @@ var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 var currentUser = null;   // will be set to Supabase user object after login
 var currentProfile = {};  // {id, name, avatar_color}
 var userTrips = [];       // trips loaded from DB
+var tripCache = null;     // in-memory cache of all synced trip data
+var _persistDebounce = {};
 
 // ── Auth tab toggle ──────────────────────────────────────────────────────────
 function authTab(tab){
@@ -1256,11 +1258,79 @@ async function unfollowTrip(id) {
   renderHomeTrips();
 }
 
+// ── Trip data cache (syncs localStorage → Supabase JSON columns) ─────────────
+function initTripCache(trip) {
+  var tid = trip.id;
+  function fromArr(dbVal, lsKey) {
+    if (dbVal && dbVal.length) return dbVal;
+    try { return JSON.parse(localStorage.getItem(lsKey)||'[]'); } catch(e) { return []; }
+  }
+  function fromObj(dbVal, lsKey) {
+    if (dbVal && Object.keys(dbVal).length) return dbVal;
+    try { return JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(e) { return {}; }
+  }
+  function perDay(dbVal, prefix) {
+    if (dbVal && Object.keys(dbVal).length) return dbVal;
+    var out = {};
+    for (var i = 1; i <= 60; i++) {
+      var v = localStorage.getItem(prefix+tid+'_'+i);
+      if (v) out[i] = v;
+    }
+    return out;
+  }
+  function migrateBkp(dbVal) {
+    if (dbVal && Object.keys(dbVal).length) return dbVal;
+    var out = {};
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.startsWith('wander_bkp_')) out[k.slice(11)] = localStorage.getItem(k);
+    }
+    return out;
+  }
+  tripCache = {
+    expenses:         fromArr(trip.expenses_json,           'wander_expenses_'+tid),
+    planTracked:      fromObj(trip.plan_tracked_json,       'wander_plan_tracked_'+tid),
+    tasks:            fromArr(trip.tasks_json,              'wander_tasks_'+tid),
+    journal:          perDay(trip.journal_json,             'wander_journal_'),
+    mood:             perDay(trip.mood_json,                'wander_mood_'),
+    location:         perDay(trip.location_json,            'wander_loc_'),
+    dayNotes:         perDay(trip.day_notes_json,           'wander_notes_'),
+    bookingPlatforms: migrateBkp(trip.booking_platforms_json)
+  };
+  // Persist any migrated data right away
+  ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
+}
+
+function persistTripField(field) {
+  if (!currentTripId || !tripCache) return;
+  var map = {
+    'expenses_json': tripCache.expenses,
+    'plan_tracked_json': tripCache.planTracked,
+    'tasks_json': tripCache.tasks,
+    'journal_json': tripCache.journal,
+    'mood_json': tripCache.mood,
+    'location_json': tripCache.location,
+    'day_notes_json': tripCache.dayNotes,
+    'booking_platforms_json': tripCache.bookingPlatforms
+  };
+  if (!(field in map)) return;
+  var upd = {}; upd[field] = map[field];
+  sb.from('trips').update(upd).eq('id', currentTripId).then(function(r) {
+    if (r && r.error) console.warn('Wander sync error ['+field+']:', r.error.message);
+  });
+}
+
+function persistDebounced(field, delay) {
+  clearTimeout(_persistDebounce[field]);
+  _persistDebounce[field] = setTimeout(function(){ persistTripField(field); }, delay||1500);
+}
+
 function openDbTrip(id){
   var trip = userTrips.find(function(t){ return t.id===id; });
   if(!trip) return;
   currentTripId = trip.id;
   currentTripStartDate = trip.start_date || null;
+  initTripCache(trip);
 
   // ── Header ──────────────────────────────────────────────────────────────
   var hdr = document.getElementById('trip-header');
@@ -1337,6 +1407,7 @@ function openDbTrip(id){
 
   go('trip');
   localStorage.setItem('wander_nav_trip', currentTripId);
+  renderExpenses();
   checkSoonAlerts();
 }
 
@@ -1398,26 +1469,28 @@ function openTrip(){go('trip');updateTripDays();}
 
 // ── Day location (city/country) ──────────────────────────────────────────────
 function loadDayLocation(dayNum) {
-  var key = 'wander_loc_' + (currentTripId||'x') + '_' + dayNum;
   var el = document.getElementById('day-location-'+dayNum);
-  if (el) el.value = localStorage.getItem(key) || '';
+  if (el) el.value = (tripCache ? tripCache.location[dayNum] : localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum)) || '';
 }
 function saveDayLocation(dayNum) {
-  var key = 'wander_loc_' + (currentTripId||'x') + '_' + dayNum;
   var el = document.getElementById('day-location-'+dayNum);
-  if (el) localStorage.setItem(key, el.value.trim());
+  if (!el) return;
+  var val = el.value.trim();
+  if (tripCache) { tripCache.location[dayNum] = val; persistDebounced('location_json'); }
+  else localStorage.setItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum, val);
 }
 
 // ── Day notes (inline per-day) ────────────────────────────────────────────────
 function saveDayNotes(dayNum) {
-  var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
   var ta = document.getElementById('plan-notes-'+dayNum);
-  if (ta) localStorage.setItem(key, ta.value.trim());
+  if (!ta) return;
+  var val = ta.value.trim();
+  if (tripCache) { tripCache.dayNotes[dayNum] = val; persistDebounced('day_notes_json'); }
+  else localStorage.setItem('wander_notes_'+(currentTripId||'x')+'_'+dayNum, val);
 }
 function loadDayNotes(dayNum) {
-  var key = 'wander_notes_'+(currentTripId||'x')+'_'+dayNum;
   var ta = document.getElementById('plan-notes-'+dayNum);
-  if (ta) ta.value = localStorage.getItem(key) || '';
+  if (ta) ta.value = (tripCache ? tripCache.dayNotes[dayNum] : localStorage.getItem('wander_notes_'+(currentTripId||'x')+'_'+dayNum)) || '';
 }
 
 // ── Set current day without scrolling (for action buttons) ───────────────────
@@ -1932,9 +2005,21 @@ function resetOvernightBtn(){
 }
 
 // ── Booking platform helpers (localStorage, keyed by Supabase record ID) ──────
-function savePlatform(id, platform){ if(id){ if(platform) localStorage.setItem('wander_bkp_'+id, platform); else localStorage.removeItem('wander_bkp_'+id); } }
-function getPlatform(id){ return id ? (localStorage.getItem('wander_bkp_'+id)||'') : ''; }
-function deletePlatform(id){ if(id) localStorage.removeItem('wander_bkp_'+id); }
+function savePlatform(id, platform){
+  if (!id) return;
+  if (tripCache) {
+    if (platform) tripCache.bookingPlatforms[id] = platform; else delete tripCache.bookingPlatforms[id];
+    persistTripField('booking_platforms_json');
+  } else {
+    if (platform) localStorage.setItem('wander_bkp_'+id, platform); else localStorage.removeItem('wander_bkp_'+id);
+  }
+}
+function getPlatform(id){ return id ? (tripCache ? (tripCache.bookingPlatforms[id]||'') : (localStorage.getItem('wander_bkp_'+id)||'')) : ''; }
+function deletePlatform(id){
+  if (!id) return;
+  if (tripCache) { delete tripCache.bookingPlatforms[id]; persistTripField('booking_platforms_json'); }
+  else localStorage.removeItem('wander_bkp_'+id);
+}
 
 function flightBuildNotes(displayNotes, overnight, cost){
   var parts = [];
@@ -2142,12 +2227,14 @@ function catpill(btn){
 var expSelectedCat = '✈️ Flight';
 var expCurrentSplit = 'even';
 
-function expensesKey(){ return 'wander_expenses_'+(currentTripId||'x'); }
+function expensesKey(){ return 'wander_expenses_'+(currentTripId||'x'); } // fallback only
 
 // Map of planItemId → expenseId so we can toggle tracked state
-function planTrackKey(){ return 'wander_plan_tracked_'+(currentTripId||'x'); }
-function loadPlanTracked(){ try{ return JSON.parse(localStorage.getItem(planTrackKey())||'{}'); }catch(e){ return {}; } }
-function savePlanTracked(obj){ localStorage.setItem(planTrackKey(), JSON.stringify(obj)); }
+function loadPlanTracked(){ return tripCache ? tripCache.planTracked : (function(){ try{ return JSON.parse(localStorage.getItem('wander_plan_tracked_'+(currentTripId||'x'))||'{}'); }catch(e){ return {}; } }()); }
+function savePlanTracked(obj){
+  if (tripCache) { tripCache.planTracked = obj; persistTripField('plan_tracked_json'); }
+  else localStorage.setItem('wander_plan_tracked_'+(currentTripId||'x'), JSON.stringify(obj));
+}
 function isPlanTracked(planItemId){ return !!loadPlanTracked()[planItemId]; }
 
 function trackPlanExpense(desc, amount, category, planItemId, dayNum){
@@ -2185,8 +2272,11 @@ function showToast(msg){
   document.body.appendChild(t);
   setTimeout(function(){ t.style.opacity='0'; t.style.transition='opacity .4s'; setTimeout(function(){ t.remove(); },400); }, 2000);
 }
-function loadExpenses(){ try{ return JSON.parse(localStorage.getItem(expensesKey())||'[]'); }catch(e){ return []; } }
-function saveExpenses(arr){ localStorage.setItem(expensesKey(), JSON.stringify(arr)); }
+function loadExpenses(){ return tripCache ? tripCache.expenses : (function(){ try{ return JSON.parse(localStorage.getItem(expensesKey())||'[]'); }catch(e){ return []; } }()); }
+function saveExpenses(arr){
+  if (tripCache) { tripCache.expenses = arr; persistTripField('expenses_json'); }
+  else localStorage.setItem(expensesKey(), JSON.stringify(arr));
+}
 
 // Called from hotel/activity save — adds a "planned" item
 function addToExpenses(desc, amount, category) {
@@ -2455,8 +2545,8 @@ function renderLogOverview(){
   el.innerHTML = logTripDays.map(function(day, i){
     var jKey = 'wander_journal_'+(currentTripId||'x')+'_'+day.num;
     var entry = localStorage.getItem(jKey)||'';
-    var loc = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num)||'';
-    var mood = localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+day.num)||'';
+    var loc = (tripCache ? tripCache.location[day.num] : localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num))||'';
+    var mood = (tripCache ? tripCache.mood[day.num] : localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+day.num))||'';
     var photos = logGetPhotos(day.num);
     var outfitCount = suitcaseItems.filter(function(it){ return String(it.day)===String(day.num); }).length;
     var flag = getLocationIcon(loc);
@@ -2501,14 +2591,13 @@ async function openLogDay(dayNum){
   var dayMeta = logTripDays.find(function(d){ return d.num===dayNum; });
   if(!dayMeta && logTripDays.length){ buildLogTripDays(); dayMeta = logTripDays.find(function(d){ return d.num===dayNum; }); }
   var label = dayMeta ? dayMeta.label : 'Day '+dayNum;
-  var loc = localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum)||'';
+  var loc = (tripCache ? tripCache.location[dayNum] : localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum))||'';
   var flag = getLocationIcon(loc);
   document.getElementById('log-day-label').textContent = label;
   document.getElementById('log-day-city').textContent = loc ? flag+' '+loc : '';
 
-  var journalKey = 'wander_journal_'+(currentTripId||'x')+'_'+dayNum;
-  var savedEntry = localStorage.getItem(journalKey)||'';
-  var savedMood = localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum)||'';
+  var savedEntry = (tripCache ? tripCache.journal[dayNum] : localStorage.getItem('wander_journal_'+(currentTripId||'x')+'_'+dayNum))||'';
+  var savedMood = (tripCache ? tripCache.mood[dayNum] : localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum))||'';
   var photos = logGetPhotos(dayNum);
 
   // Fetch plans
@@ -2662,7 +2751,7 @@ function logEdit(){
   var disp = document.getElementById('log-entry-display');
   var edit = document.getElementById('log-entry-edit');
   if(disp) disp.style.display='none';
-  if(edit){ edit.style.display=''; var ta=document.getElementById('log-entry-text'); if(ta){ var key='wander_journal_'+(currentTripId||'x')+'_'+currentLogDay; ta.value=localStorage.getItem(key)||''; } }
+  if(edit){ edit.style.display=''; var ta=document.getElementById('log-entry-text'); if(ta){ ta.value=(tripCache ? tripCache.journal[currentLogDay] : localStorage.getItem('wander_journal_'+(currentTripId||'x')+'_'+currentLogDay))||''; } }
 }
 
 function logCancel(){
@@ -2676,8 +2765,8 @@ function logSave(){
   var ta = document.getElementById('log-entry-text');
   if(!ta) return;
   var txt = ta.value.trim();
-  var key = 'wander_journal_'+(currentTripId||'x')+'_'+currentLogDay;
-  localStorage.setItem(key, txt);
+  if (tripCache) { tripCache.journal[currentLogDay] = txt; persistDebounced('journal_json'); }
+  else localStorage.setItem('wander_journal_'+(currentTripId||'x')+'_'+currentLogDay, txt);
   // re-render the day to reflect saved entry
   openLogDay(currentLogDay);
   renderLogOverview();
@@ -2687,7 +2776,8 @@ function logRate(el, dayNum){
   el.parentElement.querySelectorAll('span').forEach(function(s){ s.style.opacity='.35'; s.style.transform=''; });
   el.style.opacity='1';
   el.style.transform='scale(1.2)';
-  localStorage.setItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum, el.dataset.mood);
+  if (tripCache) { tripCache.mood[dayNum] = el.dataset.mood; persistTripField('mood_json'); }
+  else localStorage.setItem('wander_mood_'+(currentTripId||'x')+'_'+dayNum, el.dataset.mood);
   renderLogOverview();
 }
 
@@ -3424,13 +3514,17 @@ function updateTripDays(){
 // ─── TASKS ───────────────────────────────────
 var taskIdCounter = 0;
 
-function tasksKey(){ return 'wander_tasks_'+(currentTripId||'x'); }
+function tasksKey(){ return 'wander_tasks_'+(currentTripId||'x'); } // fallback only
 
 function loadTasks(){
+  if (tripCache) return tripCache.tasks;
   try{ return JSON.parse(localStorage.getItem(tasksKey())||'[]'); }catch(e){ return []; }
 }
 
-function saveTasks(arr){ localStorage.setItem(tasksKey(), JSON.stringify(arr)); }
+function saveTasks(arr){
+  if (tripCache) { tripCache.tasks = arr; persistTripField('tasks_json'); }
+  else localStorage.setItem(tasksKey(), JSON.stringify(arr));
+}
 
 function taskIsOverdue(due){
   if(!due) return false;
