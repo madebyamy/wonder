@@ -285,6 +285,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div id="trip-title" style="font-size:19px;font-weight:700;letter-spacing:-.4px;">Trip</div>
         <div id="trip-subtitle" style="font-size:11px;opacity:.7;"></div>
       </div>
+      <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.25);border-radius:20px;padding:5px 11px;cursor:pointer;flex:0 0 auto;">
+        <span style="font-size:12px;">💸</span>
+        <div style="text-align:center;">
+          <div id="plans-expected-total" style="font-size:13px;font-weight:800;color:inherit;line-height:1.1;">$0</div>
+          <div style="font-size:8px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Expected</div>
+        </div>
+      </div>
     </div>
     <div id="trip-countdown-wrap" style="background:rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;margin-bottom:9px;display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
@@ -324,14 +331,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div class="tp active" id="tp-plans">
       <!-- Sticky day picker — built dynamically -->
       <div style="position:sticky;top:0;z-index:10;background:var(--canvas);box-shadow:0 2px 8px rgba(0,0,0,.06);">
-        <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;padding:4px 16px 0;margin:0 -16px;scrollbar-width:none;"></div>
-        <div style="display:flex;justify-content:flex-end;padding:6px 0 10px;">
-          <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:5px 11px;cursor:pointer;">
-            <span style="font-size:12px;">💸</span>
-            <span style="font-size:10px;font-weight:600;color:var(--muted);">Expected</span>
-            <span id="plans-expected-total" style="font-size:12px;font-weight:800;color:var(--ink);">$0</span>
-          </div>
-        </div>
+        <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;padding:4px 16px 10px;margin:0 -16px;scrollbar-width:none;"></div>
       </div>
 
       <!-- All day blocks rendered here by JS -->
@@ -822,7 +822,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Departure time</div><input id="f-dep" class="inp" type="time"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Arrival time</div><input id="f-arr" class="inp" type="time"></div>
     </div>
-    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Notes / confirmation #</div><input id="f-notes" class="inp" placeholder="Seat 14A · conf ABC123"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Notes / confirmation #</div><input id="f-notes" class="inp" placeholder="Seat 14A · conf ABC123"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Total cost</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="f-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
+    </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking platform</div><input id="f-platform" class="inp" placeholder="Expedia, Google Flights, airline…"></div>
     <button id="f-overnight-btn" onclick="toggleOvernightBtn()" style="width:100%;display:flex;align-items:center;gap:9px;background:var(--card2);border:2px solid var(--card3);border-radius:11px;padding:10px 13px;cursor:pointer;font-family:inherit;margin-bottom:14px;transition:.15s;" type="button">
       <span id="f-overnight-icon" style="width:20px;height:20px;border-radius:6px;border:2px solid var(--card3);background:transparent;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;"></span>
       <span style="font-size:12px;font-weight:600;color:var(--ink);">🌙 Overnight flight — lands next day</span>
@@ -845,8 +849,18 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-in date</div><input id="h-in" class="inp" type="date"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Check-out date</div><input id="h-out" class="inp" type="date"></div>
     </div>
-    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="h-conf" class="inp" placeholder="ABC123XYZ"></div>
-    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Website / booking link</div><input id="h-link" class="inp" type="url" placeholder="https://hotels.com/..."></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="h-conf" class="inp" placeholder="ABC123XYZ"></div>
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Free cancellation until</div>
+        <input id="h-cancel" class="inp" type="date">
+        <div style="font-size:9px;color:var(--muted);margin-top:3px;">⏰ Adds a to-do reminder</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking platform</div><input id="h-platform" class="inp" placeholder="Booking.com, Hotels.com…"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Website / booking link</div><input id="h-link" class="inp" type="url" placeholder="https://hotels.com/..."></div>
+    </div>
     <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Total cost — adds to expense tracker</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="h-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
     <div id="h-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveHotel()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save hotel →</button>
@@ -869,7 +883,10 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Website / booking link</div><input id="e-link" class="inp" type="url" placeholder="https://..."></div>
     <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Description / notes</div><textarea id="e-desc" class="inp" rows="3" style="resize:none;" placeholder="Meeting point, what to bring, dress code..."></textarea></div>
-    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking ref (optional)</div><input id="e-ref" class="inp" placeholder="VIATOR-ABC123"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking ref (optional)</div><input id="e-ref" class="inp" placeholder="VIATOR-ABC123"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking platform</div><input id="e-platform" class="inp" placeholder="Viator, GetYourGuide…"></div>
+    </div>
     <div id="e-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveExcursion()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save activity →</button>
   </div>
@@ -897,7 +914,10 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="c-conf" class="inp" placeholder="ABC123"></div>
       <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Total cost</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="c-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
     </div>
-    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking link</div><input id="c-link" class="inp" type="url" placeholder="https://…"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking platform</div><input id="c-platform" class="inp" placeholder="Expedia, Rentalcars…"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking link</div><input id="c-link" class="inp" type="url" placeholder="https://…"></div>
+    </div>
     <div id="c-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
     <button onclick="saveCar()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save car rental →</button>
   </div>
@@ -1317,6 +1337,7 @@ function openDbTrip(id){
 
   go('trip');
   localStorage.setItem('wander_nav_trip', currentTripId);
+  checkSoonAlerts();
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -1671,7 +1692,13 @@ function renderPlanItem(item) {
     var arr = f.arrival_time ? f.arrival_time.slice(0,5) : '';
     var overnight = flightIsOvernight(f.notes) || (dep && arr && arr < dep);
     var displayNotes = flightNotesDisplay(f.notes);
+    var fCost = flightCost(f.notes);
     var isArrival = item.arrivalOnly;
+    var fTracked = fCost ? isPlanTracked(f.id) : false;
+    var fCostBtn = fCost ? (fTracked
+      ? '<button onclick="removeFromTracker(\''+f.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+(f.airline||'Flight').replace(/'/g,"\\'")+'\','+fCost+',\'✈️ Flight\',\''+f.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+fCost.toFixed(2)+' to tracker</button>'
+    ) : '';
     return '<div style="background:'+(isArrival?'rgba(100,80,180,.1)':'rgba(74,122,222,.09)')+';border-radius:13px;padding:12px 13px;">'
       +'<div style="display:flex;align-items:flex-start;gap:9px;">'
       +'<span style="font-size:20px;flex:0 0 auto;">'+(isArrival?'🛬':'✈️')+'</span>'
@@ -1683,6 +1710,8 @@ function renderPlanItem(item) {
       +(isArrival && arr ? '<div style="font-size:11px;color:var(--muted);">Arrives '+arr+'</div>'
         : dep ? '<div style="font-size:11px;color:var(--muted);">Dep '+dep+(arr?' · Arr '+arr+(overnight?' +1':''):'')+'</div>' : '')
       +(displayNotes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+displayNotes+'</div>' : '')
+      +(getPlatform(f.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(f.id)+'</div>' : '')
+      +(!isArrival ? fCostBtn : '')
       +'</div>'
       +(isArrival ? '' : actions('flights', f.id))
       +'</div></div>';
@@ -1703,6 +1732,7 @@ function renderPlanItem(item) {
       +'<div style="font-size:11px;color:var(--muted);">Check-in '+h.checkin_date+' · Check-out '+h.checkout_date+'</div>'
       +(h.confirmation ? '<div style="font-size:11px;color:var(--muted);">Conf: '+h.confirmation+'</div>' : '')
       +(h.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+h.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +(getPlatform(h.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(h.id)+'</div>' : '')
       +hCostBtn
       +'</div>'
       +actions('hotels', h.id)
@@ -1728,6 +1758,7 @@ function renderPlanItem(item) {
       +(carData.returnDate ? '<div style="font-size:11px;color:var(--muted);">🔄 Return '+(carData.returnLoc&&carData.returnLoc!==carData.pickupLoc?carData.returnLoc+' · ':'')+carData.returnDate+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Conf: '+e.booking_ref+'</div>' : '')
       +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +(getPlatform(e.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(e.id)+'</div>' : '')
       +eCostBtn
       +'</div>'
       +actions('excursions', e.id)
@@ -1754,6 +1785,7 @@ function renderPlanItem(item) {
       +(e.description ? '<div style="font-size:11px;color:var(--muted);">'+e.description+'</div>' : '')
       +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Ref: '+e.booking_ref+'</div>' : '')
       +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +(getPlatform(e.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(e.id)+'</div>' : '')
       +eCostBtn
       +'</div>'
       +actions('excursions', e.id)
@@ -1775,6 +1807,8 @@ function openEditSheet(type, id) {
     document.getElementById('f-dep').value = d.departure_time ? d.departure_time.slice(0,5) : '';
     document.getElementById('f-arr').value = d.arrival_time ? d.arrival_time.slice(0,5) : '';
     document.getElementById('f-notes').value = flightNotesDisplay(d.notes);
+    document.getElementById('f-cost').value = flightCost(d.notes) || '';
+    document.getElementById('f-platform').value = getPlatform(id);
     setOvernightBtn(flightIsOvernight(d.notes));
     document.querySelector('#add-flight-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-flight-sheet').style.display = 'flex';
@@ -1786,6 +1820,9 @@ function openEditSheet(type, id) {
     document.getElementById('h-conf').value = d.confirmation || '';
     document.getElementById('h-link').value = d.link || '';
     document.getElementById('h-cost').value = d.cost || '';
+    var cancelTask = loadTasks().find(function(t){ return t.hotelId === id; });
+    document.getElementById('h-cancel').value = cancelTask ? cancelTask.due : '';
+    document.getElementById('h-platform').value = getPlatform(id);
     document.querySelector('#add-hotel-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-hotel-sheet').style.display = 'flex';
   } else if (type === 'excursions' && d.activity_type === 'Car Rental') {
@@ -1801,6 +1838,7 @@ function openEditSheet(type, id) {
     document.getElementById('c-conf').value = d.booking_ref || '';
     document.getElementById('c-cost').value = d.cost || '';
     document.getElementById('c-link').value = d.link || '';
+    document.getElementById('c-platform').value = getPlatform(id);
     document.querySelector('#add-car-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-car-sheet').style.display = 'flex';
   } else if (type === 'excursions') {
@@ -1811,12 +1849,17 @@ function openEditSheet(type, id) {
     document.getElementById('e-link').value = d.link || '';
     document.getElementById('e-desc').value = d.description || '';
     document.getElementById('e-ref').value = d.booking_ref || '';
+    document.getElementById('e-platform').value = getPlatform(id);
     document.querySelector('#add-excursion-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-excursion-sheet').style.display = 'flex';
   }
 }
 
 async function deletePlanItem(table, id) {
+  if (table === 'hotels') {
+    saveTasks(loadTasks().filter(function(t){ return t.hotelId !== id; }));
+  }
+  deletePlatform(id);
   await sb.from(table).delete().eq('id', id);
   loadDayPlans(currentDayNum);
 }
@@ -1879,14 +1922,33 @@ function resetOvernightBtn(){
   toggleOvernightBtn();
 }
 
+// ── Booking platform helpers (localStorage, keyed by Supabase record ID) ──────
+function savePlatform(id, platform){ if(id){ if(platform) localStorage.setItem('wander_bkp_'+id, platform); else localStorage.removeItem('wander_bkp_'+id); } }
+function getPlatform(id){ return id ? (localStorage.getItem('wander_bkp_'+id)||'') : ''; }
+function deletePlatform(id){ if(id) localStorage.removeItem('wander_bkp_'+id); }
+
+function flightBuildNotes(displayNotes, overnight, cost){
+  var parts = [];
+  if(overnight) parts.push('[overnight]');
+  if(cost) parts.push('[cost:'+parseFloat(cost).toFixed(2)+']');
+  if(displayNotes) parts.push(displayNotes);
+  return parts.join(' ') || null;
+}
 function flightNotesWithOvernight(rawNotes, overnight){
+  // legacy shim — used by saveFlight which now calls flightBuildNotes directly
   var notes = rawNotes || '';
-  // strip any existing marker first
   notes = notes.replace(/^\[overnight\]\s*/,'');
   return overnight ? '[overnight] '+notes : notes||null;
 }
-function flightIsOvernight(notes){ return notes && notes.indexOf('[overnight]') === 0; }
-function flightNotesDisplay(notes){ return notes ? notes.replace(/^\[overnight\]\s*/,'') : ''; }
+function flightIsOvernight(notes){ return !!(notes && notes.includes('[overnight]')); }
+function flightCost(notes){
+  if(!notes) return null;
+  var m = notes.match(/\[cost:([\d.]+)\]/);
+  return m ? parseFloat(m[1]) : null;
+}
+function flightNotesDisplay(notes){
+  return notes ? notes.replace(/\[overnight\]\s*/g,'').replace(/\[cost:[\d.]+\]\s*/g,'').trim() : '';
+}
 
 // ── Save flight ───────────────────────────────────────────────────────────────
 async function saveFlight() {
@@ -1908,18 +1970,21 @@ async function saveFlight() {
     airline: airline||null, flight_number: num||null,
     departure_airport: from||null, arrival_airport: to||null,
     departure_time: dep||null, arrival_time: arr||null,
-    notes: flightNotesWithOvernight(document.getElementById('f-notes').value.trim(), overnight),
+    notes: flightBuildNotes(document.getElementById('f-notes').value.trim(), overnight, parseFloat(document.getElementById('f-cost').value)||null),
     created_by: currentUser.id
   };
-  var error;
+  var error, flightId;
   if (editingPlanId) {
     ({error} = await sb.from('flights').update(data).eq('id', editingPlanId));
+    flightId = editingPlanId;
   } else {
-    ({error} = await sb.from('flights').insert(data));
+    var {data: inserted, error: insertErr} = await sb.from('flights').insert(data).select().single();
+    error = insertErr; flightId = inserted ? inserted.id : null;
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  savePlatform(flightId, document.getElementById('f-platform').value.trim());
   closeAddSheet('flight');
-  ['f-date','f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['f-date','f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes','f-cost','f-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   resetOvernightBtn();
   loadDayPlans(currentDayNum);
 }
@@ -1945,16 +2010,37 @@ async function saveHotel() {
     cost: cost,
     created_by: currentUser.id
   };
-  var error;
+  var error, hotelId;
   if (editingPlanId) {
     ({error} = await sb.from('hotels').update(data).eq('id', editingPlanId));
+    hotelId = editingPlanId;
   } else {
-    ({error} = await sb.from('hotels').insert(data));
+    var {data: inserted, error: insertErr} = await sb.from('hotels').insert(data).select().single();
+    error = insertErr;
+    hotelId = inserted ? inserted.id : null;
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
-  // expense tracking is opt-in via the plan card button
+  // manage cancellation task
+  var cancelDate = document.getElementById('h-cancel').value;
+  if (hotelId) {
+    var tasks = loadTasks();
+    var idx = tasks.findIndex(function(t){ return t.hotelId === hotelId; });
+    if (cancelDate) {
+      var taskText = '🏨 Cancel: ' + name;
+      if (idx >= 0) {
+        tasks[idx].text = taskText;
+        tasks[idx].due = cancelDate;
+      } else {
+        tasks.push({ id: Date.now()+'_hc', text: taskText, due: cancelDate, done: false, hotelId: hotelId });
+      }
+    } else if (idx >= 0) {
+      tasks.splice(idx, 1);
+    }
+    saveTasks(tasks);
+  }
+  savePlatform(hotelId, document.getElementById('h-platform').value.trim());
   closeAddSheet('hotel');
-  ['h-name','h-addr','h-in','h-out','h-conf','h-link','h-cost'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['h-name','h-addr','h-in','h-out','h-conf','h-cancel','h-link','h-cost','h-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   loadDayPlans(currentDayNum);
 }
 
@@ -1977,16 +2063,19 @@ async function saveExcursion() {
     booking_ref: document.getElementById('e-ref').value.trim()||null,
     created_by: currentUser.id
   };
-  var error;
+  var error, excId;
   if (editingPlanId) {
     ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+    excId = editingPlanId;
   } else {
-    ({error} = await sb.from('excursions').insert(data));
+    var {data: inserted, error: insertErr} = await sb.from('excursions').insert(data).select().single();
+    error = insertErr; excId = inserted ? inserted.id : null;
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  savePlatform(excId, document.getElementById('e-platform').value.trim());
   // expense tracking is opt-in via the plan card button
   closeAddSheet('excursion');
-  ['e-title','e-time','e-cost','e-link','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['e-title','e-time','e-cost','e-link','e-desc','e-ref','e-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('e-type').value='';
   loadDayPlans(currentDayNum);
 }
@@ -2015,15 +2104,18 @@ async function saveCar() {
     description: '__car__'+JSON.stringify(carData),
     booking_ref: conf||null, cost: cost, link: link||null, created_by: currentUser.id
   };
-  var error;
+  var error, carId;
   if (editingPlanId) {
     ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+    carId = editingPlanId;
   } else {
-    ({error} = await sb.from('excursions').insert(data));
+    var {data: inserted, error: insertErr} = await sb.from('excursions').insert(data).select().single();
+    error = insertErr; carId = inserted ? inserted.id : null;
   }
   if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  savePlatform(carId, document.getElementById('c-platform').value.trim());
   closeAddSheet('car');
-  ['c-company','c-type','c-pickup-loc','c-return-loc','c-conf','c-link'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['c-company','c-type','c-pickup-loc','c-return-loc','c-conf','c-link','c-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   ['c-pickup-date','c-return-date','c-pickup-time','c-cost'].forEach(function(id){ document.getElementById(id).value=''; });
   loadDayPlans(currentDayNum);
 }
@@ -3447,22 +3539,32 @@ function goToTasks(){
 }
 
 // ─── ALERT BANNER ───────────────────────────
+function taskDueSoon(due){
+  if(!due) return false;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var d = new Date(due+'T00:00:00');
+  var diff = (d - today) / 86400000;
+  return diff >= 0 && diff <= 5;
+}
+
 function showAlert(){
   var el = document.getElementById('alert-sheet');
   if(!el) return;
-  // Populate with pending tasks
   var tasks = loadTasks().filter(function(t){ return !t.done; });
   var body = el.querySelector('#alert-task-list');
   if(body){
     if(tasks.length){
-      var today = new Date(); today.setHours(0,0,0,0);
       body.innerHTML = tasks.map(function(t){
         var overdue = taskIsOverdue(t.due);
-        return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:11px;padding:10px 12px;">'
-          +'<div style="width:18px;height:18px;border-radius:5px;border:2px solid '+(overdue?'#cc3a3a':'var(--card3)')+';flex:0 0 auto;"></div>'
+        var soon = !overdue && taskDueSoon(t.due);
+        var color = overdue ? '#cc3a3a' : soon ? '#c87020' : 'var(--card3)';
+        var bg = overdue ? 'background:rgba(204,58,58,.07);' : soon ? 'background:rgba(200,112,32,.07);' : 'background:var(--card2);';
+        var label = overdue ? '⚠️ Overdue · ' : soon ? '⏰ Due soon · ' : '📅 ';
+        return '<div style="display:flex;align-items:center;gap:10px;'+bg+'border-radius:11px;padding:10px 12px;">'
+          +'<div style="width:18px;height:18px;border-radius:5px;border:2px solid '+color+';flex:0 0 auto;"></div>'
           +'<div style="flex:1;min-width:0;">'
-          +'<div style="font-size:13px;font-weight:600;'+(overdue?'color:#cc3a3a;':'')+' word-break:break-word;">'+t.text+'</div>'
-          +(t.due?'<div style="font-size:10px;font-weight:600;color:'+(overdue?'#cc3a3a':'var(--muted)')+';">'+(overdue?'⚠️ Overdue · ':'📅 ')+taskDueLabel(t.due)+'</div>':'')
+          +'<div style="font-size:13px;font-weight:600;'+(overdue?'color:#cc3a3a;':soon?'color:#c87020;':'')+' word-break:break-word;">'+t.text+'</div>'
+          +(t.due?'<div style="font-size:10px;font-weight:600;color:'+(overdue?'#cc3a3a':soon?'#c87020':'var(--muted)')+';">'+label+taskDueLabel(t.due)+'</div>':'')
           +'</div></div>';
       }).join('');
     } else {
@@ -3474,6 +3576,11 @@ function showAlert(){
     }
   }
   el.style.display = 'flex';
+}
+
+function checkSoonAlerts(){
+  var tasks = loadTasks().filter(function(t){ return !t.done && (taskIsOverdue(t.due) || taskDueSoon(t.due)); });
+  if(tasks.length) setTimeout(showAlert, 800);
 }
 function dismissAlert(){
   var el = document.getElementById('alert-sheet');
