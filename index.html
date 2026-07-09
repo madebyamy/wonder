@@ -875,6 +875,34 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   </div>
 </div>
 
+<!-- ═══════════ ADD CAR RENTAL SHEET ═══════════ -->
+<div id="add-car-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddSheet('car')">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">🚗 Car rental</div>
+      <button onclick="closeAddSheet('car')" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Company</div><input id="c-company" class="inp" placeholder="Hertz, Enterprise…"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Car type (optional)</div><input id="c-type" class="inp" placeholder="SUV, Sedan…"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Pickup date</div><input id="c-pickup-date" class="inp" type="date"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Return date</div><input id="c-return-date" class="inp" type="date"></div>
+    </div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Pickup time (optional)</div><input id="c-pickup-time" class="inp" type="time"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Pickup location</div><input id="c-pickup-loc" class="inp" placeholder="Airport, hotel address…"></div>
+    <div style="margin-bottom:8px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Return location (if different)</div><input id="c-return-loc" class="inp" placeholder="Same as pickup"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Confirmation #</div><input id="c-conf" class="inp" placeholder="ABC123"></div>
+      <div><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Total cost</div><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;font-weight:600;color:var(--muted);">$</span><input id="c-cost" class="inp" type="number" placeholder="0.00" min="0" step="0.01"></div></div>
+    </div>
+    <div style="margin-bottom:14px;"><div style="font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;">Booking link</div><input id="c-link" class="inp" type="url" placeholder="https://…"></div>
+    <div id="c-error" style="display:none;background:#fee;border-radius:9px;padding:8px 12px;font-size:12px;color:#cc3a3a;margin-bottom:10px;"></div>
+    <button onclick="saveCar()" class="btn-d" style="width:100%;padding:13px;font-size:14px;font-weight:700;">Save car rental →</button>
+  </div>
+</div>
+
 <!-- ═══════════ OUTFITS SHEET ═══════════ -->
 <div id="add-outfit-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeOutfitSheet()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:92vh;overflow-y:auto;">
@@ -1411,11 +1439,14 @@ function renderAllDayBlocks(totalDays, startDate) {
         +'<div style="background:var(--card2);border-radius:12px;padding:12px;text-align:center;font-size:12px;color:var(--muted);">Loading…</div>'
       +'</div>'
       // add buttons
-      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:12px;">'
+      +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:6px;">'
         +'<button onclick="setDayAndOpen('+n+',\'flight\')" style="background:rgba(74,122,222,.1);border:1px solid rgba(74,122,222,.3);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:var(--blue);"><i class="ti ti-plane" style="font-size:14px;"></i> + Flight</button>'
         +'<button onclick="setDayAndOpen('+n+',\'hotel\')" style="background:rgba(164,212,197,.2);border:1px solid rgba(164,212,197,.5);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a5a4a;"><i class="ti ti-bed" style="font-size:14px;"></i> + Hotel</button>'
+        +'<button onclick="setDayAndOpen('+n+',\'car\')" style="background:rgba(80,160,80,.12);border:1px solid rgba(80,160,80,.35);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#1a6a2a;"><i class="ti ti-car" style="font-size:14px;"></i> + Car</button>'
         +'<button onclick="setDayAndOpen('+n+',\'excursion\')" style="background:rgba(232,185,74,.15);border:1px solid rgba(232,185,74,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a4a00;"><i class="ti ti-ticket" style="font-size:14px;"></i> + Activity</button>'
-        +'<button onclick="setDayAndOpen('+n+',\'outfit\')" style="background:rgba(180,130,220,.15);border:1px solid rgba(180,130,220,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a3ab0;"><i class="ti ti-shirt" style="font-size:14px;"></i> + Outfits</button>'
+      +'</div>'
+      +'<div style="margin-bottom:12px;">'
+        +'<button onclick="setDayAndOpen('+n+',\'outfit\')" style="width:100%;background:rgba(180,130,220,.15);border:1px solid rgba(180,130,220,.4);border-radius:11px;padding:9px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;color:#7a3ab0;"><i class="ti ti-shirt" style="font-size:14px;"></i> + Outfits</button>'
       +'</div>'
       // outfits
       +'<div id="plans-outfit-section-'+n+'" style="display:none;margin-bottom:12px;">'
@@ -1677,6 +1708,31 @@ function renderPlanItem(item) {
       +actions('hotels', h.id)
       +'</div></div>';
   }
+  if (item.type === 'excursion' && item.data.activity_type === 'Car Rental') {
+    var e = item.data;
+    var carData = {};
+    try { if(e.description&&e.description.startsWith('__car__')) carData=JSON.parse(e.description.slice(7)); } catch(ex){}
+    var time = e.start_time ? e.start_time.slice(0,5) : '';
+    var eTracked = e.cost ? isPlanTracked(e.id) : false;
+    var eCostBtn = e.cost ? (eTracked
+      ? '<button onclick="removeFromTracker(\''+e.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(204,58,58,.1);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#cc3a3a;cursor:pointer;font-family:inherit;">✕ Remove from tracker</button>'
+      : '<button onclick="trackPlanExpense(\''+e.title.replace(/'/g,"\\'")+'\',' +parseFloat(e.cost)+',\'🚗 Car\',\''+e.id+'\','+dn+')" style="margin-top:7px;display:inline-flex;align-items:center;gap:4px;background:rgba(26,138,74,.12);border:none;border-radius:7px;padding:4px 9px;font-size:11px;font-weight:700;color:#1a8a4a;cursor:pointer;font-family:inherit;">💸 Add $'+parseFloat(e.cost).toFixed(2)+' to tracker</button>'
+    ) : '';
+    return '<div style="background:rgba(80,160,80,.1);border-radius:13px;padding:12px 13px;">'
+      +'<div style="display:flex;align-items:flex-start;gap:9px;">'
+      +'<span style="font-size:20px;flex:0 0 auto;">🚗</span>'
+      +'<div style="flex:1;">'
+      +'<div style="font-size:13px;font-weight:700;">'+e.title+(carData.type?' · '+carData.type:'')+'</div>'
+      +(time ? '<div style="font-size:11px;color:var(--muted);">Pickup '+time+'</div>' : '')
+      +(carData.pickupLoc ? '<div style="font-size:11px;color:var(--muted);">📍 '+carData.pickupLoc+'</div>' : '')
+      +(carData.returnDate ? '<div style="font-size:11px;color:var(--muted);">🔄 Return '+(carData.returnLoc&&carData.returnLoc!==carData.pickupLoc?carData.returnLoc+' · ':'')+carData.returnDate+'</div>' : '')
+      +(e.booking_ref ? '<div style="font-size:11px;color:var(--muted);">Conf: '+e.booking_ref+'</div>' : '')
+      +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
+      +eCostBtn
+      +'</div>'
+      +actions('excursions', e.id)
+      +'</div></div>';
+  }
   if (item.type === 'excursion') {
     var e = item.data;
     var time = e.start_time ? e.start_time.slice(0,5) : '';
@@ -1732,6 +1788,21 @@ function openEditSheet(type, id) {
     document.getElementById('h-cost').value = d.cost || '';
     document.querySelector('#add-hotel-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-hotel-sheet').style.display = 'flex';
+  } else if (type === 'excursions' && d.activity_type === 'Car Rental') {
+    var carData = {};
+    try { if(d.description&&d.description.startsWith('__car__')) carData=JSON.parse(d.description.slice(7)); } catch(ex){}
+    document.getElementById('c-company').value = d.title || '';
+    document.getElementById('c-type').value = carData.type || '';
+    document.getElementById('c-pickup-date').value = d.excursion_date || '';
+    document.getElementById('c-return-date').value = carData.returnDate || '';
+    document.getElementById('c-pickup-time').value = d.start_time ? d.start_time.slice(0,5) : '';
+    document.getElementById('c-pickup-loc').value = carData.pickupLoc || '';
+    document.getElementById('c-return-loc').value = (carData.returnLoc && carData.returnLoc !== carData.pickupLoc) ? carData.returnLoc : '';
+    document.getElementById('c-conf').value = d.booking_ref || '';
+    document.getElementById('c-cost').value = d.cost || '';
+    document.getElementById('c-link').value = d.link || '';
+    document.querySelector('#add-car-sheet .btn-d').textContent = 'Save changes →';
+    document.getElementById('add-car-sheet').style.display = 'flex';
   } else if (type === 'excursions') {
     document.getElementById('e-title').value = d.title || '';
     document.getElementById('e-type').value = d.activity_type || '';
@@ -1764,6 +1835,9 @@ function openAddSheet(type) {
       document.getElementById('h-out').value = nextDate;
     } else if (type === 'excursion') {
       document.getElementById('e-date').value = dayDate;
+    } else if (type === 'car') {
+      document.getElementById('c-pickup-date').value = dayDate;
+      document.getElementById('c-return-date').value = getDayDateStr(currentDayNum + 1);
     }
   }
   document.getElementById('add-'+type+'-sheet').style.display = 'flex';
@@ -1914,6 +1988,43 @@ async function saveExcursion() {
   closeAddSheet('excursion');
   ['e-title','e-time','e-cost','e-link','e-desc','e-ref'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('e-type').value='';
+  loadDayPlans(currentDayNum);
+}
+
+// ── Save car rental ───────────────────────────────────────────────────────────
+async function saveCar() {
+  var errEl = document.getElementById('c-error');
+  errEl.style.display = 'none';
+  if (!currentTripId || !currentUser) { errEl.textContent='Please sign in and open a trip first.'; errEl.style.display=''; return; }
+  var company = document.getElementById('c-company').value.trim();
+  if (!company) { errEl.textContent='Please enter a company name.'; errEl.style.display=''; return; }
+  var pickupDate = document.getElementById('c-pickup-date').value;
+  if (!pickupDate) { errEl.textContent='Please enter a pickup date.'; errEl.style.display=''; return; }
+  var type    = document.getElementById('c-type').value.trim();
+  var retDate = document.getElementById('c-return-date').value;
+  var pTime   = document.getElementById('c-pickup-time').value;
+  var pLoc    = document.getElementById('c-pickup-loc').value.trim();
+  var rLoc    = document.getElementById('c-return-loc').value.trim();
+  var conf    = document.getElementById('c-conf').value.trim();
+  var cost    = parseFloat(document.getElementById('c-cost').value)||null;
+  var link    = document.getElementById('c-link').value.trim();
+  var carData = { type: type||null, pickupLoc: pLoc||null, returnLoc: rLoc||pLoc||null, returnDate: retDate||null };
+  var data = {
+    trip_id: currentTripId, title: company, activity_type: 'Car Rental',
+    excursion_date: pickupDate, start_time: pTime||null,
+    description: '__car__'+JSON.stringify(carData),
+    booking_ref: conf||null, cost: cost, link: link||null, created_by: currentUser.id
+  };
+  var error;
+  if (editingPlanId) {
+    ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+  } else {
+    ({error} = await sb.from('excursions').insert(data));
+  }
+  if (error) { errEl.textContent='Error: '+error.message; errEl.style.display=''; return; }
+  closeAddSheet('car');
+  ['c-company','c-type','c-pickup-loc','c-return-loc','c-conf','c-link'].forEach(function(id){ document.getElementById(id).value=''; });
+  ['c-pickup-date','c-return-date','c-pickup-time','c-cost'].forEach(function(id){ document.getElementById(id).value=''; });
   loadDayPlans(currentDayNum);
 }
 
