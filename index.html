@@ -1859,6 +1859,15 @@ async function deletePlanItem(table, id) {
   if (table === 'hotels') {
     saveTasks(loadTasks().filter(function(t){ return t.hotelId !== id; }));
   }
+  // remove from expense tracker if it was tracked
+  var tracked = loadPlanTracked();
+  var expId = tracked[id];
+  if (expId) {
+    saveExpenses(loadExpenses().filter(function(i){ return i.id !== expId; }));
+    delete tracked[id];
+    savePlanTracked(tracked);
+    renderExpenses();
+  }
   deletePlatform(id);
   await sb.from(table).delete().eq('id', id);
   loadDayPlans(currentDayNum);
