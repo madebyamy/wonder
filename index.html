@@ -323,7 +323,16 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <!-- ─── PLANS ─── -->
     <div class="tp active" id="tp-plans">
       <!-- Sticky day picker — built dynamically -->
-      <div id="trip-day-picker" style="position:sticky;top:0;z-index:10;background:var(--canvas);display:flex;gap:5px;overflow-x:auto;padding:4px 0 12px;margin:0 0 4px -16px;padding-left:16px;width:calc(100% + 32px);scrollbar-width:none;box-shadow:0 2px 8px rgba(0,0,0,.06);"></div>
+      <div style="position:sticky;top:0;z-index:10;background:var(--canvas);box-shadow:0 2px 8px rgba(0,0,0,.06);">
+        <div id="trip-day-picker" style="display:flex;gap:5px;overflow-x:auto;padding:4px 16px 0;margin:0 -16px;scrollbar-width:none;"></div>
+        <div style="display:flex;justify-content:flex-end;padding:6px 0 10px;">
+          <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:5px;background:var(--card2);border-radius:20px;padding:5px 11px;cursor:pointer;">
+            <span style="font-size:12px;">💸</span>
+            <span style="font-size:10px;font-weight:600;color:var(--muted);">Expected</span>
+            <span id="plans-expected-total" style="font-size:12px;font-weight:800;color:var(--ink);">$0</span>
+          </div>
+        </div>
+      </div>
 
       <!-- All day blocks rendered here by JS -->
       <div id="all-days-container"></div>
@@ -1449,6 +1458,7 @@ function tab(btn,name){
   if(name==='log'){ renderLogOverview(); }
   if(name==='tasks'){ renderTaskList(); }
   if(name==='expenses'){ renderExpenses(); }
+  if(name==='plans'){ renderExpenses(); }
   localStorage.setItem('wander_nav_tab', name);
 }
 
@@ -2037,6 +2047,8 @@ function renderExpenses() {
   var pb = document.getElementById('exp-progress-bar');
   var pl = document.getElementById('exp-progress-label');
   if(tp) tp.textContent = '$'+planned.toFixed(2);
+  var pet = document.getElementById('plans-expected-total');
+  if(pet) pet.textContent = '$'+planned.toFixed(2);
   if(ta) ta.textContent = '$'+actual.toFixed(2);
   if(pb){
     var pct = planned > 0 ? Math.min(100, (actual/planned)*100) : (actual>0?100:0);
