@@ -1235,18 +1235,21 @@ async function doSignup(){
   btn.textContent = 'Creating account…';
   var res = await sb.auth.signUp({email, password, options:{data:{name}}});
   btn.textContent = 'Create account →'; btn.disabled = false;
-  if(res.error){ errEl.textContent = res.error.message; errEl.style.display=''; return; }
-  var newUserId = res.data.user && res.data.user.id;
-  // Mark invite used and store invited_by on profile
-  if(newUserId){
-    await sb.from('invites').update({status:'used', used_by:newUserId}).eq('id', invite.id);
-    await sb.from('profiles').upsert({id:newUserId, name:name, email:email, max_trips: invite.max_trips||5, invited_by: invite.created_by}, {onConflict:'id'});
+  if(res.error){
+    var msg = (res.error && (res.error.message || res.error.msg || res.error.error_description || JSON.stringify(res.error))) || 'Sign up failed. Please try again.';
+    errEl.textContent = msg; errEl.style.display=''; return;
   }
+  var newUserId = res.data && res.data.user && res.data.user.id;
+  if(!newUserId){ errEl.textContent='Account created but could not get user ID. Please sign in.'; errEl.style.display=''; return; }
+  // Mark invite used and save profile (best-effort — don't block on errors)
+  sb.from('invites').update({status:'used', used_by:newUserId}).eq('id', invite.id).then(function(){});
+  sb.from('profiles').upsert({id:newUserId, name:name, email:email, max_trips: invite.max_trips||5, invited_by: invite.created_by||null}, {onConflict:'id'}).then(function(){});
   if(res.data.session){
     await afterLogin(res.data.user);
   } else {
+    okEl.textContent = 'Account created! Check your email to confirm, then sign in.';
     okEl.style.display='';
-    setTimeout(function(){ authTab('in'); }, 2000);
+    setTimeout(function(){ authTab('in'); }, 3000);
   }
 }
 
