@@ -4346,16 +4346,42 @@ async function saveUserEdit(){
 // ─── SHARE TRIP ──────────────────────────────────────────────────────────────
 
 var _shareSearchTimeout = null;
+var _sharePerms = {access:'edit', log:true, photos:true};
 
 function openShareTrip(){
   var sheet = document.getElementById('share-trip-sheet');
   sheet.style.display='';
   document.getElementById('share-email-input').value='';
   document.getElementById('share-search-results').innerHTML='';
+  _sharePerms = {access:'edit', log:true, photos:true};
+  shareSetAccess('edit');
+  shareRenderToggle('log', true);
+  shareRenderToggle('photos', true);
   renderTripMembers();
 }
 function closeShareTrip(){
   document.getElementById('share-trip-sheet').style.display='none';
+}
+
+function shareSetAccess(level){
+  _sharePerms.access = level;
+  var vBtn = document.getElementById('share-perm-view');
+  var eBtn = document.getElementById('share-perm-edit');
+  if(vBtn){ vBtn.style.background = level==='view'?'var(--ink)':'none'; vBtn.style.color = level==='view'?'#fffaf0':'var(--muted)'; }
+  if(eBtn){ eBtn.style.background = level==='edit'?'var(--ink)':'none'; eBtn.style.color = level==='edit'?'#fffaf0':'var(--muted)'; }
+}
+
+function shareTogglePerm(key){
+  _sharePerms[key] = !_sharePerms[key];
+  shareRenderToggle(key, _sharePerms[key]);
+}
+
+function shareRenderToggle(key, on){
+  var el = document.getElementById('share-perm-'+key);
+  if(!el) return;
+  el.style.background = on ? 'var(--blue)' : 'var(--card3)';
+  var dot = el.querySelector('div');
+  if(dot){ dot.style.right = on ? '3px' : 'auto'; dot.style.left = on ? 'auto' : '3px'; }
 }
 
 function searchShareUsers(val){
@@ -4382,35 +4408,77 @@ async function addTripMember(){
   var email = input.value.trim();
   var userId = input.dataset.userId;
   if(!email){ return; }
-  // If we don't have userId yet, look it up by email
   if(!userId){
     var {data:prof} = await sb.from('profiles').select('id').eq('email',email).single();
     if(!prof){ alert('No Wander account found for that email address.'); return; }
     userId = prof.id;
   }
   if(userId === currentUser.id){ alert('You already own this trip.'); return; }
-  var {error} = await sb.from('trip_members').upsert({trip_id:currentTripId, user_id:userId, access_level:'edit'},{onConflict:'trip_id,user_id'});
+  var {error} = await sb.from('trip_members').upsert({
+    trip_id: currentTripId, user_id: userId,
+    access_level: _sharePerms.access,
+    can_view_log: _sharePerms.log,
+    can_view_photos: _sharePerms.photos
+  },{onConflict:'trip_id,user_id'});
   if(error){ alert('Error: '+error.message); return; }
   input.value=''; delete input.dataset.userId;
+  document.getElementById('share-search-results').innerHTML='';
   renderTripMembers();
+  loadTripMembers();
 }
 
 async function removeTripMember(userId){
+  if(!confirm('Remove this person from the trip?')) return;
   await sb.from('trip_members').delete().eq('trip_id',currentTripId).eq('user_id',userId);
+  renderTripMembers();
+  loadTripMembers();
+}
+
+async function updateMemberAccess(userId, field, value){
+  var update = {};
+  update[field] = value;
+  await sb.from('trip_members').update(update).eq('trip_id',currentTripId).eq('user_id',userId);
   renderTripMembers();
 }
 
 async function renderTripMembers(){
   var el = document.getElementById('share-members-list');
+  if(!el) return;
   var {data} = await sb.from('trip_members').select('*, profiles(id,name,email)').eq('trip_id',currentTripId);
   if(!data||!data.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No one else has access yet.</div>'; return; }
   el.innerHTML = data.map(function(m){
     var p = m.profiles || {};
-    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:10px 12px;">' +
-      '<div class="av" style="width:34px;height:34px;font-size:13px;flex:0 0 auto;background:var(--sky);color:#fff;">'+(p.name||p.email||'?').slice(0,2).toUpperCase()+'</div>' +
-      '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">'+(p.name||p.email||'Unknown')+'</div><div style="font-size:11px;color:var(--muted);">'+(p.email||'')+'</div></div>' +
-      '<button onclick="removeTripMember(\''+m.user_id+'\')" style="background:var(--canvas);border:1.5px solid var(--card2);border-radius:9px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#e57373;">Remove</button>' +
-    '</div>';
+    var isEdit = m.access_level === 'edit';
+    var logOn = m.can_view_log !== false;
+    var photosOn = m.can_view_photos !== false;
+    var uid = m.user_id;
+    return '<div style="background:var(--card2);border-radius:14px;padding:12px;">'
+      // Header row: avatar + name + unshare
+      +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">'
+      +'<div class="av" style="width:34px;height:34px;font-size:13px;flex:0 0 auto;background:var(--sky);color:#fff;">'+(p.name||'?').slice(0,2).toUpperCase()+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">'+(p.name||'Unknown')+'</div><div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(p.email||'')+'</div></div>'
+      +'<button onclick="removeTripMember(\''+uid+'\')" style="background:#fee;border:none;border-radius:9px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;color:#cc3a3a;flex:0 0 auto;">Unshare</button>'
+      +'</div>'
+      // Access level toggle
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+      +'<span style="font-size:12px;font-weight:500;">Access</span>'
+      +'<div style="display:flex;background:var(--card3);border-radius:8px;padding:2px;gap:2px;">'
+      +'<button onclick="updateMemberAccess(\''+uid+'\',\'access_level\',\'view\')" style="border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:'+(isEdit?'none':'var(--ink)')+';color:'+(isEdit?'var(--muted)':'#fffaf0')+';transition:.15s;">View</button>'
+      +'<button onclick="updateMemberAccess(\''+uid+'\',\'access_level\',\'edit\')" style="border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:'+(isEdit?'var(--ink)':'none')+';color:'+(isEdit?'#fffaf0':'var(--muted)')+';transition:.15s;">Edit</button>'
+      +'</div></div>'
+      // Log toggle
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+      +'<span style="font-size:12px;font-weight:500;">Can view log</span>'
+      +'<div onclick="updateMemberAccess(\''+uid+'\',\'can_view_log\','+(!logOn)+')" style="width:34px;height:20px;border-radius:10px;background:'+(logOn?'var(--blue)':'var(--card3)')+';cursor:pointer;position:relative;transition:.2s;">'
+      +'<div style="position:absolute;top:2px;'+(logOn?'right:2px':'left:2px')+';width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></div></div>'
+      +'</div>'
+      // Photos toggle
+      +'<div style="display:flex;align-items:center;justify-content:space-between;">'
+      +'<span style="font-size:12px;font-weight:500;">Can view photos</span>'
+      +'<div onclick="updateMemberAccess(\''+uid+'\',\'can_view_photos\','+(!photosOn)+')" style="width:34px;height:20px;border-radius:10px;background:'+(photosOn?'var(--blue)':'var(--card3)')+';cursor:pointer;position:relative;transition:.2s;">'
+      +'<div style="position:absolute;top:2px;'+(photosOn?'right:2px':'left:2px')+';width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></div></div>'
+      +'</div>'
+      +'</div>';
   }).join('');
 }
 
@@ -4450,18 +4518,54 @@ setInterval(updateTime, 30000);
 
 <!-- ═══════════ SHARE TRIP SHEET ═══════════ -->
 <div id="share-trip-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeShareTrip()">
-  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="font-size:16px;font-weight:700;">👥 Share trip</div>
       <button onclick="closeShareTrip()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;">×</button>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Invite by email</div>
-    <div style="display:flex;gap:8px;margin-bottom:16px;">
-      <input id="share-email-input" type="email" placeholder="friend@email.com" class="inp" style="flex:1;" oninput="searchShareUsers(this.value)">
-      <button onclick="addTripMember()" style="padding:10px 16px;border-radius:13px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
+
+    <!-- Search -->
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;">Add person</div>
+    <input id="share-email-input" type="email" placeholder="Search by email…" class="inp" style="margin-bottom:6px;" oninput="searchShareUsers(this.value)">
+    <div id="share-search-results" style="margin-bottom:10px;"></div>
+
+    <!-- Permissions for new invite -->
+    <div style="background:var(--card2);border-radius:14px;padding:12px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;">Permissions</div>
+      <!-- Access level -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:13px;font-weight:500;">Access level</span>
+        <div style="display:flex;background:var(--card3);border-radius:9px;padding:2px;gap:2px;">
+          <button id="share-perm-view" onclick="shareSetAccess('view')" style="border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:none;color:var(--muted);">View only</button>
+          <button id="share-perm-edit" onclick="shareSetAccess('edit')" style="border:none;border-radius:7px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;background:var(--ink);color:#fffaf0;">Can edit</button>
+        </div>
+      </div>
+      <!-- Log access -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div>
+          <div style="font-size:13px;font-weight:500;">Share log</div>
+          <div style="font-size:10px;color:var(--muted);">They can read journal entries</div>
+        </div>
+        <div id="share-perm-log" onclick="shareTogglePerm('log')" style="width:38px;height:22px;border-radius:11px;background:var(--blue);cursor:pointer;position:relative;transition:.2s;">
+          <div style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></div>
+        </div>
+      </div>
+      <!-- Photos access -->
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:13px;font-weight:500;">Share photos</div>
+          <div style="font-size:10px;color:var(--muted);">They can view trip photos</div>
+        </div>
+        <div id="share-perm-photos" onclick="shareTogglePerm('photos')" style="width:38px;height:22px;border-radius:11px;background:var(--blue);cursor:pointer;position:relative;transition:.2s;">
+          <div style="position:absolute;top:3px;right:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s;"></div>
+        </div>
+      </div>
     </div>
-    <div id="share-search-results" style="margin-bottom:12px;"></div>
-    <div class="sl" style="margin-bottom:8px;">Current members</div>
+
+    <button onclick="addTripMember()" style="width:100%;padding:12px;border-radius:13px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:20px;">+ Add to trip</button>
+
+    <!-- Current members -->
+    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;">People with access</div>
     <div id="share-members-list" style="display:flex;flex-direction:column;gap:8px;">
       <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading…</div>
     </div>
