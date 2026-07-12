@@ -4162,7 +4162,9 @@ async function loadAdminData(){
     sb.from('profiles').select('*').order('created_at', {ascending:false}),
     sb.from('invites').select('*').order('created_at', {ascending:false})
   ]);
-  renderAdminUsers(usersRes.data || []);
+  var el = document.getElementById('adm-users-list');
+  if(usersRes.error){ el.innerHTML='<div style="color:red;padding:16px;font-size:12px;">Error loading users: '+JSON.stringify(usersRes.error)+'</div>'; }
+  else renderAdminUsers(usersRes.data || []);
   renderAdminInvites(invitesRes.data || []);
 }
 
