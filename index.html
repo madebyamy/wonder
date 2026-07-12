@@ -1237,10 +1237,9 @@ async function doSignup(){
   try { res = await sb.auth.signUp({email, password, options:{data:{name}}}); }
   catch(ex){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Exception: '+(ex.message||String(ex)); errEl.style.display=''; return; }
   btn.textContent = 'Create account →'; btn.disabled = false;
+  // Full diagnostic — show entire response so we can debug
   if(res.error){
-    // Show full diagnostic so we can see exactly what Supabase returns
-    var msg = res.error.message || res.error.msg || res.error.error_description || res.error.status || res.error.code || ('Error: '+JSON.stringify(res.error));
-    errEl.textContent = msg || 'Sign up failed (no message). Error keys: '+Object.keys(res.error).join(',');
+    errEl.textContent = 'FULL: '+JSON.stringify(res);
     errEl.style.display=''; return;
   }
   var newUserId = res.data && res.data.user && res.data.user.id;
