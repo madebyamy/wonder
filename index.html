@@ -157,8 +157,8 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div style="color:var(--muted);font-size:14px;">Your adventures, organized.</div>
   </div>
 
-  <!-- Sign in form (only — accounts created by admin in Supabase) -->
-  <div>
+  <!-- Sign in form -->
+  <div id="auth-form-in">
     <div style="margin-bottom:10px;">
       <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Email</div>
       <input id="login-email" type="email" class="inp" placeholder="you@example.com" autocomplete="email" style="font-size:15px;">
@@ -169,8 +169,34 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     </div>
     <div id="login-error" style="display:none;background:#fee;border-radius:9px;padding:9px 12px;font-size:12px;color:#cc3a3a;margin-bottom:12px;"></div>
     <button onclick="doLogin()" id="login-btn" class="btn-d" style="width:100%;padding:13px;font-size:15px;font-weight:700;">Sign in →</button>
-    <div style="text-align:center;margin-top:20px;">
-      <span style="font-size:12px;color:var(--muted);">Access is by invitation only.</span>
+    <div style="text-align:center;margin-top:16px;">
+      <span style="font-size:12px;color:var(--muted);">Have an invite code? </span>
+      <button onclick="authTab('up')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--blue);font-weight:700;font-family:inherit;">Create account →</button>
+    </div>
+  </div>
+  <!-- Sign up form (invite only) -->
+  <div id="auth-form-up" style="display:none;">
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Your name</div>
+      <input id="signup-name" class="inp" placeholder="Jane Smith" style="font-size:15px;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Email</div>
+      <input id="signup-email" type="email" class="inp" placeholder="you@example.com" autocomplete="email" style="font-size:15px;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Password</div>
+      <input id="signup-password" type="password" class="inp" placeholder="Min 6 characters" style="font-size:15px;">
+    </div>
+    <div style="margin-bottom:18px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;">Invite code</div>
+      <input id="signup-code" class="inp" placeholder="WANDER-XXXX-XXXX" style="font-size:15px;text-transform:uppercase;" oninput="this.value=this.value.toUpperCase()">
+    </div>
+    <div id="signup-error" style="display:none;background:#fee;border-radius:9px;padding:9px 12px;font-size:12px;color:#cc3a3a;margin-bottom:12px;"></div>
+    <div id="signup-success" style="display:none;background:#e8f5ee;border-radius:9px;padding:9px 12px;font-size:12px;color:#1a8a4a;margin-bottom:12px;">Account created! Check your email to confirm.</div>
+    <button onclick="doSignup()" id="signup-btn" class="btn-d" style="width:100%;padding:13px;font-size:15px;font-weight:700;">Create account →</button>
+    <div style="text-align:center;margin-top:16px;">
+      <button onclick="authTab('in')" style="background:none;border:none;cursor:pointer;font-size:12px;color:var(--muted);font-family:inherit;">← Back to sign in</button>
     </div>
   </div>
 </div>
@@ -187,6 +213,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <span style="font-size:22px;font-weight:700;letter-spacing:-.6px;">Wander</span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
+        <button id="home-admin-btn" onclick="go('admin')" style="display:none;background:var(--lav);border:none;border-radius:9px;width:32px;height:32px;cursor:pointer;font-size:16px;" title="Admin">🛡️</button>
         <button onclick="go('profile')" style="position:relative;background:none;border:none;cursor:pointer;" aria-label="Profile">
           <div class="av u-amy" id="home-av" style="width:32px;height:32px;font-size:13px;">A</div>
         </button>
@@ -285,6 +312,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div id="trip-title" style="font-size:19px;font-weight:700;letter-spacing:-.4px;">Trip</div>
         <div id="trip-subtitle" style="font-size:11px;opacity:.7;"></div>
       </div>
+      <button id="trip-share-btn" onclick="openShareTrip()" style="display:none;background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Share trip">👥</button>
       <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.25);border-radius:20px;padding:5px 11px;cursor:pointer;flex:0 0 auto;">
         <span style="font-size:12px;">💸</span>
         <div style="text-align:center;">
@@ -789,6 +817,35 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 <!-- Hidden photo input for log -->
 <input type="file" id="log-photo-input" accept="image/*" multiple style="display:none;" onchange="logPhotoChosen(this)">
 
+<!-- ═══════════ ADMIN SCREEN ═══════════ -->
+<div class="screen" id="s-admin">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:6px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <button class="back-btn" onclick="go('home')"><i class="ti ti-arrow-left"></i></button>
+    <span class="page-title">🛡️ Admin</span>
+  </div>
+  <!-- Tabs -->
+  <div style="display:flex;gap:8px;padding:0 16px 12px;flex:0 0 auto;">
+    <button id="adm-tab-users" onclick="admTab('users')" style="flex:1;padding:8px;border-radius:12px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:600;cursor:pointer;">Users</button>
+    <button id="adm-tab-invites" onclick="admTab('invites')" style="flex:1;padding:8px;border-radius:12px;border:1.5px solid var(--card2);background:transparent;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;">Invites</button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <!-- Users panel -->
+    <div id="adm-panel-users">
+      <div id="adm-users-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+    <!-- Invites panel -->
+    <div id="adm-panel-invites" style="display:none;">
+      <button onclick="openGenerateInvite()" style="width:100%;padding:13px;border-radius:14px;border:none;background:var(--blue);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;">+ Generate invite code</button>
+      <div id="adm-invites-list" style="display:flex;flex-direction:column;gap:8px;">
+        <div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ ADD FLIGHT SHEET ═══════════ -->
 <!-- ── Trip confirm modal ───────────────────────────────────────────────── -->
 <div id="trip-confirm-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
@@ -1068,10 +1125,6 @@ var _persistDebounce = {};
 function authTab(tab){
   document.getElementById('auth-form-in').style.display = tab==='in' ? '' : 'none';
   document.getElementById('auth-form-up').style.display = tab==='up' ? '' : 'none';
-  document.getElementById('auth-tab-in').style.background = tab==='in' ? 'var(--ink)' : 'none';
-  document.getElementById('auth-tab-in').style.color = tab==='in' ? '#fffaf0' : 'var(--muted)';
-  document.getElementById('auth-tab-up').style.background = tab==='up' ? 'var(--ink)' : 'none';
-  document.getElementById('auth-tab-up').style.color = tab==='up' ? '#fffaf0' : 'var(--muted)';
 }
 
 // ── Sign in ──────────────────────────────────────────────────────────────────
@@ -1094,31 +1147,55 @@ async function doSignup(){
   var name = document.getElementById('signup-name').value.trim();
   var email = document.getElementById('signup-email').value.trim();
   var password = document.getElementById('signup-password').value;
+  var code = (document.getElementById('signup-code').value||'').trim().toUpperCase();
   var errEl = document.getElementById('signup-error');
   var okEl = document.getElementById('signup-success');
   var btn = document.getElementById('signup-btn');
   errEl.style.display='none'; okEl.style.display='none';
   if(!name || !email || !password){ errEl.textContent='Please fill in all fields.'; errEl.style.display=''; return; }
+  if(!code){ errEl.textContent='An invite code is required to create an account.'; errEl.style.display=''; return; }
   if(password.length < 6){ errEl.textContent='Password must be at least 6 characters.'; errEl.style.display=''; return; }
-  btn.textContent = 'Creating account…'; btn.disabled = true;
+  btn.textContent = 'Checking code…'; btn.disabled = true;
+  // Validate invite code
+  var {data:invite, error:invErr} = await sb.from('invites').select('*').eq('code', code).eq('status','pending').single();
+  if(invErr || !invite){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Invalid or expired invite code.'; errEl.style.display=''; return; }
+  if(invite.expires_at && new Date(invite.expires_at) < new Date()){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has expired.'; errEl.style.display=''; return; }
+  btn.textContent = 'Creating account…';
   var res = await sb.auth.signUp({email, password, options:{data:{name}}});
   btn.textContent = 'Create account →'; btn.disabled = false;
   if(res.error){ errEl.textContent = res.error.message; errEl.style.display=''; return; }
-  // If email confirmation is off in Supabase, user is auto-confirmed
+  var newUserId = res.data.user && res.data.user.id;
+  // Mark invite used and store invited_by on profile
+  if(newUserId){
+    await sb.from('invites').update({status:'used', used_by:newUserId}).eq('id', invite.id);
+    await sb.from('profiles').upsert({id:newUserId, name:name, email:email, max_trips: invite.max_trips||5, invited_by: invite.created_by}, {onConflict:'id'});
+  }
   if(res.data.session){
     await afterLogin(res.data.user);
   } else {
     okEl.style.display='';
-    setTimeout(()=>authTab('in'), 2000);
+    setTimeout(function(){ authTab('in'); }, 2000);
   }
 }
 
 // ── After successful login ────────────────────────────────────────────────────
 async function afterLogin(user){
   currentUser = user;
-  // Load profile
+  // Load profile, upsert email so it's always current
   var {data:prof} = await sb.from('profiles').select('*').eq('id', user.id).single();
+  if(prof && prof.email !== user.email){
+    await sb.from('profiles').update({email: user.email}).eq('id', user.id);
+    prof.email = user.email;
+  }
   currentProfile = prof || {id:user.id, name:user.email.split('@')[0], avatar_color:'blue'};
+  // Block suspended accounts
+  if(currentProfile.account_status === 'suspended'){
+    await sb.auth.signOut();
+    var errEl = document.getElementById('login-error');
+    if(errEl){ errEl.textContent = 'Your account has been suspended. Please contact support.'; errEl.style.display=''; }
+    go('login');
+    return;
+  }
   // Update UI with real name
   updateUserUI();
   // Load trips
@@ -1433,6 +1510,9 @@ function updateUserUI(){
   if(pn) pn.textContent = name;
   var pe = document.getElementById('prof-email');
   if(pe && currentUser) pe.textContent = currentUser.email;
+  // Admin button visibility
+  var admBtn = document.getElementById('home-admin-btn');
+  if(admBtn) admBtn.style.display = currentProfile.is_admin ? '' : 'none';
 }
 
 // ── Sign out ──────────────────────────────────────────────────────────────────
@@ -1462,6 +1542,13 @@ function go(name, skipHistory){
   if(el) el.classList.add('active');
   if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
   if(name === 'profile') renderProfileTrips();
+  if(name === 'admin') loadAdminData();
+  // Show share button only on trip screen when user is the owner
+  var shareBtn = document.getElementById('trip-share-btn');
+  if(shareBtn){
+    var isOwner = currentTripId && currentUser && userTrips.find(function(t){ return t.id===currentTripId && t.created_by===currentUser.id; });
+    shareBtn.style.display = (name==='trip' && isOwner) ? '' : 'none';
+  }
   // persist so refresh can restore
   if(name !== 'login') localStorage.setItem('wander_nav_screen', name);
 }
@@ -1643,6 +1730,11 @@ async function saveNewTrip() {
 
   if (!name) { errEl.textContent = 'Please enter a trip name.'; errEl.style.display = ''; return; }
   if (start && end && end < start) { errEl.textContent = 'End date must be after start date.'; errEl.style.display = ''; return; }
+
+  // Enforce max trips limit
+  var maxTrips = currentProfile.max_trips != null ? currentProfile.max_trips : 10;
+  var myTripCount = userTrips.filter(function(t){ return t.created_by === currentUser.id; }).length;
+  if(myTripCount >= maxTrips){ errEl.textContent = 'You have reached your trip limit ('+maxTrips+'). Contact the admin to increase your limit.'; errEl.style.display=''; return; }
 
   btn.textContent = 'Creating…';
   btn.disabled = true;
@@ -3740,6 +3832,194 @@ function dismissAlert(){
   if(el) el.style.display = 'none';
 }
 
+// ─── ADMIN DASHBOARD ────────────────────────────────────────────────────────
+
+function admTab(tab){
+  document.getElementById('adm-panel-users').style.display = tab==='users' ? '' : 'none';
+  document.getElementById('adm-panel-invites').style.display = tab==='invites' ? '' : 'none';
+  document.getElementById('adm-tab-users').style.background = tab==='users' ? 'var(--blue)' : 'transparent';
+  document.getElementById('adm-tab-users').style.color = tab==='users' ? '#fff' : 'var(--ink)';
+  document.getElementById('adm-tab-users').style.border = tab==='users' ? 'none' : '1.5px solid var(--card2)';
+  document.getElementById('adm-tab-invites').style.background = tab==='invites' ? 'var(--blue)' : 'transparent';
+  document.getElementById('adm-tab-invites').style.color = tab==='invites' ? '#fff' : 'var(--ink)';
+  document.getElementById('adm-tab-invites').style.border = tab==='invites' ? 'none' : '1.5px solid var(--card2)';
+}
+
+async function loadAdminData(){
+  var [usersRes, invitesRes] = await Promise.all([
+    sb.from('profiles').select('*').order('created_at', {ascending:false}),
+    sb.from('invites').select('*').order('created_at', {ascending:false})
+  ]);
+  renderAdminUsers(usersRes.data || []);
+  renderAdminInvites(invitesRes.data || []);
+}
+
+function renderAdminUsers(users){
+  var el = document.getElementById('adm-users-list');
+  if(!users.length){ el.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">No users yet.</div>'; return; }
+  el.innerHTML = users.map(function(u){
+    var statusColor = u.account_status==='suspended' ? '#e57373' : '#66bb6a';
+    var statusLabel = u.account_status==='suspended' ? 'Suspended' : 'Active';
+    var adminBadge = u.is_admin ? '<span style="background:var(--lav);color:var(--ink);font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;margin-left:6px;">Admin</span>' : '';
+    return '<div style="background:var(--card2);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:12px;">' +
+      '<div class="av" style="width:38px;height:38px;font-size:14px;flex:0 0 auto;background:var(--sky);color:#fff;">'+(u.name||'?').slice(0,2).toUpperCase()+'</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:13px;font-weight:700;">'+(u.name||'Unknown')+adminBadge+'</div>' +
+        '<div style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(u.email||'')+'</div>' +
+        '<div style="font-size:10px;margin-top:2px;"><span style="color:'+statusColor+';font-weight:600;">●</span> '+statusLabel+' · '+( u.max_trips!=null?u.max_trips:10)+' trips max</div>' +
+      '</div>' +
+      '<button onclick="openEditUser(\''+u.id+'\',\''+encodeURIComponent(u.name||'')+'\','+(u.max_trips!=null?u.max_trips:10)+',\''+(u.account_status||'active')+'\')" style="background:var(--canvas);border:1.5px solid var(--card2);border-radius:10px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);">Edit</button>' +
+    '</div>';
+  }).join('');
+}
+
+function renderAdminInvites(invites){
+  var el = document.getElementById('adm-invites-list');
+  if(!invites.length){ el.innerHTML='<div style="text-align:center;padding:32px;color:var(--muted);font-size:13px;">No invites yet. Generate one above.</div>'; return; }
+  el.innerHTML = invites.map(function(inv){
+    var isPending = inv.status==='pending';
+    var exp = inv.expires_at ? new Date(inv.expires_at).toLocaleDateString() : '—';
+    var statusColor = isPending ? '#66bb6a' : (inv.status==='used'?'var(--muted)':'#e57373');
+    return '<div style="background:var(--card2);border-radius:14px;padding:13px 14px;">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+        '<div style="font-family:monospace;font-size:15px;font-weight:800;letter-spacing:1px;">'+inv.code+'</div>' +
+        '<div style="display:flex;gap:7px;">' +
+          (isPending ? '<button onclick="copyInviteCode(\''+inv.code+'\')" style="background:var(--blue);color:#fff;border:none;border-radius:9px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;">Copy</button>' : '') +
+          (isPending ? '<button onclick="revokeInvite(\''+inv.id+'\')" style="background:var(--canvas);border:1.5px solid var(--card2);border-radius:9px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);">Revoke</button>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);">'+(inv.label?'<b>'+inv.label+'</b> · ':'')+inv.max_trips+' trips · Expires '+exp+' · <span style="color:'+statusColor+';font-weight:600;">'+inv.status+'</span></div>' +
+    '</div>';
+  }).join('');
+}
+
+function openGenerateInvite(){
+  document.getElementById('inv-label').value='';
+  document.getElementById('inv-max-trips').value='5';
+  document.getElementById('inv-expires').value='30';
+  var m = document.getElementById('gen-invite-modal');
+  m.style.display='flex';
+}
+function closeGenerateInvite(){
+  document.getElementById('gen-invite-modal').style.display='none';
+}
+
+async function generateInvite(){
+  var label = document.getElementById('inv-label').value.trim();
+  var maxTrips = parseInt(document.getElementById('inv-max-trips').value)||5;
+  var days = parseInt(document.getElementById('inv-expires').value)||30;
+  var code = Math.random().toString(36).slice(2,6).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase();
+  var expires = new Date(Date.now() + days*86400000).toISOString();
+  var {error} = await sb.from('invites').insert({code:code, label:label||null, max_trips:maxTrips, created_by:currentUser.id, expires_at:expires, status:'pending'});
+  if(error){ alert('Error: '+error.message); return; }
+  closeGenerateInvite();
+  await loadAdminData();
+}
+
+async function revokeInvite(id){
+  await sb.from('invites').update({status:'revoked'}).eq('id',id);
+  await loadAdminData();
+}
+
+function copyInviteCode(code){
+  navigator.clipboard.writeText(code).then(function(){
+    alert('Copied: '+code);
+  });
+}
+
+function openEditUser(id, encodedName, maxTrips, status){
+  document.getElementById('eu-id').value = id;
+  document.getElementById('eu-name').value = decodeURIComponent(encodedName);
+  document.getElementById('eu-max-trips').value = maxTrips;
+  document.getElementById('eu-status').value = status;
+  document.getElementById('edit-user-modal').style.display='flex';
+}
+function closeEditUser(){
+  document.getElementById('edit-user-modal').style.display='none';
+}
+async function saveUserEdit(){
+  var id = document.getElementById('eu-id').value;
+  var name = document.getElementById('eu-name').value.trim();
+  var maxTrips = parseInt(document.getElementById('eu-max-trips').value)||5;
+  var status = document.getElementById('eu-status').value;
+  var {error} = await sb.from('profiles').update({name:name, max_trips:maxTrips, account_status:status}).eq('id',id);
+  if(error){ alert('Error: '+error.message); return; }
+  closeEditUser();
+  await loadAdminData();
+}
+
+
+// ─── SHARE TRIP ──────────────────────────────────────────────────────────────
+
+var _shareSearchTimeout = null;
+
+function openShareTrip(){
+  var sheet = document.getElementById('share-trip-sheet');
+  sheet.style.display='';
+  document.getElementById('share-email-input').value='';
+  document.getElementById('share-search-results').innerHTML='';
+  renderTripMembers();
+}
+function closeShareTrip(){
+  document.getElementById('share-trip-sheet').style.display='none';
+}
+
+function searchShareUsers(val){
+  clearTimeout(_shareSearchTimeout);
+  if(!val || val.length < 3){ document.getElementById('share-search-results').innerHTML=''; return; }
+  _shareSearchTimeout = setTimeout(async function(){
+    var {data} = await sb.from('profiles').select('id,name,email').ilike('email','%'+val+'%').limit(5);
+    var el = document.getElementById('share-search-results');
+    if(!data||!data.length){ el.innerHTML=''; return; }
+    el.innerHTML = data.map(function(u){
+      return '<div onclick="selectShareUser(\''+u.id+'\',\''+encodeURIComponent(u.email)+'\')" style="background:var(--card2);border-radius:11px;padding:10px 12px;cursor:pointer;margin-bottom:5px;font-size:13px;">'+(u.name||u.email)+'<span style="color:var(--muted);font-size:11px;margin-left:6px;">'+u.email+'</span></div>';
+    }).join('');
+  }, 350);
+}
+
+function selectShareUser(id, encodedEmail){
+  document.getElementById('share-email-input').value = decodeURIComponent(encodedEmail);
+  document.getElementById('share-search-results').innerHTML='';
+  document.getElementById('share-email-input').dataset.userId = id;
+}
+
+async function addTripMember(){
+  var input = document.getElementById('share-email-input');
+  var email = input.value.trim();
+  var userId = input.dataset.userId;
+  if(!email){ return; }
+  // If we don't have userId yet, look it up by email
+  if(!userId){
+    var {data:prof} = await sb.from('profiles').select('id').eq('email',email).single();
+    if(!prof){ alert('No Wander account found for that email address.'); return; }
+    userId = prof.id;
+  }
+  if(userId === currentUser.id){ alert('You already own this trip.'); return; }
+  var {error} = await sb.from('trip_members').upsert({trip_id:currentTripId, user_id:userId, access_level:'edit'},{onConflict:'trip_id,user_id'});
+  if(error){ alert('Error: '+error.message); return; }
+  input.value=''; delete input.dataset.userId;
+  renderTripMembers();
+}
+
+async function removeTripMember(userId){
+  await sb.from('trip_members').delete().eq('trip_id',currentTripId).eq('user_id',userId);
+  renderTripMembers();
+}
+
+async function renderTripMembers(){
+  var el = document.getElementById('share-members-list');
+  var {data} = await sb.from('trip_members').select('*, profiles(id,name,email)').eq('trip_id',currentTripId);
+  if(!data||!data.length){ el.innerHTML='<div style="font-size:13px;color:var(--muted);padding:8px 0;">No one else has access yet.</div>'; return; }
+  el.innerHTML = data.map(function(m){
+    var p = m.profiles || {};
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--card2);border-radius:12px;padding:10px 12px;">' +
+      '<div class="av" style="width:34px;height:34px;font-size:13px;flex:0 0 auto;background:var(--sky);color:#fff;">'+(p.name||p.email||'?').slice(0,2).toUpperCase()+'</div>' +
+      '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:600;">'+(p.name||p.email||'Unknown')+'</div><div style="font-size:11px;color:var(--muted);">'+(p.email||'')+'</div></div>' +
+      '<button onclick="removeTripMember(\''+m.user_id+'\')" style="background:var(--canvas);border:1.5px solid var(--card2);border-radius:9px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;color:#e57373;">Remove</button>' +
+    '</div>';
+  }).join('');
+}
+
 // ─── SMS TOGGLE ─────────────────────────────
 function toggleSMS(el){
   el.classList.toggle('on');
@@ -3758,5 +4038,63 @@ function updateTime(){
 updateTime();
 setInterval(updateTime, 30000);
 </script>
+<!-- ═══════════ SHARE TRIP SHEET ═══════════ -->
+<div id="share-trip-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeShareTrip()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">👥 Share trip</div>
+      <button onclick="closeShareTrip()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;">×</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Invite by email</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <input id="share-email-input" type="email" placeholder="friend@email.com" class="inp" style="flex:1;" oninput="searchShareUsers(this.value)">
+      <button onclick="addTripMember()" style="padding:10px 16px;border-radius:13px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Add</button>
+    </div>
+    <div id="share-search-results" style="margin-bottom:12px;"></div>
+    <div class="sl" style="margin-bottom:8px;">Current members</div>
+    <div id="share-members-list" style="display:flex;flex-direction:column;gap:8px;">
+      <div style="text-align:center;padding:16px;color:var(--muted);font-size:13px;">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ GENERATE INVITE MODAL ═══════════ -->
+<div id="gen-invite-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+  <div style="background:var(--canvas);border-radius:22px;padding:26px 22px 22px;margin:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px;">Generate invite code</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Share this code with someone to let them create an account.</div>
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Label (optional)</div>
+    <input id="inv-label" class="inp" placeholder="e.g. Lynnell" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Max trips allowed</div>
+    <input id="inv-max-trips" type="number" class="inp" value="5" min="1" max="50" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Expires in (days)</div>
+    <input id="inv-expires" type="number" class="inp" value="30" min="1" max="365" style="margin-bottom:20px;">
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeGenerateInvite()" style="flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--card2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);">Cancel</button>
+      <button onclick="generateInvite()" style="flex:1;padding:13px;border-radius:13px;border:none;background:var(--blue);font-size:14px;font-weight:700;cursor:pointer;color:#fff;">Generate</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ EDIT USER MODAL ═══════════ -->
+<div id="edit-user-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+  <div style="background:var(--canvas);border-radius:22px;padding:26px 22px 22px;margin:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div style="font-size:18px;font-weight:800;margin-bottom:16px;">Edit user</div>
+    <input type="hidden" id="eu-id">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Display name</div>
+    <input id="eu-name" class="inp" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Max trips</div>
+    <input id="eu-max-trips" type="number" class="inp" min="0" max="999" style="margin-bottom:12px;">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Account status</div>
+    <select id="eu-status" class="inp" style="margin-bottom:20px;">
+      <option value="active">Active</option>
+      <option value="suspended">Suspended</option>
+    </select>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeEditUser()" style="flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--card2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);">Cancel</button>
+      <button onclick="saveUserEdit()" style="flex:1;padding:13px;border-radius:13px;border:none;background:var(--blue);font-size:14px;font-weight:700;cursor:pointer;color:#fff;">Save</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
