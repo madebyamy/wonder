@@ -562,15 +562,19 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
       <!-- Summary header -->
       <div style="background:var(--sky);border-radius:18px;padding:16px;margin-bottom:13px;">
-        <!-- Planned + Actual row -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <!-- Total + breakdown row -->
+        <div style="margin-bottom:10px;">
+          <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Total trip cost</div>
+          <div id="exp-total-trip" style="font-size:30px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;background:rgba(0,0,0,.12);border-radius:10px;padding:9px 11px;">
           <div>
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Planned</div>
-            <div id="exp-total-planned" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:2px;">Planned</div>
+            <div id="exp-total-planned" style="font-size:18px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
-            <div id="exp-total-actual" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:2px;">Actual paid</div>
+            <div id="exp-total-actual" style="font-size:18px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
           </div>
         </div>
         <!-- Budget tracker -->
@@ -2572,15 +2576,15 @@ function renderExpenses() {
   if(tp) tp.textContent = '$'+planned.toFixed(2);
   if(ta) ta.textContent = '$'+actual.toFixed(2);
 
-  // Trip header pill: show planned + actual
+  // Total trip cost = planned + actual
+  var total = planned + actual;
+  var tt = document.getElementById('exp-total-trip');
+  if(tt) tt.textContent = '$'+total.toFixed(2);
+
   var pet = document.getElementById('plans-expected-total');
-  if(pet){
-    if(actual > 0 && planned > 0) pet.textContent = '$'+actual.toFixed(0)+' / $'+planned.toFixed(0);
-    else if(actual > 0) pet.textContent = '$'+actual.toFixed(2);
-    else pet.textContent = '$'+planned.toFixed(2);
-  }
+  if(pet) pet.textContent = '$'+total.toFixed(0);
   var petLabel = document.getElementById('plans-expected-label');
-  if(petLabel) petLabel.textContent = actual > 0 ? 'Spent / Plan' : (planned > 0 ? 'Planned' : 'Expenses');
+  if(petLabel) petLabel.textContent = 'Total cost';
 
   // Budget tracker bars
   var budget = loadBudget();
@@ -2588,24 +2592,18 @@ function renderExpenses() {
   if(budgetInput && (budgetInput.value === '' || budgetInput.value === '0') && budget > 0) budgetInput.value = budget;
   var barPlanned = document.getElementById('exp-bar-planned');
   var barActual  = document.getElementById('exp-bar-actual');
-  var baseline   = budget > 0 ? budget : Math.max(planned, actual, 1);
+  var baseline = budget > 0 ? budget : Math.max(total, 1);
   if(barPlanned) barPlanned.style.width = Math.min(100,(planned/baseline)*100)+'%';
-  if(barActual)  barActual.style.width  = Math.min(100,(actual/baseline)*100)+'%';
+  if(barActual)  barActual.style.width  = Math.min(100,(total/baseline)*100)+'%';
   if(pl){
     if(items.length === 0) pl.textContent = 'No expenses yet — add one below';
     else if(budget > 0){
-      var rem = budget - actual;
-      var planRem = budget - planned;
+      var rem = budget - total;
       pl.textContent = rem >= 0
-        ? '$'+actual.toFixed(2)+' spent · $'+planned.toFixed(2)+' planned · $'+rem.toFixed(2)+' of $'+budget.toFixed(2)+' budget left'
-        : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(rem)).toFixed(2)+' over budget';
-    } else if(planned === 0 && actual > 0) pl.textContent = '$'+actual.toFixed(2)+' spent';
-    else if(actual === 0) pl.textContent = '$'+planned.toFixed(2)+' planned · nothing confirmed yet';
-    else {
-      var diff = planned - actual;
-      pl.textContent = diff >= 0
-        ? '$'+actual.toFixed(2)+' spent of $'+planned.toFixed(2)+' planned · $'+diff.toFixed(2)+' under'
-        : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(diff)).toFixed(2)+' over planned';
+        ? '$'+total.toFixed(2)+' total of $'+budget.toFixed(2)+' budget · $'+rem.toFixed(2)+' remaining'
+        : '$'+total.toFixed(2)+' total · $'+(Math.abs(rem)).toFixed(2)+' over budget';
+    } else {
+      pl.textContent = '$'+planned.toFixed(2)+' planned + $'+actual.toFixed(2)+' paid = $'+total.toFixed(2)+' total';
     }
   }
 
@@ -3890,24 +3888,41 @@ function taskDueSoon(due){
   return diff >= 0 && diff <= 5;
 }
 
+function _getAllUpcomingTasks(){
+  // Gather tasks across ALL loaded trips (not just current trip)
+  var today = new Date(); today.setHours(0,0,0,0);
+  var all = [];
+  userTrips.forEach(function(trip){
+    var tasks = [];
+    if(trip.tasks_json && trip.tasks_json.length) tasks = trip.tasks_json;
+    else { try{ tasks = JSON.parse(localStorage.getItem('wander_tasks_'+trip.id)||'[]'); }catch(e){} }
+    tasks.forEach(function(t){ if(!t.done) all.push({task:t, tripId:trip.id, tripName:trip.name}); });
+  });
+  return all;
+}
+
 function showAlert(){
   var el = document.getElementById('alert-sheet');
   if(!el) return;
-  var tasks = loadTasks().filter(function(t){ return !t.done; });
-  var body = el.querySelector('#alert-task-list');
+  var allTasks = _getAllUpcomingTasks();
+  // Show overdue/soon tasks, plus all undone tasks if none qualify
+  var flagged = allTasks.filter(function(x){ return taskIsOverdue(x.task.due) || taskDueSoon(x.task.due); });
+  var tasks = flagged.length ? flagged : allTasks;
+  var body = document.getElementById('alert-task-list');
   if(body){
     if(tasks.length){
-      body.innerHTML = tasks.map(function(t){
+      body.innerHTML = tasks.map(function(x){
+        var t = x.task;
         var overdue = taskIsOverdue(t.due);
         var soon = !overdue && taskDueSoon(t.due);
-        var color = overdue ? '#cc3a3a' : soon ? '#c87020' : 'var(--card3)';
-        var bg = overdue ? 'background:rgba(204,58,58,.07);' : soon ? 'background:rgba(200,112,32,.07);' : 'background:var(--card2);';
+        var color = overdue ? '#cc3a3a' : soon ? '#c87020' : 'var(--muted)';
+        var bg = overdue ? 'rgba(204,58,58,.07)' : soon ? 'rgba(200,112,32,.07)' : 'var(--card2)';
         var label = overdue ? '⚠️ Overdue · ' : soon ? '⏰ Due soon · ' : '📅 ';
-        return '<div style="display:flex;align-items:center;gap:10px;'+bg+'border-radius:11px;padding:10px 12px;">'
-          +'<div style="width:18px;height:18px;border-radius:5px;border:2px solid '+color+';flex:0 0 auto;"></div>'
+        return '<div style="display:flex;align-items:center;gap:10px;background:'+bg+';border-radius:11px;padding:10px 12px;">'
+          +'<button onclick="alertToggleTask(\''+x.tripId+'\',\''+t.id+'\')" style="width:20px;height:20px;border-radius:6px;border:2px solid '+color+';background:none;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;" id="atask-'+t.id+'"> </button>'
           +'<div style="flex:1;min-width:0;">'
-          +'<div style="font-size:13px;font-weight:600;'+(overdue?'color:#cc3a3a;':soon?'color:#c87020;':'')+' word-break:break-word;">'+t.text+'</div>'
-          +(t.due?'<div style="font-size:10px;font-weight:600;color:'+(overdue?'#cc3a3a':soon?'#c87020':'var(--muted)')+';">'+label+taskDueLabel(t.due)+'</div>':'')
+          +'<div style="font-size:13px;font-weight:600;word-break:break-word;">'+t.text+'</div>'
+          +'<div style="font-size:10px;color:'+color+';margin-top:2px;">'+(t.due?label+taskDueLabel(t.due):'')+(x.tripName?' · '+x.tripName:'')+'</div>'
           +'</div></div>';
       }).join('');
     } else {
@@ -3921,9 +3936,38 @@ function showAlert(){
   el.style.display = 'flex';
 }
 
+function alertToggleTask(tripId, taskId){
+  // Find the trip's task list and mark done
+  var trip = userTrips.find(function(t){ return t.id===tripId; });
+  if(!trip) return;
+  var tasks = [];
+  if(trip.tasks_json && trip.tasks_json.length) tasks = trip.tasks_json.slice();
+  else { try{ tasks = JSON.parse(localStorage.getItem('wander_tasks_'+tripId)||'[]'); }catch(e){} }
+  var task = tasks.find(function(t){ return t.id===taskId; });
+  if(!task) return;
+  task.done = !task.done;
+  // Save back
+  if(trip.tasks_json){ trip.tasks_json = tasks; }
+  localStorage.setItem('wander_tasks_'+tripId, JSON.stringify(tasks));
+  sb.from('trips').update({tasks_json: tasks}).eq('id', tripId).then(function(){});
+  // Update UI
+  var btn = document.getElementById('atask-'+taskId);
+  if(btn){
+    btn.textContent = task.done ? '✓' : ' ';
+    btn.style.background = task.done ? 'var(--blue)' : 'none';
+    btn.style.color = '#fff';
+    var row = btn.parentElement;
+    if(row) row.style.opacity = task.done ? '0.45' : '1';
+  }
+  // If we're currently viewing that trip, re-render its tasks
+  if(currentTripId === tripId) renderTasks();
+}
+
 function checkSoonAlerts(){
-  var tasks = loadTasks().filter(function(t){ return !t.done && (taskIsOverdue(t.due) || taskDueSoon(t.due)); });
-  if(tasks.length) setTimeout(showAlert, 800);
+  // Wait for trips to load, then check
+  var allTasks = _getAllUpcomingTasks();
+  var flagged = allTasks.filter(function(x){ return taskIsOverdue(x.task.due) || taskDueSoon(x.task.due); });
+  if(flagged.length) setTimeout(showAlert, 800);
 }
 function dismissAlert(){
   var el = document.getElementById('alert-sheet');
