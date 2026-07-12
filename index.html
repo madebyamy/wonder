@@ -1225,7 +1225,7 @@ async function doSignup(){
   // Validate invite code
   var {data:invite, error:invErr} = await sb.from('invites').select('*').eq('code', code).eq('status','pending').single();
   if(invErr || !invite){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Invalid or expired invite code.'; errEl.style.display=''; return; }
-  if(invite.expires_at && new Date(invite.expires_at) < new Date()){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has expired.'; errEl.style.display=''; return; }
+  if(invite.expires_at && new Date(invite.expires_at) < new Date()){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has expired. Please request a new one.'; errEl.style.display=''; return; }
   btn.textContent = 'Creating account…';
   var res = await sb.auth.signUp({email, password, options:{data:{name}}});
   btn.textContent = 'Create account →'; btn.disabled = false;
@@ -4156,7 +4156,7 @@ function renderAdminInvites(invites){
 function openGenerateInvite(){
   document.getElementById('inv-label').value='';
   document.getElementById('inv-max-trips').value='5';
-  document.getElementById('inv-expires').value='30';
+  document.getElementById('inv-expires').value='';
   var m = document.getElementById('gen-invite-modal');
   m.style.display='flex';
 }
@@ -4167,9 +4167,10 @@ function closeGenerateInvite(){
 async function generateInvite(){
   var label = document.getElementById('inv-label').value.trim();
   var maxTrips = parseInt(document.getElementById('inv-max-trips').value)||5;
-  var days = parseInt(document.getElementById('inv-expires').value)||30;
+  var daysVal = document.getElementById('inv-expires').value.trim();
+  var days = parseInt(daysVal);
   var code = Math.random().toString(36).slice(2,6).toUpperCase()+Math.random().toString(36).slice(2,6).toUpperCase();
-  var expires = new Date(Date.now() + days*86400000).toISOString();
+  var expires = (!daysVal || isNaN(days)) ? null : new Date(Date.now() + days*86400000).toISOString();
   var {error} = await sb.from('invites').insert({code:code, label:label||null, max_trips:maxTrips, created_by:currentUser.id, expires_at:expires, status:'pending'});
   if(error){ alert('Error: '+error.message); return; }
   closeGenerateInvite();
@@ -4343,8 +4344,8 @@ setInterval(updateTime, 30000);
     <input id="inv-label" class="inp" placeholder="e.g. Lynnell" style="margin-bottom:12px;">
     <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Max trips allowed</div>
     <input id="inv-max-trips" type="number" class="inp" value="5" min="1" max="50" style="margin-bottom:12px;">
-    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Expires in (days)</div>
-    <input id="inv-expires" type="number" class="inp" value="30" min="1" max="365" style="margin-bottom:20px;">
+    <div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Expires in (days) <span style="font-weight:400;color:var(--muted);">— leave blank for no expiry</span></div>
+    <input id="inv-expires" type="number" class="inp" placeholder="e.g. 30" min="1" max="3650" style="margin-bottom:20px;">
     <div style="display:flex;gap:10px;">
       <button onclick="closeGenerateInvite()" style="flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--card2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);">Cancel</button>
       <button onclick="generateInvite()" style="flex:1;padding:13px;border-radius:13px;border:none;background:var(--blue);font-size:14px;font-weight:700;cursor:pointer;color:#fff;">Generate</button>
