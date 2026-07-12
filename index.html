@@ -1226,9 +1226,11 @@ async function doSignup(){
   if(!code){ errEl.textContent='An invite code is required to create an account.'; errEl.style.display=''; return; }
   if(password.length < 6){ errEl.textContent='Password must be at least 6 characters.'; errEl.style.display=''; return; }
   btn.textContent = 'Checking code…'; btn.disabled = true;
-  // Validate invite code
-  var {data:invite, error:invErr} = await sb.from('invites').select('*').eq('code', code).eq('status','pending').single();
-  if(invErr || !invite){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Invalid or expired invite code.'; errEl.style.display=''; return; }
+  // Validate invite code — use array select to avoid .single() errors
+  var {data:inviteRows} = await sb.from('invites').select('*').eq('code', code).limit(1);
+  var invite = inviteRows && inviteRows[0];
+  if(!invite){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Invite code not found. Check for typos and try again.'; errEl.style.display=''; return; }
+  if(invite.status !== 'pending'){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has already been used or revoked.'; errEl.style.display=''; return; }
   if(invite.expires_at && new Date(invite.expires_at) < new Date()){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has expired. Please request a new one.'; errEl.style.display=''; return; }
   btn.textContent = 'Creating account…';
   var res = await sb.auth.signUp({email, password, options:{data:{name}}});
