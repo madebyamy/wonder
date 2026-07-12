@@ -1233,11 +1233,15 @@ async function doSignup(){
   if(invite.status !== 'pending'){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has already been used or revoked.'; errEl.style.display=''; return; }
   if(invite.expires_at && new Date(invite.expires_at) < new Date()){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='This invite code has expired. Please request a new one.'; errEl.style.display=''; return; }
   btn.textContent = 'Creating account…';
-  var res = await sb.auth.signUp({email, password, options:{data:{name}}});
+  var res;
+  try { res = await sb.auth.signUp({email, password, options:{data:{name}}}); }
+  catch(ex){ btn.textContent='Create account →'; btn.disabled=false; errEl.textContent='Exception: '+(ex.message||String(ex)); errEl.style.display=''; return; }
   btn.textContent = 'Create account →'; btn.disabled = false;
   if(res.error){
-    var msg = (res.error && (res.error.message || res.error.msg || res.error.error_description || JSON.stringify(res.error))) || 'Sign up failed. Please try again.';
-    errEl.textContent = msg; errEl.style.display=''; return;
+    // Show full diagnostic so we can see exactly what Supabase returns
+    var msg = res.error.message || res.error.msg || res.error.error_description || res.error.status || res.error.code || ('Error: '+JSON.stringify(res.error));
+    errEl.textContent = msg || 'Sign up failed (no message). Error keys: '+Object.keys(res.error).join(',');
+    errEl.style.display=''; return;
   }
   var newUserId = res.data && res.data.user && res.data.user.id;
   if(!newUserId){ errEl.textContent='Account created but could not get user ID. Please sign in.'; errEl.style.display=''; return; }
