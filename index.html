@@ -502,9 +502,15 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <div class="tp" id="tp-log">
 
       <!-- View toggle -->
-      <div style="display:flex;background:var(--card2);border-radius:11px;padding:3px;margin-bottom:13px;">
-        <button id="log-view-overview" onclick="logView('overview')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--ink);color:#fffaf0;">Overview</button>
-        <button id="log-view-daily" onclick="logView('daily')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:none;color:var(--muted);">Daily view</button>
+      <div style="display:flex;gap:8px;margin-bottom:13px;align-items:center;">
+        <div style="flex:1;display:flex;background:var(--card2);border-radius:11px;padding:3px;">
+          <button id="log-view-overview" onclick="logView('overview')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--ink);color:#fffaf0;">Overview</button>
+          <button id="log-view-daily" onclick="logView('daily')" style="flex:1;border:none;border-radius:9px;padding:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;background:none;color:var(--muted);">Daily</button>
+        </div>
+        <div style="display:flex;background:var(--card2);border-radius:11px;padding:3px;gap:2px;">
+          <button id="log-filter-all" onclick="setLogFilter('all')" style="border:none;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;background:var(--ink);color:#fffaf0;">All</button>
+          <button id="log-filter-mine" onclick="setLogFilter('mine')" style="border:none;border-radius:9px;padding:6px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;background:none;color:var(--muted);">Mine</button>
+        </div>
       </div>
 
       <!-- Overview -->
@@ -1505,6 +1511,7 @@ function openDbTrip(id){
   currentTripId = trip.id;
   currentTripStartDate = trip.start_date || null;
   initTripCache(trip);
+  loadTripMembers();
 
   // ── Header ──────────────────────────────────────────────────────────────
   var hdr = document.getElementById('trip-header');
@@ -1865,6 +1872,8 @@ var editingPlanId = null;
 var planItemCache = {};
 var currentTripStartDate = null;
 var currentDayNum = 1;
+var tripMemberMap = {};
+var logFilter = 'all';
 
 // Map day number (1-based offset) to a calendar date string (YYYY-MM-DD)
 function getDayDateStr(dayNum) {
@@ -1957,6 +1966,34 @@ function renderPlansOutfits(dayNum){
   }).join('');
 }
 
+async function loadTripMembers(){
+  tripMemberMap = {};
+  if(!currentTripId) return;
+  var {data} = await sb.from('trip_members').select('user_id, profiles(id,name,avatar_color)').eq('trip_id', currentTripId);
+  (data||[]).forEach(function(m){
+    var p = m.profiles || {};
+    var name = p.name || 'Traveler';
+    tripMemberMap[m.user_id] = {name:name, initials:name.slice(0,2).toUpperCase(), color:p.avatar_color||'blue'};
+  });
+  // Include trip owner from currentProfile if it's the current user
+  if(currentUser && currentProfile){
+    var name = currentProfile.name || 'Me';
+    tripMemberMap[currentUser.id] = {name:name, initials:name.slice(0,2).toUpperCase(), color:currentProfile.avatar_color||'blue'};
+  }
+}
+
+function creatorBadge(userId){
+  if(!userId || !currentUser || userId === currentUser.id) return '';
+  var m = tripMemberMap[userId];
+  if(!m) return '';
+  var colorMap = {blue:'#4a7ade',lav:'#b8a4ed',peach:'#ffb084',mint:'#a4d4c5',ochre:'#e8b94a',coral:'#ff7b5a'};
+  var bg = colorMap[m.color] || '#4a7ade';
+  return '<div style="display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:'+bg+'22;border-radius:6px;padding:2px 7px;">'
+    +'<span style="width:15px;height:15px;border-radius:50%;background:'+bg+';color:#fff;font-size:8px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;">'+m.initials+'</span>'
+    +'<span style="font-size:10px;font-weight:600;color:var(--ink);">'+m.name+'</span>'
+    +'</div>';
+}
+
 function renderPlanItem(item) {
   var dn = item.dayNum || currentDayNum;
   var actions = function(type, id) {
@@ -1991,6 +2028,7 @@ function renderPlanItem(item) {
       +(displayNotes ? '<div style="font-size:11px;color:var(--muted);margin-top:2px;">'+displayNotes+'</div>' : '')
       +(getPlatform(f.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(f.id)+'</div>' : '')
       +(!isArrival ? fCostBtn : '')
+      +creatorBadge(f.created_by)
       +'</div>'
       +(isArrival ? '' : actions('flights', f.id))
       +'</div></div>';
@@ -2014,6 +2052,7 @@ function renderPlanItem(item) {
       +(h.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+h.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
       +(getPlatform(h.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(h.id)+'</div>' : '')
       +hCostBtn
+      +creatorBadge(h.created_by)
       +'</div>'
       +actions('hotels', h.id)
       +'</div></div>';
@@ -2039,6 +2078,7 @@ function renderPlanItem(item) {
       +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
       +(getPlatform(e.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(e.id)+'</div>' : '')
       +eCostBtn
+      +creatorBadge(e.created_by)
       +'</div>'
       +actions('excursions', e.id)
       +'</div></div>';
@@ -2066,6 +2106,7 @@ function renderPlanItem(item) {
       +(e.link ? '<div style="font-size:11px;margin-top:2px;"><a href="'+e.link+'" target="_blank" style="color:var(--blue);text-decoration:none;">🔗 Website</a></div>' : '')
       +(getPlatform(e.id) ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">🎫 '+getPlatform(e.id)+'</div>' : '')
       +eCostBtn
+      +creatorBadge(e.created_by)
       +'</div>'
       +actions('excursions', e.id)
       +'</div></div>';
@@ -2971,18 +3012,40 @@ async function openLogDay(dayNum){
   var headerGradients = ['linear-gradient(135deg,#ede0f7,#d8cff0)','linear-gradient(135deg,#ffecd8,#ffd6b0)','linear-gradient(135deg,#d4f0e4,#b8e8d0)','linear-gradient(135deg,#fde8e8,#f5cece)','linear-gradient(135deg,#e0eeff,#c8dbff)','linear-gradient(135deg,#fdf4d0,#f5e8a8)'];
   var hbg = headerGradients[(dayNum-1) % headerGradients.length];
 
-  document.getElementById('log-day-content').innerHTML =
-    '<div style="background:'+hbg+';border-radius:20px;padding:18px;margin-bottom:14px;text-align:center;">'
+  var dayHeader = '<div style="background:'+hbg+';border-radius:20px;padding:18px;margin-bottom:14px;text-align:center;">'
     +'<div style="font-size:40px;margin-bottom:6px;">'+flag+'</div>'
     +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;opacity:.55;margin-bottom:3px;">Day '+dayNum+(loc?' · '+loc:'')+'</div>'
     +'<div style="font-size:19px;font-weight:800;line-height:1.2;">'+label+'</div>'
     +(savedMood?'<div style="font-size:28px;margin-top:6px;">'+savedMood+'</div>':'')
-    +'</div>'
-    + plansHtml
-    + outfitsHtml
-    + photosHtml
-    + entryHtml
-    + moodHtml;
+    +'</div>';
+
+  document.getElementById('log-day-content').innerHTML = dayHeader + plansHtml + outfitsHtml + photosHtml + entryHtml + moodHtml
+    + '<div id="log-collab-entries"></div>';
+
+  // Load other members' entries if filter is 'all'
+  if(logFilter === 'all' && currentTripId && currentUser){
+    var dateStr = getDayDateStr(dayNum);
+    sb.from('log_entries').select('body, created_by, entry_date').eq('trip_id', currentTripId).eq('entry_date', dateStr).neq('created_by', currentUser.id).then(function(res){
+      var entries = res.data || [];
+      if(!entries.length) return;
+      var el = document.getElementById('log-collab-entries');
+      if(!el) return;
+      var colorMap = {blue:'#4a7ade',lav:'#b8a4ed',peach:'#ffb084',mint:'#a4d4c5',ochre:'#e8b94a',coral:'#ff7b5a'};
+      el.innerHTML = entries.map(function(e){
+        var m = tripMemberMap[e.created_by] || {name:'Traveler',initials:'TR',color:'blue'};
+        var bg = colorMap[m.color] || '#4a7ade';
+        return '<div style="margin-bottom:14px;">'
+          +'<div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">'
+          +'<span style="width:26px;height:26px;border-radius:50%;background:'+bg+';color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;">'+m.initials+'</span>'
+          +'<span style="font-size:11px;font-weight:700;">'+m.name+'\'s journal</span>'
+          +'</div>'
+          +'<div style="background:var(--card2);border-radius:14px;padding:14px;">'
+          +'<p style="font-size:13px;line-height:1.8;color:var(--ink);margin:0;white-space:pre-wrap;">'+(e.body||'')+'</p>'
+          +'</div>'
+          +'</div>';
+      }).join('');
+    });
+  }
 
   document.querySelector('#s-trip .scroll').scrollTop = 0;
 }
@@ -3013,9 +3076,25 @@ function logSave(){
   var txt = ta.value.trim();
   if (tripCache) { tripCache.journal[currentLogDay] = txt; persistDebounced('journal_json'); }
   else localStorage.setItem('wander_journal_'+(currentTripId||'x')+'_'+currentLogDay, txt);
-  // re-render the day to reflect saved entry
+  // Also save to log_entries for collaboration
+  if(currentTripId && currentUser){
+    var dateStr = getDayDateStr(currentLogDay);
+    sb.from('log_entries').upsert({
+      trip_id: currentTripId, created_by: currentUser.id,
+      entry_date: dateStr, body: txt, updated_at: new Date().toISOString()
+    }, {onConflict:'trip_id,created_by,entry_date'}).then(function(){});
+  }
   openLogDay(currentLogDay);
   renderLogOverview();
+}
+
+function setLogFilter(f){
+  logFilter = f;
+  var allBtn = document.getElementById('log-filter-all');
+  var mineBtn = document.getElementById('log-filter-mine');
+  if(allBtn){ allBtn.style.background = f==='all'?'var(--ink)':'none'; allBtn.style.color = f==='all'?'#fffaf0':'var(--muted)'; }
+  if(mineBtn){ mineBtn.style.background = f==='mine'?'var(--ink)':'none'; mineBtn.style.color = f==='mine'?'#fffaf0':'var(--muted)'; }
+  if(currentLogDay) openLogDay(currentLogDay);
 }
 
 function logRate(el, dayNum){
@@ -4163,8 +4242,7 @@ async function loadAdminData(){
     sb.from('invites').select('*').order('created_at', {ascending:false})
   ]);
   var el = document.getElementById('adm-users-list');
-  alert('Admin debug: error='+JSON.stringify(usersRes.error)+' rows='+(usersRes.data?usersRes.data.length:'null'));
-  if(usersRes.error){ el.innerHTML='<div style="color:red;padding:16px;font-size:12px;">Error: '+JSON.stringify(usersRes.error)+'</div>'; return; }
+  if(usersRes.error){ el.innerHTML='<div style="color:red;padding:16px;font-size:12px;">Error loading users: '+usersRes.error.message+'</div>'; return; }
   renderAdminUsers(usersRes.data || []);
   renderAdminInvites(invitesRes.data || []);
 }
