@@ -227,10 +227,10 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div id="home-upcoming-count" style="font-size:24px;font-weight:700;color:#fffaf0;letter-spacing:-1px;">0</div>
         <div style="font-size:11px;color:#7ab0e8;">trips planned</div>
       </div>
-      <div style="background:var(--peach);border-radius:13px;padding:12px;">
-        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--peach-d);margin-bottom:2px;">Total spent</div>
-        <div style="font-size:24px;font-weight:700;color:#3a1a08;letter-spacing:-1px;">$0</div>
-        <div style="font-size:11px;color:#8a4a20;">all trips</div>
+      <div onclick="go('home-tasks')" style="background:var(--lav);border-radius:13px;padding:12px;cursor:pointer;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a86d4;margin-bottom:2px;">Tasks due</div>
+        <div id="home-tasks-count" style="font-size:24px;font-weight:700;color:#1a1a2e;letter-spacing:-1px;">0</div>
+        <div style="font-size:11px;color:#6a56b4;">upcoming</div>
       </div>
     </div>
   </div>
@@ -242,9 +242,59 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   </div>
 
   <div class="bnav">
-    <button class="bni on" onclick="go('home')"><i class="ti ti-map-2"></i><span>Trips</span></button>
-    <button class="bni" onclick="go('home')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
-    <button class="bni" onclick="go('home')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
+    <button class="bni on" id="bnav-trips" onclick="go('home')"><i class="ti ti-map-2"></i><span>Trips</span></button>
+    <button class="bni" id="bnav-tasks" onclick="go('home-tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="bni" id="bnav-expenses" onclick="go('home-expenses')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
+    <button class="bni" onclick="go('profile')"><i class="ti ti-user-circle"></i><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HOME TASKS
+════════════════════════════════════ -->
+<div class="screen" id="s-home-tasks">
+  <div class="sbar"><span id="ht-time">9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:4px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:9px;flex:1;">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fffaf0;">W</div>
+      <span style="font-size:22px;font-weight:700;letter-spacing:-.6px;">Wander</span>
+    </div>
+    <button onclick="go('profile')" style="background:none;border:none;cursor:pointer;"><div class="av u-amy" id="ht-av" style="width:32px;height:32px;font-size:13px;">A</div></button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px;">Upcoming Tasks</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Tasks due today or in the future</div>
+    <div id="home-tasks-list"><div style="text-align:center;padding:40px 16px;color:var(--muted);font-size:13px;">No upcoming tasks</div></div>
+  </div>
+  <div class="bnav">
+    <button class="bni" onclick="go('home')"><i class="ti ti-map-2"></i><span>Trips</span></button>
+    <button class="bni on" onclick="go('home-tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="bni" onclick="go('home-expenses')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
+    <button class="bni" onclick="go('profile')"><i class="ti ti-user-circle"></i><span>Profile</span></button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     SCREEN: HOME EXPENSES
+════════════════════════════════════ -->
+<div class="screen" id="s-home-expenses">
+  <div class="sbar"><span>9:41</span><span>◼◼ 📶</span></div>
+  <div style="padding:4px 16px 12px;flex:0 0 auto;display:flex;align-items:center;gap:10px;">
+    <div style="display:flex;align-items:center;gap:9px;flex:1;">
+      <div style="width:32px;height:32px;border-radius:9px;background:var(--sky);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:#fffaf0;">W</div>
+      <span style="font-size:22px;font-weight:700;letter-spacing:-.6px;">Wander</span>
+    </div>
+    <button onclick="go('profile')" style="background:none;border:none;cursor:pointer;"><div class="av u-amy" style="width:32px;height:32px;font-size:13px;">A</div></button>
+  </div>
+  <div class="scroll" style="padding:0 16px 24px;">
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px;">All Expenses</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">Across all upcoming trips</div>
+    <div id="home-expenses-list"><div style="text-align:center;padding:40px 16px;color:var(--muted);font-size:13px;">No expenses yet</div></div>
+  </div>
+  <div class="bnav">
+    <button class="bni" onclick="go('home')"><i class="ti ti-map-2"></i><span>Trips</span></button>
+    <button class="bni" onclick="go('home-tasks')"><i class="ti ti-checklist"></i><span>Tasks</span></button>
+    <button class="bni on" onclick="go('home-expenses')"><i class="ti ti-receipt"></i><span>Expenses</span></button>
     <button class="bni" onclick="go('profile')"><i class="ti ti-user-circle"></i><span>Profile</span></button>
   </div>
 </div>
@@ -317,14 +367,17 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <span style="font-size:12px;">💸</span>
         <div style="text-align:center;">
           <div id="plans-expected-total" style="font-size:13px;font-weight:800;color:inherit;line-height:1.1;">$0</div>
-          <div style="font-size:8px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Expected</div>
+          <div style="font-size:8px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Spent</div>
         </div>
       </div>
     </div>
     <div id="trip-countdown-wrap" style="background:rgba(255,255,255,.18);border-radius:11px;padding:9px 12px;margin-bottom:9px;display:none;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;opacity:.7;">Departure</div>
-        <div id="trip-days-badge" style="font-size:13px;font-weight:700;"></div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <div id="trip-days-badge" style="font-size:13px;font-weight:700;"></div>
+          <button onclick="openEditDates()" style="background:rgba(255,255,255,.25);border:none;border-radius:7px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;opacity:.85;">Edit dates</button>
+        </div>
       </div>
       <div style="background:rgba(0,0,0,.12);border-radius:99px;height:4px;"><div id="trip-progress-bar" style="height:4px;border-radius:99px;background:rgba(0,0,0,.4);width:0%;"></div></div>
       <div id="trip-date-range" style="font-size:10px;opacity:.7;margin-top:4px;"></div>
@@ -509,18 +562,25 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
       <!-- Summary header -->
       <div style="background:var(--sky);border-radius:18px;padding:16px;margin-bottom:13px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
           <div>
             <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Planned</div>
-            <div id="exp-total-planned" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+            <div id="exp-total-planned" style="font-size:20px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
+            <div id="exp-total-actual" style="font-size:20px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
-            <div id="exp-total-actual" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Budget</div>
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">
+              <span style="font-size:14px;font-weight:700;color:#fffaf0;">$</span>
+              <input id="exp-budget-input" type="number" min="0" step="1" placeholder="0" oninput="saveBudget(this.value)" style="background:rgba(255,255,255,.2);border:none;border-radius:8px;padding:3px 6px;font-size:16px;font-weight:800;color:#fffaf0;width:72px;text-align:right;outline:none;">
+            </div>
           </div>
         </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:99px;height:5px;margin-bottom:6px;">
-          <div id="exp-progress-bar" style="background:#fffaf0;height:5px;border-radius:99px;width:0%;transition:.4s;"></div>
+        <div style="background:rgba(255,255,255,.2);border-radius:99px;height:8px;margin-bottom:6px;">
+          <div id="exp-progress-bar" style="background:#fffaf0;height:8px;border-radius:99px;width:0%;transition:.4s;"></div>
         </div>
         <div id="exp-progress-label" style="font-size:11px;color:var(--skylt);">No expenses yet — add one below</div>
       </div>
@@ -1389,7 +1449,8 @@ function initTripCache(trip) {
     mood:             perDay(trip.mood_json,                'wander_mood_'),
     location:         perDay(trip.location_json,            'wander_loc_'),
     dayNotes:         perDay(trip.day_notes_json,           'wander_notes_'),
-    bookingPlatforms: migrateBkp(trip.booking_platforms_json)
+    bookingPlatforms: migrateBkp(trip.booking_platforms_json),
+    budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0)
   };
   // Persist any migrated data right away
   ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
@@ -1405,7 +1466,8 @@ function persistTripField(field) {
     'mood_json': tripCache.mood,
     'location_json': tripCache.location,
     'day_notes_json': tripCache.dayNotes,
-    'booking_platforms_json': tripCache.bookingPlatforms
+    'booking_platforms_json': tripCache.bookingPlatforms,
+    'budget_json': tripCache.budget
   };
   if (!(field in map)) return;
   var upd = {}; upd[field] = map[field];
@@ -1552,6 +1614,8 @@ function go(name, skipHistory){
   if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
   if(name === 'profile') renderProfileTrips();
   if(name === 'admin') loadAdminData();
+  if(name === 'home-tasks') renderHomeTasks();
+  if(name === 'home-expenses') renderHomeExpenses();
   // Show share button only on trip screen when user is the owner
   var shareBtn = document.getElementById('trip-share-btn');
   if(shareBtn){
@@ -2501,16 +2565,28 @@ function renderExpenses() {
   var pl = document.getElementById('exp-progress-label');
   if(tp) tp.textContent = '$'+planned.toFixed(2);
   var pet = document.getElementById('plans-expected-total');
-  if(pet) pet.textContent = '$'+planned.toFixed(2);
+  if(pet) pet.textContent = '$'+(actual>0?actual:planned).toFixed(2);
   if(ta) ta.textContent = '$'+actual.toFixed(2);
+
+  // Budget progress bar
+  var budget = loadBudget();
+  var budgetInput = document.getElementById('exp-budget-input');
+  if(budgetInput && budgetInput.value === '' && budget > 0) budgetInput.value = budget;
+  var trackAgainst = budget > 0 ? budget : planned;
+  var trackAmount  = actual > 0 ? actual : planned;
   if(pb){
-    var pct = planned > 0 ? Math.min(100, (actual/planned)*100) : (actual>0?100:0);
+    var pct = trackAgainst > 0 ? Math.min(100, (trackAmount/trackAgainst)*100) : (trackAmount>0?100:0);
     pb.style.width = pct+'%';
-    pb.style.background = pct > 100 ? '#ff8080' : '#fffaf0';
+    pb.style.background = pct >= 90 ? '#ff8080' : '#fffaf0';
   }
   if(pl){
     if(items.length === 0) pl.textContent = 'No expenses yet — add one below';
-    else if(planned === 0 && actual > 0) pl.textContent = '$'+actual.toFixed(2)+' spent';
+    else if(budget > 0){
+      var rem = budget - actual;
+      pl.textContent = rem >= 0
+        ? '$'+actual.toFixed(2)+' spent of $'+budget.toFixed(2)+' budget · $'+rem.toFixed(2)+' remaining'
+        : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(rem)).toFixed(2)+' over budget';
+    } else if(planned === 0 && actual > 0) pl.textContent = '$'+actual.toFixed(2)+' spent';
     else if(actual === 0) pl.textContent = '$'+planned.toFixed(2)+' planned · nothing confirmed yet';
     else {
       var diff = planned - actual;
@@ -3841,6 +3917,168 @@ function dismissAlert(){
   if(el) el.style.display = 'none';
 }
 
+// ─── HOME TASKS + EXPENSES SCREENS ───────────────────────────────────────────
+
+async function renderHomeTasks(){
+  var el = document.getElementById('home-tasks-list');
+  var countEl = document.getElementById('home-tasks-count');
+  if(!el) return;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var allTasks = [];
+  // Gather tasks from all trips
+  for(var i=0; i<userTrips.length; i++){
+    var t = userTrips[i];
+    // Only include upcoming trips (end_date >= today or no end_date)
+    if(t.end_date && new Date(t.end_date+'T00:00:00') < today) continue;
+    var tasks = [];
+    if(t.tasks_json && t.tasks_json.length) tasks = t.tasks_json;
+    else { try{ tasks = JSON.parse(localStorage.getItem('wander_tasks_'+t.id)||'[]'); }catch(e){} }
+    tasks.forEach(function(tk){ if(!tk.done) allTasks.push({task:tk, trip:t}); });
+  }
+  // Filter: not done, due today or future (or no due date)
+  var upcoming = allTasks.filter(function(x){
+    if(!x.task.due) return true;
+    return new Date(x.task.due+'T00:00:00') >= today;
+  });
+  // Sort by due date
+  upcoming.sort(function(a,b){
+    if(!a.task.due && !b.task.due) return 0;
+    if(!a.task.due) return 1;
+    if(!b.task.due) return -1;
+    return a.task.due.localeCompare(b.task.due);
+  });
+  if(countEl) countEl.textContent = upcoming.length;
+  if(!upcoming.length){ el.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--muted);font-size:13px;">No upcoming tasks 🎉</div>'; return; }
+  el.innerHTML = upcoming.map(function(x){
+    var dueStr = x.task.due ? new Date(x.task.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : 'No due date';
+    var overdue = x.task.due && new Date(x.task.due+'T00:00:00') < today;
+    return '<div onclick="openDbTrip(\''+x.trip.id+'\')" style="background:var(--card2);border-radius:13px;padding:12px 14px;margin-bottom:8px;cursor:pointer;">'
+      +'<div style="font-size:12px;font-weight:700;">'+x.task.text+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-top:4px;">'
+      +'<span style="font-size:10px;color:'+(overdue?'#e57373':'var(--muted)')+';">'+(overdue?'⚠️ Overdue · ':'')+dueStr+'</span>'
+      +'<span style="font-size:10px;color:var(--muted);">· '+x.trip.name+'</span>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+
+async function renderHomeExpenses(){
+  var el = document.getElementById('home-expenses-list');
+  if(!el) return;
+  var today = new Date(); today.setHours(0,0,0,0);
+  var allExpenses = [];
+  for(var i=0; i<userTrips.length; i++){
+    var t = userTrips[i];
+    if(t.end_date && new Date(t.end_date+'T00:00:00') < today) continue;
+    var exps = [];
+    if(t.expenses_json && t.expenses_json.length) exps = t.expenses_json;
+    else { try{ exps = JSON.parse(localStorage.getItem('wander_expenses_'+t.id)||'[]'); }catch(e){} }
+    exps.forEach(function(e){ allExpenses.push({exp:e, trip:t}); });
+  }
+  if(!allExpenses.length){ el.innerHTML='<div style="text-align:center;padding:40px 16px;color:var(--muted);font-size:13px;">No expenses yet</div>'; return; }
+  var totalPlanned = allExpenses.filter(function(x){ return x.exp.type==='planned'; }).reduce(function(s,x){ return s+x.exp.amount; },0);
+  var totalActual  = allExpenses.filter(function(x){ return x.exp.type==='actual';  }).reduce(function(s,x){ return s+x.exp.amount; },0);
+  var summaryHtml = '<div style="background:var(--sky);border-radius:14px;padding:14px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">'
+    +'<div><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--skylt);">Planned</div><div style="font-size:22px;font-weight:800;color:#fffaf0;">$'+totalPlanned.toFixed(2)+'</div></div>'
+    +'<div style="text-align:right;"><div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--skylt);">Actual spent</div><div style="font-size:22px;font-weight:800;color:#fffaf0;">$'+totalActual.toFixed(2)+'</div></div>'
+    +'</div>';
+  // Group by trip
+  var byTrip = {};
+  allExpenses.forEach(function(x){ if(!byTrip[x.trip.id]) byTrip[x.trip.id]={trip:x.trip,items:[]}; byTrip[x.trip.id].items.push(x.exp); });
+  var listHtml = Object.values(byTrip).map(function(g){
+    var tot = g.items.reduce(function(s,e){ return s+e.amount; },0);
+    var rows = g.items.map(function(e){
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--card3);">'
+        +'<div style="font-size:12px;font-weight:600;">'+e.desc+'</div>'
+        +'<div style="font-size:12px;font-weight:700;color:'+(e.type==='actual'?'#1a8a4a':'#7a5af8')+';">$'+e.amount.toFixed(2)+'</div>'
+      +'</div>';
+    }).join('');
+    return '<div onclick="openDbTrip(\''+g.trip.id+'\')" style="background:var(--card2);border-radius:13px;padding:12px 14px;margin-bottom:9px;cursor:pointer;">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+      +'<div style="font-size:13px;font-weight:700;">'+(g.trip.cover_emoji||'✈️')+' '+g.trip.name+'</div>'
+      +'<div style="font-size:13px;font-weight:700;">$'+tot.toFixed(2)+'</div>'
+      +'</div>'+rows
+    +'</div>';
+  }).join('');
+  el.innerHTML = summaryHtml + listHtml;
+}
+
+// ─── EDIT TRIP DATES ─────────────────────────────────────────────────────────
+
+function openEditDates(){
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  if(!trip) return;
+  document.getElementById('ed-start').value = trip.start_date||'';
+  document.getElementById('ed-end').value = trip.end_date||'';
+  document.getElementById('edit-dates-modal').style.display='flex';
+}
+function closeEditDates(){
+  document.getElementById('edit-dates-modal').style.display='none';
+}
+async function saveEditDates(){
+  var newStart = document.getElementById('ed-start').value;
+  var newEnd   = document.getElementById('ed-end').value;
+  if(!newStart||!newEnd){ alert('Please set both start and end dates.'); return; }
+  if(newEnd < newStart){ alert('End date must be after start date.'); return; }
+  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
+  var oldStart = trip.start_date;
+  // Persist to Supabase
+  var {error} = await sb.from('trips').update({start_date:newStart, end_date:newEnd}).eq('id', currentTripId);
+  if(error){ alert('Error: '+error.message); return; }
+  // If the start date changed, remap all excursions/flights/hotels by day offset
+  if(oldStart && oldStart !== newStart){
+    var oldStartD = new Date(oldStart+'T00:00:00');
+    var newStartD = new Date(newStart+'T00:00:00');
+    var diffDays = Math.round((newStartD - oldStartD)/86400000);
+    if(diffDays !== 0){
+      // Shift excursion dates
+      var {data:excs} = await sb.from('excursions').select('id,excursion_date').eq('trip_id',currentTripId);
+      for(var i=0; excs&&i<excs.length; i++){
+        if(excs[i].excursion_date){
+          var d = new Date(excs[i].excursion_date+'T00:00:00');
+          d.setDate(d.getDate()+diffDays);
+          await sb.from('excursions').update({excursion_date:d.toISOString().slice(0,10)}).eq('id',excs[i].id);
+        }
+      }
+      // Shift flight dates
+      var {data:fls} = await sb.from('flights').select('id,departure_date,arrival_date').eq('trip_id',currentTripId);
+      for(var j=0; fls&&j<fls.length; j++){
+        var upd = {};
+        if(fls[j].departure_date){ var d2=new Date(fls[j].departure_date+'T00:00:00'); d2.setDate(d2.getDate()+diffDays); upd.departure_date=d2.toISOString().slice(0,10); }
+        if(fls[j].arrival_date){ var d3=new Date(fls[j].arrival_date+'T00:00:00'); d3.setDate(d3.getDate()+diffDays); upd.arrival_date=d3.toISOString().slice(0,10); }
+        if(Object.keys(upd).length) await sb.from('flights').update(upd).eq('id',fls[j].id);
+      }
+      // Shift hotel dates
+      var {data:hts} = await sb.from('hotels').select('id,check_in,check_out').eq('trip_id',currentTripId);
+      for(var k=0; hts&&k<hts.length; k++){
+        var upd2 = {};
+        if(hts[k].check_in){ var d4=new Date(hts[k].check_in+'T00:00:00'); d4.setDate(d4.getDate()+diffDays); upd2.check_in=d4.toISOString().slice(0,10); }
+        if(hts[k].check_out){ var d5=new Date(hts[k].check_out+'T00:00:00'); d5.setDate(d5.getDate()+diffDays); upd2.check_out=d5.toISOString().slice(0,10); }
+        if(Object.keys(upd2).length) await sb.from('hotels').update(upd2).eq('id',hts[k].id);
+      }
+    }
+  }
+  // Reload trip
+  trip.start_date = newStart; trip.end_date = newEnd;
+  closeEditDates();
+  openDbTrip(currentTripId);
+}
+
+// ─── BUDGET ──────────────────────────────────────────────────────────────────
+
+function saveBudget(val){
+  if(!currentTripId) return;
+  var budget = parseFloat(val)||0;
+  if(tripCache){ tripCache.budget = budget; persistDebounced('budget_json',1000); }
+  else localStorage.setItem('wander_budget_'+currentTripId, budget);
+  renderExpenses();
+}
+
+function loadBudget(){
+  if(tripCache && tripCache.budget != null) return tripCache.budget;
+  return parseFloat(localStorage.getItem('wander_budget_'+currentTripId))||0;
+}
+
 // ─── ADMIN DASHBOARD ────────────────────────────────────────────────────────
 
 function admTab(tab){
@@ -4047,6 +4285,22 @@ function updateTime(){
 updateTime();
 setInterval(updateTime, 30000);
 </script>
+<!-- ═══════════ EDIT DATES MODAL ═══════════ -->
+<div id="edit-dates-modal" style="display:none;position:absolute;inset:0;z-index:400;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+  <div style="background:var(--canvas);border-radius:22px;padding:26px 22px 22px;margin:24px;max-width:340px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.18);">
+    <div style="font-size:18px;font-weight:800;margin-bottom:4px;">Change trip dates</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:18px;">Activities stay on their relative day — Day 1 always maps to your new start date.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
+      <div><div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">Start date</div><input id="ed-start" type="date" class="inp"></div>
+      <div><div style="font-size:11px;font-weight:600;color:#9a9a9a;margin-bottom:5px;">End date</div><input id="ed-end" type="date" class="inp"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeEditDates()" style="flex:1;padding:13px;border-radius:13px;border:1.5px solid var(--card2);background:var(--card2);font-size:14px;font-weight:600;cursor:pointer;color:var(--ink);">Cancel</button>
+      <button onclick="saveEditDates()" style="flex:1;padding:13px;border-radius:13px;border:none;background:var(--blue);font-size:14px;font-weight:700;cursor:pointer;color:#fff;">Update</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ SHARE TRIP SHEET ═══════════ -->
 <div id="share-trip-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeShareTrip()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
