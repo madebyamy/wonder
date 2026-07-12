@@ -4163,8 +4163,9 @@ async function loadAdminData(){
     sb.from('invites').select('*').order('created_at', {ascending:false})
   ]);
   var el = document.getElementById('adm-users-list');
-  if(usersRes.error){ el.innerHTML='<div style="color:red;padding:16px;font-size:12px;">Error loading users: '+JSON.stringify(usersRes.error)+'</div>'; }
-  else renderAdminUsers(usersRes.data || []);
+  if(usersRes.error){ el.innerHTML='<div style="color:red;padding:16px;font-size:12px;">Error: '+JSON.stringify(usersRes.error)+'</div>'; return; }
+  el.innerHTML='<div style="padding:8px;font-size:11px;color:var(--muted);">Debug: data='+(usersRes.data===null?'null':usersRes.data.length+' rows')+'</div>';
+  renderAdminUsers(usersRes.data || []);
   renderAdminInvites(invitesRes.data || []);
 }
 
