@@ -1188,6 +1188,11 @@ async function afterLogin(user){
     prof.email = user.email;
   }
   currentProfile = prof || {id:user.id, name:user.email.split('@')[0], avatar_color:'blue'};
+  // Merge is_admin from JWT metadata as fallback (in case RLS blocks profile read)
+  if(!currentProfile.is_admin){
+    var meta = (user.user_metadata || {});
+    if(meta.is_admin) currentProfile.is_admin = true;
+  }
   // Block suspended accounts
   if(currentProfile.account_status === 'suspended'){
     await sb.auth.signOut();
