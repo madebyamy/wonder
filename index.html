@@ -366,8 +366,8 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.25);border-radius:20px;padding:5px 11px;cursor:pointer;flex:0 0 auto;">
         <span style="font-size:12px;">💸</span>
         <div style="text-align:center;">
-          <div id="plans-expected-total" style="font-size:13px;font-weight:800;color:inherit;line-height:1.1;">$0</div>
-          <div style="font-size:8px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Spent</div>
+          <div id="plans-expected-total" style="font-size:11px;font-weight:800;color:inherit;line-height:1.1;">$0</div>
+          <div id="plans-expected-label" style="font-size:8px;font-weight:600;opacity:.75;text-transform:uppercase;letter-spacing:.5px;">Expenses</div>
         </div>
       </div>
     </div>
@@ -562,27 +562,33 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
       <!-- Summary header -->
       <div style="background:var(--sky);border-radius:18px;padding:16px;margin-bottom:13px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        <!-- Planned + Actual row -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
           <div>
             <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Planned</div>
-            <div id="exp-total-planned" style="font-size:20px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
-          </div>
-          <div style="text-align:center;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
-            <div id="exp-total-actual" style="font-size:20px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
+            <div id="exp-total-planned" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
           </div>
           <div style="text-align:right;">
-            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Budget</div>
-            <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;">
-              <span style="font-size:14px;font-weight:700;color:#fffaf0;">$</span>
-              <input id="exp-budget-input" type="number" min="0" step="1" placeholder="0" oninput="saveBudget(this.value)" style="background:rgba(255,255,255,.2);border:none;border-radius:8px;padding:3px 6px;font-size:16px;font-weight:800;color:#fffaf0;width:72px;text-align:right;outline:none;">
-            </div>
+            <div style="font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--skylt);margin-bottom:3px;">Actual spent</div>
+            <div id="exp-total-actual" style="font-size:24px;font-weight:800;color:#fffaf0;letter-spacing:-1px;">$0</div>
           </div>
         </div>
-        <div style="background:rgba(255,255,255,.2);border-radius:99px;height:8px;margin-bottom:6px;">
-          <div id="exp-progress-bar" style="background:#fffaf0;height:8px;border-radius:99px;width:0%;transition:.4s;"></div>
+        <!-- Budget tracker -->
+        <div style="background:rgba(0,0,0,.15);border-radius:12px;padding:10px 12px;margin-bottom:0;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;">
+            <div style="font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--skylt);">Budget tracker</div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <span style="font-size:12px;font-weight:700;color:#fffaf0;">$</span>
+              <input id="exp-budget-input" type="number" min="0" step="1" placeholder="Set budget" oninput="saveBudget(this.value)" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:7px;padding:3px 7px;font-size:13px;font-weight:700;color:#fffaf0;width:90px;text-align:right;outline:none;">
+            </div>
+          </div>
+          <!-- Stacked bar: planned (purple) + actual (green) vs budget -->
+          <div style="background:rgba(255,255,255,.15);border-radius:99px;height:10px;margin-bottom:6px;overflow:hidden;position:relative;">
+            <div id="exp-bar-planned" style="position:absolute;left:0;top:0;height:10px;border-radius:99px;background:rgba(180,150,255,.7);transition:.4s;width:0%;"></div>
+            <div id="exp-bar-actual" style="position:absolute;left:0;top:0;height:10px;border-radius:99px;background:#fffaf0;transition:.4s;width:0%;"></div>
+          </div>
+          <div id="exp-progress-label" style="font-size:11px;color:var(--skylt);">Set a budget above to track spending</div>
         </div>
-        <div id="exp-progress-label" style="font-size:11px;color:var(--skylt);">No expenses yet — add one below</div>
       </div>
 
       <!-- Add expense form -->
@@ -2564,34 +2570,41 @@ function renderExpenses() {
   var pb = document.getElementById('exp-progress-bar');
   var pl = document.getElementById('exp-progress-label');
   if(tp) tp.textContent = '$'+planned.toFixed(2);
-  var pet = document.getElementById('plans-expected-total');
-  if(pet) pet.textContent = '$'+(actual>0?actual:planned).toFixed(2);
   if(ta) ta.textContent = '$'+actual.toFixed(2);
 
-  // Budget progress bar
+  // Trip header pill: show planned + actual
+  var pet = document.getElementById('plans-expected-total');
+  if(pet){
+    if(actual > 0 && planned > 0) pet.textContent = '$'+actual.toFixed(0)+' / $'+planned.toFixed(0);
+    else if(actual > 0) pet.textContent = '$'+actual.toFixed(2);
+    else pet.textContent = '$'+planned.toFixed(2);
+  }
+  var petLabel = document.getElementById('plans-expected-label');
+  if(petLabel) petLabel.textContent = actual > 0 ? 'Spent / Plan' : (planned > 0 ? 'Planned' : 'Expenses');
+
+  // Budget tracker bars
   var budget = loadBudget();
   var budgetInput = document.getElementById('exp-budget-input');
-  if(budgetInput && budgetInput.value === '' && budget > 0) budgetInput.value = budget;
-  var trackAgainst = budget > 0 ? budget : planned;
-  var trackAmount  = actual > 0 ? actual : planned;
-  if(pb){
-    var pct = trackAgainst > 0 ? Math.min(100, (trackAmount/trackAgainst)*100) : (trackAmount>0?100:0);
-    pb.style.width = pct+'%';
-    pb.style.background = pct >= 90 ? '#ff8080' : '#fffaf0';
-  }
+  if(budgetInput && (budgetInput.value === '' || budgetInput.value === '0') && budget > 0) budgetInput.value = budget;
+  var barPlanned = document.getElementById('exp-bar-planned');
+  var barActual  = document.getElementById('exp-bar-actual');
+  var baseline   = budget > 0 ? budget : Math.max(planned, actual, 1);
+  if(barPlanned) barPlanned.style.width = Math.min(100,(planned/baseline)*100)+'%';
+  if(barActual)  barActual.style.width  = Math.min(100,(actual/baseline)*100)+'%';
   if(pl){
     if(items.length === 0) pl.textContent = 'No expenses yet — add one below';
     else if(budget > 0){
       var rem = budget - actual;
+      var planRem = budget - planned;
       pl.textContent = rem >= 0
-        ? '$'+actual.toFixed(2)+' spent of $'+budget.toFixed(2)+' budget · $'+rem.toFixed(2)+' remaining'
+        ? '$'+actual.toFixed(2)+' spent · $'+planned.toFixed(2)+' planned · $'+rem.toFixed(2)+' of $'+budget.toFixed(2)+' budget left'
         : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(rem)).toFixed(2)+' over budget';
     } else if(planned === 0 && actual > 0) pl.textContent = '$'+actual.toFixed(2)+' spent';
     else if(actual === 0) pl.textContent = '$'+planned.toFixed(2)+' planned · nothing confirmed yet';
     else {
       var diff = planned - actual;
       pl.textContent = diff >= 0
-        ? '$'+actual.toFixed(2)+' of $'+planned.toFixed(2)+' spent · $'+diff.toFixed(2)+' under'
+        ? '$'+actual.toFixed(2)+' spent of $'+planned.toFixed(2)+' planned · $'+diff.toFixed(2)+' under'
         : '$'+actual.toFixed(2)+' spent · $'+(Math.abs(diff)).toFixed(2)+' over planned';
     }
   }
