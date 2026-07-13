@@ -1695,17 +1695,35 @@ function saveDayLocation(dayNum) {
   else localStorage.setItem('wander_loc_'+(currentTripId||'x')+'_'+dayNum, val);
 }
 
-// ── Day notes (inline per-day) ────────────────────────────────────────────────
+// ── Day notes (shared between trip members via trip_day_notes table) ──────────
 function saveDayNotes(dayNum) {
   var ta = document.getElementById('plan-notes-'+dayNum);
-  if (!ta) return;
-  var val = ta.value.trim();
-  if (tripCache) { tripCache.dayNotes[dayNum] = val; persistDebounced('day_notes_json'); }
-  else localStorage.setItem('wander_notes_'+(currentTripId||'x')+'_'+dayNum, val);
+  if (!ta || !currentTripId) return;
+  var val = ta.value;
+  // Update local cache for instant feedback
+  if (tripCache) tripCache.dayNotes[dayNum] = val;
+  // Save to shared table so all members see it
+  sb.from('trip_day_notes').upsert({
+    trip_id: currentTripId, day_num: dayNum,
+    content: val, updated_at: new Date().toISOString(),
+    updated_by: currentUser ? currentUser.id : null
+  }, {onConflict: 'trip_id,day_num'}).then(function(r){
+    if(r && r.error) console.warn('Notes sync error:', r.error.message);
+  });
 }
-function loadDayNotes(dayNum) {
+
+async function loadDayNotes(dayNum) {
   var ta = document.getElementById('plan-notes-'+dayNum);
-  if (ta) ta.value = (tripCache ? tripCache.dayNotes[dayNum] : localStorage.getItem('wander_notes_'+(currentTripId||'x')+'_'+dayNum)) || '';
+  if (!ta || !currentTripId) return;
+  // Try shared table first
+  var {data} = await sb.from('trip_day_notes').select('content').eq('trip_id', currentTripId).eq('day_num', dayNum).single();
+  if (data && data.content != null) {
+    ta.value = data.content;
+    if (tripCache) tripCache.dayNotes[dayNum] = data.content;
+  } else {
+    // Fall back to cached/local value
+    ta.value = (tripCache ? tripCache.dayNotes[dayNum] : localStorage.getItem('wander_notes_'+(currentTripId||'x')+'_'+dayNum)) || '';
+  }
 }
 
 // ── Set current day without scrolling (for action buttons) ───────────────────
