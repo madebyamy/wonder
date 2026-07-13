@@ -404,6 +404,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <button class="tbtn" onclick="tab(this,'log')"><i class="ti ti-notebook"></i> Log</button>
     <button class="tbtn" onclick="tab(this,'tasks')"><i class="ti ti-checklist"></i> To-do</button>
     <button class="tbtn" onclick="tab(this,'expenses')"><i class="ti ti-receipt"></i> Expenses</button>
+    <button class="tbtn" onclick="tab(this,'map')"><i class="ti ti-map-pin"></i> Map</button>
   </div>
 
   <div class="scroll">
@@ -661,6 +662,13 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
           <div style="font-size:13px;font-weight:700;margin-bottom:4px;">No expenses yet</div>
           <div style="font-size:11px;color:var(--muted);">Add expenses above or enter costs on activity cards.</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ─── MAP ─── -->
+    <div class="tp" id="tp-map">
+      <div style="border-radius:18px;overflow:hidden;height:calc(100vh - 220px);min-height:400px;">
+        <iframe src="https://www.google.com/maps/d/embed?mid=1eYEWLW7q-CnnoXVURLaPam3rlEm5Vuk" width="100%" height="100%" style="border:0;display:block;" allowfullscreen loading="lazy"></iframe>
       </div>
     </div>
 
