@@ -2188,6 +2188,7 @@ function openEditSheet(type, id) {
     document.querySelector('#add-car-sheet .btn-d').textContent = 'Save changes →';
     document.getElementById('add-car-sheet').style.display = 'flex';
   } else if (type === 'excursions') {
+    document.getElementById('e-date').value = d.excursion_date || '';
     document.getElementById('e-title').value = d.title || '';
     document.getElementById('e-type').value = d.activity_type || '';
     document.getElementById('e-time').value = d.start_time ? d.start_time.slice(0,5) : '';
