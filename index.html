@@ -667,8 +667,21 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 
     <!-- ─── MAP ─── -->
     <div class="tp" id="tp-map">
-      <div style="border-radius:18px;overflow:hidden;height:calc(100vh - 220px);min-height:400px;">
-        <iframe src="https://www.google.com/maps/d/embed?mid=1eYEWLW7q-CnnoXVURLaPam3rlEm5Vuk" width="100%" height="100%" style="border:0;display:block;" allowfullscreen loading="lazy"></iframe>
+      <div id="map-embed-wrap" style="border-radius:18px;overflow:hidden;height:calc(100vh - 260px);min-height:360px;display:none;">
+        <iframe id="map-iframe" src="" width="100%" height="100%" style="border:0;display:block;" allowfullscreen loading="lazy"></iframe>
+      </div>
+      <div id="map-empty" style="display:none;text-align:center;padding:40px 16px;">
+        <div style="font-size:40px;margin-bottom:12px;">🗺️</div>
+        <div style="font-size:15px;font-weight:700;margin-bottom:6px;">No map added yet</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:20px;">Paste a Google My Maps share link to embed your custom map.</div>
+      </div>
+      <div id="map-url-section" style="margin-top:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;" id="map-url-label">Map link</div>
+        <div style="display:flex;gap:8px;">
+          <input id="map-url-input" class="inp" type="url" placeholder="Paste Google My Maps link…" style="flex:1;">
+          <button onclick="saveMapUrl()" style="padding:10px 14px;border-radius:13px;border:none;background:var(--blue);color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Save</button>
+        </div>
+        <div style="font-size:10px;color:var(--muted);margin-top:5px;">Works with Google My Maps share or edit links</div>
       </div>
     </div>
 
@@ -1482,7 +1495,8 @@ function initTripCache(trip) {
     location:         perDay(trip.location_json,            'wander_loc_'),
     dayNotes:         perDay(trip.day_notes_json,           'wander_notes_'),
     bookingPlatforms: migrateBkp(trip.booking_platforms_json),
-    budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0)
+    budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
+    mapUrl: trip.map_url || ''
   };
   // Persist any migrated data right away
   ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
@@ -1792,6 +1806,7 @@ function tab(btn,name){
   if(name==='tasks'){ renderTaskList(); }
   if(name==='expenses'){ renderExpenses(); }
   if(name==='plans'){ renderExpenses(); }
+  if(name==='map'){ renderMapTab(); }
   localStorage.setItem('wander_nav_tab', name);
 }
 
@@ -3094,6 +3109,48 @@ function logSave(){
   }
   openLogDay(currentLogDay);
   renderLogOverview();
+}
+
+function toMapEmbedUrl(url){
+  url = url.trim();
+  // Google My Maps: convert edit/viewer link to embed
+  var midMatch = url.match(/[?&]mid=([^&]+)/);
+  if(midMatch) return 'https://www.google.com/maps/d/embed?mid='+midMatch[1];
+  // Regular Google Maps share link → embed
+  if(url.includes('google.com/maps')) return url.replace('/maps/','/maps/embed/v1/').replace('https://www.google.com/maps/embed/v1/','https://www.google.com/maps/embed?pb=').replace('place/','');
+  return url;
+}
+
+function renderMapTab(){
+  var url = tripCache ? tripCache.mapUrl : '';
+  var embedWrap = document.getElementById('map-embed-wrap');
+  var emptyEl = document.getElementById('map-empty');
+  var inputEl = document.getElementById('map-url-input');
+  var labelEl = document.getElementById('map-url-label');
+  if(url){
+    var embedUrl = toMapEmbedUrl(url);
+    document.getElementById('map-iframe').src = embedUrl;
+    if(embedWrap) embedWrap.style.display='';
+    if(emptyEl) emptyEl.style.display='none';
+    if(inputEl) inputEl.value = url;
+    if(labelEl) labelEl.textContent = 'Change map link';
+  } else {
+    if(embedWrap) embedWrap.style.display='none';
+    if(emptyEl) emptyEl.style.display='';
+    if(inputEl) inputEl.value='';
+    if(labelEl) labelEl.textContent = 'Map link';
+  }
+}
+
+async function saveMapUrl(){
+  var url = document.getElementById('map-url-input').value.trim();
+  if(!url){ alert('Please paste a map link first.'); return; }
+  if(tripCache) tripCache.mapUrl = url;
+  await sb.from('trips').update({map_url: url}).eq('id', currentTripId);
+  // Update local userTrips entry
+  var t = userTrips.find(function(t){ return t.id===currentTripId; });
+  if(t) t.map_url = url;
+  renderMapTab();
 }
 
 function setLogFilter(f){
