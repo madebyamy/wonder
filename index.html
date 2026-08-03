@@ -362,6 +362,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div id="trip-title" style="font-size:19px;font-weight:700;letter-spacing:-.4px;">Trip</div>
         <div id="trip-subtitle" style="font-size:11px;opacity:.7;"></div>
       </div>
+      <button onclick="openClockConfig()" style="background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Clocks">🕐</button>
       <button id="trip-share-btn" onclick="openShareTrip()" style="display:none;background:rgba(255,255,255,.25);border:none;border-radius:20px;padding:6px 10px;cursor:pointer;font-size:16px;" title="Share trip">👥</button>
       <div onclick="tabByName('expenses')" style="display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.25);border-radius:20px;padding:5px 11px;cursor:pointer;flex:0 0 auto;">
         <span style="font-size:12px;">💸</span>
@@ -396,6 +397,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;opacity:.7;">Stops</div>
       </div>
     </div>
+  </div>
+
+  <!-- ── World Clock Bar ── -->
+  <div id="trip-clock-bar" style="display:none;padding:7px 16px;overflow-x:auto;scrollbar-width:none;flex:0 0 auto;">
+    <div style="display:flex;gap:0;align-items:stretch;min-width:max-content;" id="trip-clock-inner"></div>
   </div>
 
   <div class="tabbar">
@@ -1185,6 +1191,53 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
   </div>
 </div>
 
+<!-- Clock Config Sheet -->
+<div id="clock-config-sheet" style="display:none;position:absolute;inset:0;z-index:310;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeClockConfig()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:16px;font-weight:700;">🕐 Destination Clocks</div>
+      <button onclick="closeClockConfig()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px;">Phoenix, AZ is always shown as your home time. Add your destination cities below.</div>
+    <div id="clock-config-list" style="margin-bottom:16px;"></div>
+    <div style="background:var(--card2);border-radius:14px;padding:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">Add a city</div>
+      <input id="clock-city-input" class="inp" placeholder="e.g. Munich, Milan, Tokyo…" style="margin-bottom:8px;" onkeydown="if(event.key==='Enter')addClockEntry()">
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">If the city isn't recognized automatically, pick a timezone:</div>
+      <select id="clock-tz-select" class="inp" style="background:var(--card3);margin-bottom:10px;">
+        <option value="Europe/Berlin">Central Europe (Munich, Berlin, Milan, Rome, Vienna)</option>
+        <option value="Europe/London">London / UK</option>
+        <option value="Europe/Paris">Paris / France</option>
+        <option value="America/New_York">Eastern US (New York, Miami)</option>
+        <option value="America/Chicago">Central US (Chicago, Dallas)</option>
+        <option value="America/Denver">Mountain US (Denver)</option>
+        <option value="America/Los_Angeles">Pacific US (LA, Seattle, Las Vegas)</option>
+        <option value="America/Phoenix">Arizona / Phoenix</option>
+        <option value="America/Cancun">Cancun</option>
+        <option value="America/Mexico_City">Mexico City</option>
+        <option value="Pacific/Honolulu">Hawaii</option>
+        <option value="America/Toronto">Eastern Canada (Toronto)</option>
+        <option value="America/Vancouver">Western Canada (Vancouver)</option>
+        <option value="Europe/Moscow">Moscow</option>
+        <option value="Asia/Dubai">Dubai / UAE</option>
+        <option value="Asia/Kolkata">India (Mumbai, Delhi)</option>
+        <option value="Asia/Bangkok">Bangkok / Thailand</option>
+        <option value="Asia/Singapore">Singapore</option>
+        <option value="Asia/Shanghai">China (Beijing, Shanghai)</option>
+        <option value="Asia/Tokyo">Japan (Tokyo, Osaka)</option>
+        <option value="Asia/Seoul">Seoul / South Korea</option>
+        <option value="Australia/Sydney">Sydney / Melbourne</option>
+        <option value="Pacific/Auckland">New Zealand (Auckland)</option>
+        <option value="Africa/Cairo">Cairo</option>
+        <option value="Africa/Johannesburg">Johannesburg / Cape Town</option>
+        <option value="America/Sao_Paulo">São Paulo / Rio</option>
+        <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+      </select>
+      <button onclick="addClockEntry()" class="btn-d" style="width:100%;padding:11px;font-size:13px;font-weight:700;">Add Clock</button>
+    </div>
+  </div>
+</div>
+
 <div id="alert-sheet" style="display:none;position:absolute;inset:0;z-index:200;background:rgba(0,0,0,.4);" onclick="if(event.target===this)dismissAlert()">
   <div style="position:absolute;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 32px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -1507,7 +1560,8 @@ function initTripCache(trip) {
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
     mapUrl: trip.map_url || '',
     wardrobe: Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [],
-    dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json)) ? trip.day_outfits_json : {}
+    dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json)) ? trip.day_outfits_json : {},
+    clocks: Array.isArray(trip.clocks_json) ? trip.clocks_json : []
   };
   // Sync wardrobe counter so new items don't collide
   if(tripCache.wardrobe.length){
@@ -1530,7 +1584,8 @@ function persistTripField(field) {
     'booking_platforms_json': tripCache.bookingPlatforms,
     'budget_json': tripCache.budget,
     'wardrobe_json': tripCache.wardrobe,
-    'day_outfits_json': tripCache.dayOutfits
+    'day_outfits_json': tripCache.dayOutfits,
+    'clocks_json': tripCache.clocks
   };
   if (!(field in map)) return;
   var upd = {}; upd[field] = map[field];
@@ -1551,6 +1606,7 @@ function openDbTrip(id){
   currentTripStartDate = trip.start_date || null;
   initTripCache(trip);
   loadTripMembers();
+  startClock();
 
   // ── Header ──────────────────────────────────────────────────────────────
   var hdr = document.getElementById('trip-header');
@@ -1676,6 +1732,7 @@ function go(name, skipHistory){
   var el = document.getElementById('s-'+name);
   if(el) el.classList.add('active');
   if(!skipHistory) history.pushState({screen:name}, '', '#'+name);
+  if(name !== 'trip' && _clockInterval){ clearInterval(_clockInterval); _clockInterval = null; }
   if(name === 'profile') renderProfileTrips();
   if(name === 'admin') loadAdminData();
   if(name === 'home-tasks') renderHomeTasks();
@@ -3157,6 +3214,163 @@ function toMapEmbedUrl(url){
   // Regular Google Maps share link → embed
   if(url.includes('google.com/maps')) return url.replace('/maps/','/maps/embed/v1/').replace('https://www.google.com/maps/embed/v1/','https://www.google.com/maps/embed?pb=').replace('place/','');
   return url;
+}
+
+// ── World Clock ───────────────────────────────────────────────────────────────
+var _clockInterval = null;
+
+// Common cities → IANA timezone. Add more as needed.
+var CITY_TZ = {
+  'Phoenix':'America/Phoenix','Tucson':'America/Phoenix','Scottsdale':'America/Phoenix',
+  'Arizona':'America/Phoenix','AZ':'America/Phoenix',
+  'New York':'America/New_York','NYC':'America/New_York','Miami':'America/New_York',
+  'Chicago':'America/Chicago','Dallas':'America/Chicago','Houston':'America/Chicago',
+  'Denver':'America/Denver','Salt Lake City':'America/Denver',
+  'Los Angeles':'America/Los_Angeles','LA':'America/Los_Angeles',
+  'Las Vegas':'America/Los_Angeles','Seattle':'America/Los_Angeles',
+  'San Francisco':'America/Los_Angeles','SF':'America/Los_Angeles',
+  'London':'Europe/London','Edinburgh':'Europe/London',
+  'Paris':'Europe/Paris','Brussels':'Europe/Brussels','Amsterdam':'Europe/Amsterdam',
+  'Berlin':'Europe/Berlin','Frankfurt':'Europe/Berlin','Hamburg':'Europe/Berlin',
+  'Munich':'Europe/Berlin','Salzburg':'Europe/Vienna','Vienna':'Europe/Vienna',
+  'Milan':'Europe/Rome','Rome':'Europe/Rome','Florence':'Europe/Rome',
+  'Naples':'Europe/Rome','Venice':'Europe/Rome','Italy':'Europe/Rome',
+  'Madrid':'Europe/Madrid','Barcelona':'Europe/Madrid',
+  'Lisbon':'Europe/Lisbon','Porto':'Europe/Lisbon',
+  'Zurich':'Europe/Zurich','Geneva':'Europe/Zurich','Switzerland':'Europe/Zurich',
+  'Prague':'Europe/Prague','Budapest':'Europe/Budapest',
+  'Warsaw':'Europe/Warsaw','Krakow':'Europe/Warsaw',
+  'Stockholm':'Europe/Stockholm','Oslo':'Europe/Oslo','Copenhagen':'Europe/Copenhagen',
+  'Helsinki':'Europe/Helsinki','Riga':'Europe/Riga','Tallinn':'Europe/Tallinn',
+  'Athens':'Europe/Athens','Istanbul':'Europe/Istanbul',
+  'Dubai':'Asia/Dubai','Abu Dhabi':'Asia/Dubai','UAE':'Asia/Dubai',
+  'Tokyo':'Asia/Tokyo','Osaka':'Asia/Tokyo','Japan':'Asia/Tokyo',
+  'Seoul':'Asia/Seoul','South Korea':'Asia/Seoul',
+  'Beijing':'Asia/Shanghai','Shanghai':'Asia/Shanghai','China':'Asia/Shanghai',
+  'Bangkok':'Asia/Bangkok','Thailand':'Asia/Bangkok',
+  'Singapore':'Asia/Singapore','Kuala Lumpur':'Asia/Kuala_Lumpur',
+  'Bali':'Asia/Makassar','Jakarta':'Asia/Jakarta',
+  'Sydney':'Australia/Sydney','Melbourne':'Australia/Sydney',
+  'Auckland':'Pacific/Auckland','New Zealand':'Pacific/Auckland',
+  'Honolulu':'Pacific/Honolulu','Hawaii':'Pacific/Honolulu',
+  'Mexico City':'America/Mexico_City','Cancun':'America/Cancun',
+  'Toronto':'America/Toronto','Montreal':'America/Toronto','Ottawa':'America/Toronto',
+  'Vancouver':'America/Vancouver','Calgary':'America/Edmonton',
+  'Buenos Aires':'America/Argentina/Buenos_Aires',
+  'São Paulo':'America/Sao_Paulo','Rio de Janeiro':'America/Sao_Paulo',
+  'Lima':'America/Lima','Bogota':'America/Bogota',
+  'Cairo':'Africa/Cairo','Nairobi':'Africa/Nairobi',
+  'Johannesburg':'Africa/Johannesburg','Cape Town':'Africa/Johannesburg',
+  'Lagos':'Africa/Lagos','Casablanca':'Africa/Casablanca',
+  'Moscow':'Europe/Moscow','St. Petersburg':'Europe/Moscow',
+  'Mumbai':'Asia/Kolkata','Delhi':'Asia/Kolkata','India':'Asia/Kolkata',
+  'Karachi':'Asia/Karachi','Lahore':'Asia/Karachi',
+  'Kathmandu':'Asia/Kathmandu','Nepal':'Asia/Kathmandu',
+  'Colombo':'Asia/Colombo','Sri Lanka':'Asia/Colombo',
+  'Tel Aviv':'Asia/Jerusalem','Jerusalem':'Asia/Jerusalem',
+  'Amman':'Asia/Amman','Beirut':'Asia/Beirut','Riyadh':'Asia/Riyadh',
+  'Doha':'Asia/Qatar','Kuwait':'Asia/Kuwait',
+  'Taipei':'Asia/Taipei','Hong Kong':'Asia/Hong_Kong',
+  'Manila':'Asia/Manila','Philippines':'Asia/Manila',
+  'Ho Chi Minh City':'Asia/Ho_Chi_Minh','Hanoi':'Asia/Bangkok',
+  'Phnom Penh':'Asia/Phnom_Penh','Yangon':'Asia/Rangoon',
+  'Dhaka':'Asia/Dhaka','Bangladesh':'Asia/Dhaka',
+  'Tashkent':'Asia/Tashkent','Almaty':'Asia/Almaty'
+};
+
+function cityToTz(city){
+  if(!city) return null;
+  var key = Object.keys(CITY_TZ).find(function(k){
+    return k.toLowerCase() === city.trim().toLowerCase();
+  });
+  return key ? CITY_TZ[key] : null;
+}
+
+function startClock(){
+  var bar = document.getElementById('trip-clock-bar');
+  if(!bar) return;
+  var clocks = (tripCache && tripCache.clocks) ? tripCache.clocks : [];
+  if(clocks.length === 0){ bar.style.display='none'; if(_clockInterval){ clearInterval(_clockInterval); _clockInterval=null; } return; }
+  bar.style.display = '';
+  renderClockBar();
+  if(_clockInterval) clearInterval(_clockInterval);
+  _clockInterval = setInterval(renderClockBar, 1000);
+}
+
+function renderClockBar(){
+  var inner = document.getElementById('trip-clock-inner');
+  if(!inner) return;
+  var clocks = (tripCache && tripCache.clocks) ? tripCache.clocks : [];
+  // Always prepend AZ home clock
+  var all = [{city:'Phoenix, AZ', tz:'America/Phoenix', home:true}].concat(clocks);
+  var now = new Date();
+  var hdr = document.getElementById('trip-header');
+  var bg = hdr ? hdr.style.background : '#b8a4ed';
+  inner.innerHTML = all.map(function(c, i){
+    var timeStr = '--:--';
+    try {
+      timeStr = now.toLocaleTimeString('en-US', {timeZone: c.tz, hour:'numeric', minute:'2-digit', hour12:true});
+    } catch(e){}
+    var isHome = !!c.home;
+    var sep = (i < all.length-1)
+      ? '<div style="width:1px;background:rgba(255,255,255,.25);margin:0 14px;align-self:stretch;"></div>'
+      : '';
+    return '<div style="display:flex;align-items:center;">'
+      +'<div style="text-align:center;min-width:70px;">'
+      +'<div style="font-size:'+(isHome?'13px':'15px')+';font-weight:'+(isHome?'600':'800')+';letter-spacing:-.3px;color:rgba(255,255,255,'+(isHome?'.75':'1')+');white-space:nowrap;font-variant-numeric:tabular-nums;">'+timeStr+'</div>'
+      +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,'+(isHome?'.5':'.8')+');white-space:nowrap;margin-top:1px;">'+c.city+'</div>'
+      +'</div>'
+      +sep
+      +'</div>';
+  }).join('');
+}
+
+// ── Clock Config Sheet ────────────────────────────────────────────────────────
+function openClockConfig(){
+  renderClockConfigList();
+  document.getElementById('clock-config-sheet').style.display='flex';
+}
+function closeClockConfig(){
+  document.getElementById('clock-config-sheet').style.display='none';
+}
+function renderClockConfigList(){
+  var list = document.getElementById('clock-config-list');
+  var clocks = (tripCache && tripCache.clocks) ? tripCache.clocks : [];
+  if(clocks.length === 0){
+    list.innerHTML = '<div style="text-align:center;padding:16px;color:var(--muted);font-size:12px;">No destination clocks yet. Add a city below.</div>';
+    return;
+  }
+  list.innerHTML = clocks.map(function(c, i){
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:11px;padding:10px 13px;margin-bottom:7px;">'
+      +'<div><div style="font-size:13px;font-weight:700;">'+c.city+'</div><div style="font-size:10px;color:var(--muted);">'+c.tz+'</div></div>'
+      +'<button onclick="removeClockEntry('+i+')" style="background:none;border:none;font-size:18px;cursor:pointer;color:#cc3a3a;padding:4px;">✕</button>'
+      +'</div>';
+  }).join('');
+}
+function addClockEntry(){
+  var input = document.getElementById('clock-city-input');
+  var city = (input.value||'').trim();
+  if(!city){ alert('Enter a city name.'); return; }
+  var tz = cityToTz(city);
+  if(!tz){
+    // Show the tz picker instead
+    var tzSel = document.getElementById('clock-tz-select');
+    tz = tzSel.value;
+  }
+  var clocks = ((tripCache && tripCache.clocks) ? tripCache.clocks : []).slice();
+  clocks.push({city: city, tz: tz});
+  if(tripCache){ tripCache.clocks = clocks; persistDebounced('clocks_json'); }
+  input.value = '';
+  renderClockConfigList();
+  startClock();
+  showToast('🕐 Clock added');
+}
+function removeClockEntry(i){
+  var clocks = ((tripCache && tripCache.clocks) ? tripCache.clocks : []).slice();
+  clocks.splice(i, 1);
+  if(tripCache){ tripCache.clocks = clocks; persistDebounced('clocks_json'); }
+  renderClockConfigList();
+  startClock();
 }
 
 function renderMapTab(){
