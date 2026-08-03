@@ -405,6 +405,7 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <button class="tbtn" onclick="tab(this,'tasks')"><i class="ti ti-checklist"></i> To-do</button>
     <button class="tbtn" onclick="tab(this,'expenses')"><i class="ti ti-receipt"></i> Expenses</button>
     <button class="tbtn" onclick="tab(this,'map')"><i class="ti ti-map-pin"></i> Map</button>
+    <button class="tbtn" onclick="tab(this,'suitcase')"><i class="ti ti-luggage"></i> Suitcase</button>
   </div>
 
   <div class="scroll">
@@ -683,6 +684,25 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
         </div>
         <div style="font-size:10px;color:var(--muted);margin-top:5px;">Works with Google My Maps share or edit links</div>
       </div>
+    </div>
+
+    <!-- ─── SUITCASE ─── -->
+    <div class="tp" id="tp-suitcase" style="padding:0 16px 24px;">
+      <!-- Category filter pills -->
+      <div style="display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding:4px 0 12px;margin:0 -16px;padding-left:16px;">
+        <button class="pill on" onclick="wardrobeCat(this,'All')" style="font-size:11px;white-space:nowrap;">All</button>
+        <button class="pill" onclick="wardrobeCat(this,'Shirts')" style="font-size:11px;white-space:nowrap;">👕 Shirts</button>
+        <button class="pill" onclick="wardrobeCat(this,'Pants')" style="font-size:11px;white-space:nowrap;">👖 Pants</button>
+        <button class="pill" onclick="wardrobeCat(this,'Dresses')" style="font-size:11px;white-space:nowrap;">👗 Dresses</button>
+        <button class="pill" onclick="wardrobeCat(this,'Skirts')" style="font-size:11px;white-space:nowrap;">🩱 Skirts</button>
+        <button class="pill" onclick="wardrobeCat(this,'Outerwear')" style="font-size:11px;white-space:nowrap;">🧥 Outerwear</button>
+        <button class="pill" onclick="wardrobeCat(this,'Accessories')" style="font-size:11px;white-space:nowrap;">💍 Accessories</button>
+        <div style="width:16px;flex:0 0 auto;"></div>
+      </div>
+      <!-- Items grid -->
+      <div id="wardrobe-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:16px;"></div>
+      <!-- Add item button -->
+      <button onclick="openAddWardrobeSheet()" style="width:100%;padding:13px;border-radius:14px;border:1.5px dashed var(--card3);background:var(--card2);font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:7px;"><i class="ti ti-plus" style="font-size:16px;"></i> Add item to suitcase</button>
     </div>
 
     <!-- ─── CHAT ─── -->
@@ -1086,93 +1106,74 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
 </div>
 
 <!-- ═══════════ OUTFITS SHEET ═══════════ -->
+<!-- Add/Edit Wardrobe Item Sheet -->
+<div id="add-wardrobe-sheet" style="display:none;position:absolute;inset:0;z-index:310;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeAddWardrobeSheet()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:90vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div id="wardrobe-sheet-title" style="font-size:16px;font-weight:700;">Add to Suitcase</div>
+      <button onclick="closeAddWardrobeSheet()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+    <!-- Photo picker -->
+    <div id="wardrobe-photo-preview" style="background:var(--card3);border-radius:14px;height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(128,128,128,.3);margin-bottom:12px;position:relative;" onclick="pickWardrobePhoto()">
+      <div id="wardrobe-photo-placeholder" style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:28px;display:block;margin-bottom:5px;"></i><span style="font-size:11px;font-weight:600;">Add photo (optional)</span></div>
+    </div>
+    <!-- Category -->
+    <div style="margin-bottom:10px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Category</div>
+      <select class="inp" id="wardrobe-cat-select" style="background:var(--card3);">
+        <option value="Shirts">👕 Shirts</option>
+        <option value="Pants">👖 Pants</option>
+        <option value="Dresses">👗 Dresses</option>
+        <option value="Skirts">🩱 Skirts</option>
+        <option value="Outerwear">🧥 Outerwear</option>
+        <option value="Accessories">💍 Accessories</option>
+      </select>
+    </div>
+    <!-- Name -->
+    <div style="margin-bottom:10px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Name</div>
+      <input class="inp" id="wardrobe-name-input" placeholder="e.g. White linen shirt">
+    </div>
+    <!-- Description -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px;">Description (optional)</div>
+      <textarea class="inp" id="wardrobe-desc-input" rows="2" style="resize:none;line-height:1.6;" placeholder="Color, fit, notes…"></textarea>
+    </div>
+    <button onclick="saveWardrobeItem()" class="btn-d" style="width:100%;padding:13px;font-size:13px;font-weight:700;">Save to suitcase →</button>
+  </div>
+</div>
+
+<!-- Day Outfit Sheet -->
 <div id="add-outfit-sheet" style="display:none;position:absolute;inset:0;z-index:300;background:rgba(0,0,0,.45);" onclick="if(event.target===this)closeOutfitSheet()">
   <div style="position:absolute;bottom:0;left:0;right:0;background:var(--canvas);border-radius:24px 24px 0 0;padding:20px 16px 36px;max-height:92vh;overflow-y:auto;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <div style="font-size:16px;font-weight:700;">👗 Outfits</div>
+      <div style="font-size:16px;font-weight:700;">👗 Outfit</div>
       <button onclick="closeOutfitSheet()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
     </div>
-    <div id="outfit-sheet-day-label" style="font-size:11px;color:var(--muted);margin-bottom:16px;"></div>
+    <div id="outfit-sheet-day-label" style="font-size:11px;color:var(--muted);margin-bottom:14px;"></div>
 
-    <!-- Category filter -->
-    <div style="display:flex;gap:5px;margin-bottom:13px;overflow-x:auto;scrollbar-width:none;">
-      <button class="pill on" onclick="catpill(this)" style="font-size:11px;">All</button>
-      <button class="pill" onclick="catpill(this)" style="font-size:11px;">👗 Outfits</button>
-      <button class="pill" onclick="catpill(this)" style="font-size:11px;">👟 Shoes</button>
-      <button class="pill" onclick="catpill(this)" style="font-size:11px;">💍 Jewelry</button>
-      <button class="pill" onclick="catpill(this)" style="font-size:11px;">🎒 Extras</button>
+    <!-- Share toggle -->
+    <div style="display:flex;align-items:center;justify-content:space-between;background:var(--card2);border-radius:12px;padding:10px 13px;margin-bottom:16px;">
+      <div>
+        <div style="font-size:12px;font-weight:600;">Share with travelers</div>
+        <div style="font-size:10px;color:var(--muted);">Others on this trip can see your outfit</div>
+      </div>
+      <div id="outfit-share-toggle" class="toggle" onclick="toggleOutfitShare(this)"></div>
     </div>
 
-    <!-- Daytime -->
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-      <span style="font-size:14px;">🌅</span>
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#c8a020;">Daytime</span>
-      <div style="flex:1;height:1px;background:rgba(200,160,32,.2);"></div>
+    <!-- Empty state -->
+    <div id="outfit-sheet-empty" style="display:none;text-align:center;padding:24px 0;">
+      <div style="font-size:32px;margin-bottom:10px;">👜</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Your suitcase is empty</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px;">Add items to your suitcase first, then pick an outfit for each day.</div>
+      <button onclick="closeOutfitSheet();tabByName('suitcase')" class="btn-d" style="padding:10px 20px;font-size:12px;">Go to Suitcase →</button>
     </div>
-    <div id="outfit-sheet-daytime" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;"></div>
 
-    <!-- Evening -->
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-      <span style="font-size:14px;">🌙</span>
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#5a4080;">Evening</span>
-      <div style="flex:1;height:1px;background:rgba(90,64,128,.2);"></div>
-    </div>
-    <div id="outfit-sheet-evening" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:14px;"></div>
+    <!-- Items by category -->
+    <div id="outfit-sheet-categories"></div>
 
-    <!-- Shoes -->
-    <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
-      <span style="font-size:14px;">👟</span>
-      <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#6a6a6a;">Shoes</span>
-      <div style="flex:1;height:1px;background:var(--card3);"></div>
-    </div>
-    <div id="outfit-sheet-shoes" style="display:flex;flex-direction:column;gap:7px;margin-bottom:16px;"></div>
-
-    <!-- Add new outfit -->
-    <div style="border-top:1px solid var(--card3);padding-top:16px;">
-      <div style="font-size:13px;font-weight:700;margin-bottom:11px;">Add to this day</div>
-
-      <!-- Photo / text toggle -->
-      <div style="display:flex;gap:7px;margin-bottom:11px;">
-        <button id="outfit-mode-photo" class="btn-l on" onclick="setOutfitMode('photo')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-camera" style="font-size:13px;"></i> Add photo</button>
-        <button id="outfit-mode-text" class="btn-l" onclick="setOutfitMode('text')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:9px;font-size:12px;"><i class="ti ti-pencil" style="font-size:13px;"></i> Describe outfit</button>
-      </div>
-
-      <!-- Photo area -->
-      <div id="outfit-photo-area" style="margin-bottom:10px;">
-        <div id="outfit-photo-preview" style="background:var(--card3);border-radius:12px;height:100px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(0,0,0,.12);" onclick="pickOutfitPhoto()">
-          <div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>
-        </div>
-        <div style="display:flex;gap:7px;margin-top:7px;">
-          <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickOutfitPhoto()"><i class="ti ti-camera" style="font-size:12px;"></i> Camera</button>
-          <button class="btn-l" style="flex:1;padding:8px;font-size:11px;display:flex;align-items:center;justify-content:center;gap:4px;" onclick="pickOutfitPhoto()"><i class="ti ti-photo" style="font-size:12px;"></i> Gallery</button>
-        </div>
-      </div>
-
-      <!-- Text area -->
-      <div id="outfit-text-area" style="display:none;margin-bottom:10px;">
-        <input class="inp" id="outfit-item-name" placeholder="e.g. Black linen top + wide-leg trousers">
-      </div>
-
-      <!-- Category + time -->
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-bottom:12px;">
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Category</div>
-          <select class="inp" id="outfit-item-category" style="background:var(--card3);">
-            <option>👗 Outfit</option><option>👟 Shoes</option><option>💍 Jewelry</option><option>🎒 Extra</option>
-          </select>
-        </div>
-        <div>
-          <div style="font-size:10px;font-weight:600;color:#9a9a9a;margin-bottom:3px;">Time of day</div>
-          <select class="inp" id="outfit-item-time" style="background:var(--card3);">
-            <option>🌅 Daytime</option><option>🌙 Evening</option><option>🌅🌙 Both</option>
-          </select>
-        </div>
-      </div>
-
-      <div id="outfit-save-btn-wrap">
-        <button class="btn-d" style="width:100%;padding:12px;font-size:13px;font-weight:700;" onclick="saveOutfitItem()">Save to this day →</button>
-      </div>
-    </div>
+    <!-- Done button -->
+    <button onclick="saveOutfitSelection()" class="btn-d" style="width:100%;padding:13px;font-size:13px;font-weight:700;margin-top:8px;">Done →</button>
   </div>
 </div>
 
@@ -1496,8 +1497,14 @@ function initTripCache(trip) {
     dayNotes:         perDay(trip.day_notes_json,           'wander_notes_'),
     bookingPlatforms: migrateBkp(trip.booking_platforms_json),
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
-    mapUrl: trip.map_url || ''
+    mapUrl: trip.map_url || '',
+    wardrobe: Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [],
+    dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json)) ? trip.day_outfits_json : {}
   };
+  // Sync wardrobe counter so new items don't collide
+  if(tripCache.wardrobe.length){
+    wardrobeIdCounter = Math.max.apply(null, tripCache.wardrobe.map(function(i){ return i.id||0; }));
+  }
   // Persist any migrated data right away
   ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
 }
@@ -1513,7 +1520,9 @@ function persistTripField(field) {
     'location_json': tripCache.location,
     'day_notes_json': tripCache.dayNotes,
     'booking_platforms_json': tripCache.bookingPlatforms,
-    'budget_json': tripCache.budget
+    'budget_json': tripCache.budget,
+    'wardrobe_json': tripCache.wardrobe,
+    'day_outfits_json': tripCache.dayOutfits
   };
   if (!(field in map)) return;
   var upd = {}; upd[field] = map[field];
@@ -1802,8 +1811,10 @@ function renderAllDayBlocks(totalDays, startDate) {
 
 // ── Load plans for all days ───────────────────────────────────────────────────
 var tripCarRentals = []; // cached for multi-day display
+var totalTripDays = 0;
 
 async function loadAllDayPlans(totalDays) {
+  totalTripDays = totalDays;
   // Pre-fetch all car rentals for the trip so they can appear on every day they cover
   if (currentTripId && currentUser) {
     var cr = await sb.from('excursions').select('*').eq('trip_id', currentTripId).eq('activity_type', 'Car Rental');
@@ -1818,7 +1829,7 @@ function tab(btn,name){
   document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('active');});
   var el = document.getElementById('tp-'+name);
   if(el) el.classList.add('active');
-  if(name==='suitcase'){ renderSuitcaseDayPicker(); renderSuitcaseItems(); }
+  if(name==='suitcase'){ renderWardrobeGrid(); }
   if(name==='photos'){ renderPhotosDayFilter(); renderPhotosGrid(); }
   if(name==='log'){ renderLogOverview(); }
   if(name==='tasks'){ renderTaskList(); }
@@ -1991,19 +2002,20 @@ function renderPlansOutfits(dayNum){
   var section = document.getElementById('plans-outfit-section-'+dayNum);
   var list    = document.getElementById('plans-outfit-list-'+dayNum);
   if(!section || !list) return;
-  var outfits = suitcaseItems.filter(function(i){ return String(i.day) === String(dayNum); });
-  if(outfits.length === 0){ section.style.display='none'; return; }
+  var outfit = tripCache ? tripCache.dayOutfits[dayNum] : null;
+  var selectedIds = outfit ? (outfit.itemIds || []) : [];
+  var wardrobe = tripCache ? tripCache.wardrobe : wardrobeItems;
+  var items = wardrobe.filter(function(i){ return selectedIds.indexOf(i.id) !== -1; });
+  if(items.length === 0){ section.style.display='none'; return; }
   section.style.display = 'block';
-  list.innerHTML = outfits.map(function(item){
-    var timeLabel = item.time==='day'?'🌅':item.time==='evening'?'🌙':'🌅🌙';
-    var inner = item.photo
-      ? '<div style="width:72px;height:90px;border-radius:10px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;position:relative;">'
-          +'<span style="position:absolute;bottom:4px;left:4px;font-size:12px;">'+timeLabel+'</span></div>'
-      : '<div style="width:72px;height:90px;border-radius:10px;background:var(--card2);flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;">'
-          +'<i class="ti ti-shirt" style="font-size:22px;color:#9a9a9a;"></i>'
-          +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;padding:0 4px;line-height:1.3;">'+( item.name||item.category)+'</span>'
-          +'<span style="font-size:11px;">'+timeLabel+'</span></div>';
-    return inner;
+  var sharedBadge = (outfit && outfit.shared) ? '<span style="font-size:9px;background:rgba(74,122,222,.15);color:#4a7ade;border-radius:5px;padding:1px 6px;font-weight:700;margin-left:4px;">Shared</span>' : '';
+  list.innerHTML = sharedBadge + items.map(function(item){
+    var catIcon = wardrobeCatIcon(item.category);
+    return item.photo
+      ? '<div style="width:72px;height:90px;border-radius:10px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
+      : '<div style="width:72px;height:90px;border-radius:10px;background:var(--card2);flex:0 0 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:4px;">'
+          +'<span style="font-size:20px;">'+catIcon+'</span>'
+          +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;line-height:1.3;">'+item.name+'</span></div>';
   }).join('');
 }
 
@@ -2563,7 +2575,7 @@ function trackPlanExpense(desc, amount, category, planItemId, dayNum){
   tracked[planItemId] = expId;
   savePlanTracked(tracked);
   renderExpenses();
-  loadDayPlans(dayNum);
+  if(totalTripDays > 0){ for(var d=1;d<=totalTripDays;d++) loadDayPlans(d); } else { loadDayPlans(dayNum); }
   showToast('💸 Added to expense tracker');
 }
 
@@ -2577,7 +2589,7 @@ function removeFromTracker(planItemId, dayNum){
     savePlanTracked(tracked);
   }
   renderExpenses();
-  loadDayPlans(dayNum);
+  if(totalTripDays > 0){ for(var d=1;d<=totalTripDays;d++) loadDayPlans(d); } else { loadDayPlans(dayNum); }
   showToast('Removed from expense tracker');
 }
 
@@ -2877,7 +2889,7 @@ function renderLogOverview(){
     var loc = (tripCache ? tripCache.location[day.num] : localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num))||'';
     var mood = (tripCache ? tripCache.mood[day.num] : localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+day.num))||'';
     var photos = logGetPhotos(day.num);
-    var outfitCount = suitcaseItems.filter(function(it){ return String(it.day)===String(day.num); }).length;
+    var dayOutfitData = getDayOutfits()[day.num]; var outfitCount = (dayOutfitData && dayOutfitData.itemIds) ? dayOutfitData.itemIds.length : 0;
     var flag = getLocationIcon(loc);
     var hasContent = entry || photos.length;
     var bg = hasContent ? gradients[i % gradients.length] : 'var(--card2)';
@@ -2975,22 +2987,21 @@ async function openLogDay(dayNum){
   }
 
   // Outfits
-  var dayOutfits = suitcaseItems.filter(function(i){ return String(i.day)===String(dayNum); });
+  var logDayOutfit = getDayOutfits()[dayNum];
+  var logOutfitIds = (logDayOutfit && logDayOutfit.itemIds) ? logDayOutfit.itemIds : [];
+  var logWardrobe = getWardrobe();
+  var logOutfitItems = logWardrobe.filter(function(i){ return logOutfitIds.indexOf(i.id) !== -1; });
   var outfitsHtml = '';
-  if(dayOutfits.length){
+  if(logOutfitItems.length){
     outfitsHtml = '<div style="margin-bottom:14px;">'
-      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">Outfits 👗</div>'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">Outfit 👗'+(logDayOutfit&&logDayOutfit.shared?' <span style="font-size:9px;background:rgba(74,122,222,.15);color:#4a7ade;border-radius:4px;padding:1px 5px;">Shared</span>':'')+'</div>'
       +'<div style="display:flex;gap:7px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;">'
-      +dayOutfits.map(function(item){
-        var timeLabel = item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'All day';
-        if(item.photo){
-          return '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:url(\''+item.photo+'\') center/cover no-repeat;position:relative;">'
-            +'<span style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.5);color:#fff;border-radius:4px;padding:1px 5px;font-size:9px;font-weight:600;">'+timeLabel+'</span></div>';
-        }
-        return '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:var(--card2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;">'
-          +'<i class="ti ti-shirt" style="font-size:22px;color:#9a9a9a;"></i>'
-          +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;line-height:1.3;">'+(item.name||item.category)+'</span>'
-          +'<span style="font-size:10px;">'+timeLabel+'</span></div>';
+      +logOutfitItems.map(function(item){
+        return item.photo
+          ? '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:url(\''+item.photo+'\') center/cover no-repeat;"></div>'
+          : '<div style="flex:0 0 auto;width:80px;height:100px;border-radius:11px;background:var(--card2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px;">'
+            +'<span style="font-size:24px;">'+wardrobeCatIcon(item.category)+'</span>'
+            +'<span style="font-size:9px;font-weight:600;color:var(--muted);text-align:center;line-height:1.3;">'+item.name+'</span></div>';
       }).join('')
       +'</div></div>';
   }
@@ -3190,405 +3201,262 @@ function logRate(el, dayNum){
   renderLogOverview();
 }
 
-function suitcaseDay(pill, dayNum, label){
-  document.querySelectorAll('#tp-suitcase .dp').forEach(function(p){p.classList.remove('on');});
-  pill.classList.add('on');
-  document.getElementById('suitcase-day-title').textContent = label;
-  // show/hide item blocks
-  document.querySelectorAll('[id^="suitcase-items-"]').forEach(function(el){el.style.display='none';});
-  var block = document.getElementById('suitcase-items-'+dayNum);
-  if(block) block.style.display='';
-  // reset share toggle to private per-day
-  var tog = document.getElementById('suitcase-share-toggle');
-  tog.classList.remove('on');
-  document.getElementById('suitcase-share-label').textContent='Private';
-  document.getElementById('suitcase-share-banner').style.display='none';
+// ── Wardrobe (Suitcase tab) ───────────────────────────────────────────────────
+var wardrobeItems = [];
+var wardrobeIdCounter = 0;
+var wardrobeFilter = 'All';
+var editingWardrobeId = null;
+var wardrobePhotoData = null;
+
+var WARDROBE_CATS = ['Shirts','Pants','Dresses','Skirts','Outerwear','Accessories'];
+var WARDROBE_CAT_ICONS = {Shirts:'👕',Pants:'👖',Dresses:'👗',Skirts:'🩱',Outerwear:'🧥',Accessories:'💍'};
+
+function wardrobeCatIcon(cat){ return WARDROBE_CAT_ICONS[cat] || '👗'; }
+
+function getWardrobe(){ return tripCache ? tripCache.wardrobe : wardrobeItems; }
+function setWardrobe(arr){
+  wardrobeItems = arr;
+  if(tripCache){ tripCache.wardrobe = arr; persistDebounced('wardrobe_json'); }
+}
+function getDayOutfits(){ return tripCache ? tripCache.dayOutfits : {}; }
+function setDayOutfit(dayNum, data){
+  if(tripCache){ tripCache.dayOutfits[dayNum] = data; persistDebounced('day_outfits_json'); }
 }
 
-function toggleSuitcaseShare(el){
-  el.classList.toggle('on');
-  var on = el.classList.contains('on');
-  document.getElementById('suitcase-share-label').textContent = on ? 'Shared' : 'Private';
+function wardrobeCat(btn, cat){
+  btn.parentElement.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+  btn.classList.add('on');
+  wardrobeFilter = cat;
+  renderWardrobeGrid();
 }
 
-var suitcaseItems = [];
-var suitcaseItemIdCounter = 0;
-var editingSuitcaseId = null;
+function renderWardrobeGrid(){
+  var grid = document.getElementById('wardrobe-grid');
+  if(!grid) return;
+  var items = getWardrobe();
+  var filtered = wardrobeFilter === 'All' ? items : items.filter(function(i){ return i.category === wardrobeFilter; });
+  if(filtered.length === 0){
+    grid.innerHTML = '<div style="grid-column:span 2;text-align:center;padding:30px 16px;color:var(--muted);">'
+      +(wardrobeFilter === 'All'
+        ? '<div style="font-size:32px;margin-bottom:10px;">👜</div><div style="font-size:13px;font-weight:700;margin-bottom:5px;">Suitcase is empty</div><div style="font-size:11px;">Add your first item below.</div>'
+        : '<div style="font-size:28px;margin-bottom:8px;">'+wardrobeCatIcon(wardrobeFilter)+'</div><div style="font-size:12px;font-weight:600;">No '+wardrobeFilter+' yet</div>')
+      +'</div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(function(item){
+    var icon = wardrobeCatIcon(item.category);
+    var topHtml = item.photo
+      ? '<div style="height:110px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;"></div>'
+      : '<div style="height:90px;background:var(--card3);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;"><span style="font-size:32px;">'+icon+'</span></div>';
+    return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'
+      +topHtml
+      +'<div style="padding:9px;">'
+      +'<div style="font-size:12px;font-weight:700;margin-bottom:1px;">'+item.name+'</div>'
+      +'<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">'+icon+' '+item.category+'</div>'
+      +(item.desc ? '<div style="font-size:10px;color:var(--muted);line-height:1.4;margin-bottom:5px;">'+item.desc+'</div>' : '')
+      +'<div style="display:flex;gap:5px;margin-top:4px;">'
+      +'<button onclick="openAddWardrobeSheet('+item.id+')" style="flex:1;background:var(--card3);border:none;border-radius:7px;padding:5px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
+      +'<button onclick="deleteWardrobeItem('+item.id+')" style="background:none;border:none;border-radius:7px;padding:5px 8px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
+      +'</div></div></div>';
+  }).join('');
+}
 
-function renderSuitcaseDayPicker(){
-  var picker = document.getElementById('suitcase-day-picker');
-  if(!picker) return;
-  var trip = userTrips.find(function(t){ return t.id===currentTripId; });
-  var days = [];
-  if(trip && trip.start_date && trip.end_date){
-    var d = new Date(trip.start_date+'T00:00:00');
-    var end = new Date(trip.end_date+'T00:00:00');
-    var dayN = 1;
-    while(d <= end){
-      days.push({date: new Date(d), num: dayN});
-      d.setDate(d.getDate()+1);
-      dayN++;
+function openAddWardrobeSheet(editId){
+  editingWardrobeId = editId || null;
+  wardrobePhotoData = null;
+  var sheet = document.getElementById('add-wardrobe-sheet');
+  var preview = document.getElementById('wardrobe-photo-preview');
+  var placeholder = document.getElementById('wardrobe-photo-placeholder');
+  document.getElementById('wardrobe-sheet-title').textContent = editId ? 'Edit Item' : 'Add to Suitcase';
+  // Reset form
+  preview.style.backgroundImage = '';
+  if(placeholder) placeholder.style.display = '';
+  document.getElementById('wardrobe-name-input').value = '';
+  document.getElementById('wardrobe-desc-input').value = '';
+  document.getElementById('wardrobe-cat-select').value = 'Shirts';
+  if(editId){
+    var item = getWardrobe().find(function(i){ return i.id === editId; });
+    if(item){
+      document.getElementById('wardrobe-name-input').value = item.name || '';
+      document.getElementById('wardrobe-desc-input').value = item.desc || '';
+      document.getElementById('wardrobe-cat-select').value = item.category || 'Shirts';
+      if(item.photo){
+        wardrobePhotoData = item.photo;
+        preview.style.backgroundImage = 'url('+item.photo+')';
+        preview.style.backgroundSize = 'cover';
+        preview.style.backgroundPosition = 'center';
+        if(placeholder) placeholder.style.display = 'none';
+      }
     }
   }
-  var DAYS_S = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var MONTHS_S2 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var html = '<div class="dp on" onclick="suitcaseDayPick(this,\'all\',\'All days\')"><div style="font-size:8px;font-weight:700;">ALL</div><div style="font-size:14px;font-weight:700;">★</div></div>';
-  days.forEach(function(day){
-    var label = MONTHS_S2[day.date.getMonth()].toUpperCase();
-    var dateNum = day.date.getDate();
-    var weekday = DAYS_S[day.date.getDay()];
-    html += '<div class="dp" onclick="suitcaseDayPick(this,'+day.num+',\'Day '+day.num+'\')"><div style="font-size:8px;font-weight:700;">'+label+'</div><div style="font-size:14px;font-weight:700;">'+dateNum+'</div><div style="font-size:9px;">'+weekday+'</div></div>';
+  sheet.style.display = 'flex';
+}
+
+function closeAddWardrobeSheet(){
+  document.getElementById('add-wardrobe-sheet').style.display = 'none';
+  editingWardrobeId = null;
+  wardrobePhotoData = null;
+}
+
+function pickWardrobePhoto(){
+  var input = document.createElement('input');
+  input.type = 'file'; input.accept = 'image/*';
+  input.onchange = function(e){
+    var file = e.target.files[0]; if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      wardrobePhotoData = ev.target.result;
+      var preview = document.getElementById('wardrobe-photo-preview');
+      var placeholder = document.getElementById('wardrobe-photo-placeholder');
+      preview.style.backgroundImage = 'url('+ev.target.result+')';
+      preview.style.backgroundSize = 'cover';
+      preview.style.backgroundPosition = 'center';
+      if(placeholder) placeholder.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+  };
+  input.click();
+}
+
+function saveWardrobeItem(){
+  var name = (document.getElementById('wardrobe-name-input').value || '').trim();
+  if(!name){ alert('Please enter a name for the item.'); return; }
+  var cat  = document.getElementById('wardrobe-cat-select').value;
+  var desc = (document.getElementById('wardrobe-desc-input').value || '').trim();
+  var wardrobe = getWardrobe().slice();
+  if(editingWardrobeId !== null){
+    var idx = wardrobe.findIndex(function(i){ return i.id === editingWardrobeId; });
+    if(idx !== -1){
+      wardrobe[idx].name = name;
+      wardrobe[idx].category = cat;
+      wardrobe[idx].desc = desc;
+      if(wardrobePhotoData) wardrobe[idx].photo = wardrobePhotoData;
+    }
+  } else {
+    wardrobe.push({id: ++wardrobeIdCounter, name: name, category: cat, desc: desc, photo: wardrobePhotoData || null});
+  }
+  setWardrobe(wardrobe);
+  closeAddWardrobeSheet();
+  renderWardrobeGrid();
+  showToast(editingWardrobeId ? 'Item updated' : '✅ Added to suitcase');
+}
+
+function deleteWardrobeItem(id){
+  if(!confirm('Remove this item from your suitcase?')) return;
+  setWardrobe(getWardrobe().filter(function(i){ return i.id !== id; }));
+  renderWardrobeGrid();
+  // also remove from any day outfit selections
+  var outfits = getDayOutfits();
+  Object.keys(outfits).forEach(function(dayNum){
+    if(outfits[dayNum] && outfits[dayNum].itemIds){
+      outfits[dayNum].itemIds = outfits[dayNum].itemIds.filter(function(x){ return x !== id; });
+      setDayOutfit(dayNum, outfits[dayNum]);
+    }
   });
-  picker.innerHTML = html;
-}
-
-var suitcaseCurrentDay = 'all';
-
-function suitcaseDayPick(el, dayKey, label){
-  el.parentElement.querySelectorAll('.dp').forEach(function(p){p.classList.remove('on');});
-  el.classList.add('on');
-  suitcaseCurrentDay = dayKey;
-  document.getElementById('suitcase-day-title').textContent = label;
-  // show/hide add form — only visible when a specific day is selected
-  var form = document.getElementById('add-item-form');
-  var noDay = document.getElementById('suitcase-no-day-msg');
-  if(dayKey === 'all'){
-    form.style.display = 'none';
-    noDay.style.display = 'block';
-  } else {
-    form.style.display = 'block';
-    noDay.style.display = 'none';
-  }
-  renderSuitcaseItems();
-}
-
-function renderSuitcaseItems(){
-  var filtered = suitcaseCurrentDay === 'all'
-    ? suitcaseItems
-    : suitcaseItems.filter(function(i){ return String(i.day) === String(suitcaseCurrentDay); });
-
-  var daytime = filtered.filter(function(i){ return (i.time==='day'||i.time==='both') && i.category!=='👟 Shoes'; });
-  var evening = filtered.filter(function(i){ return (i.time==='evening'||i.time==='both') && i.category!=='👟 Shoes'; });
-  var shoes   = filtered.filter(function(i){ return i.category==='👟 Shoes'; });
-
-  function timeTag(item){
-    return item.time==='day' ? '🌅 Day' : item.time==='evening' ? '🌙 Eve' : '🌅🌙';
-  }
-  function editDeleteBtns(id){
-    return '<div style="display:flex;gap:5px;margin-top:5px;">'
-      +'<button onclick="editSuitcaseItem('+id+')" style="flex:1;background:var(--card3);border:none;border-radius:7px;padding:4px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
-      +'<button onclick="deleteSuitcaseItem('+id+')" style="background:none;border:none;border-radius:7px;padding:4px 7px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
-      +'</div>';
-  }
-  function outfitCard(item){
-    var imgHtml = item.photo
-      ? '<div style="height:100px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;position:relative;">'
-          +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>'
-      : '<div style="background:var(--card3);height:80px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;">'
-          +'<i class="ti ti-shirt" style="font-size:28px;color:#9a9a9a;"></i>'
-          +'<span style="position:absolute;top:6px;left:6px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>';
-    return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'
-      +imgHtml
-      +'<div style="padding:8px;">'
-      +(item.name?'<div style="font-size:12px;font-weight:600;line-height:1.4;">'+item.name+'</div>':'')
-      +'<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">'+item.category+'</div>'
-      +editDeleteBtns(item.id)
-      +'</div></div>';
-  }
-  function shoeCard(item){
-    var thumbHtml = item.photo
-      ? '<div style="width:44px;height:44px;border-radius:9px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
-      : '<div style="width:44px;height:44px;border-radius:9px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:20px;color:#9a9a9a;"></i></div>';
-    return '<div style="background:var(--card2);border-radius:12px;padding:10px;display:flex;align-items:center;gap:10px;">'
-      +thumbHtml
-      +'<div style="flex:1;">'
-      +(item.name?'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>':'')
-      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div>'
-      +editDeleteBtns(item.id)
-      +'</div></div>';
-  }
-
-  var addOutfitBtn = suitcaseCurrentDay !== 'all'
-    ? '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:70px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="showAddItem(\'outfit\')">'
-        +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:20px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add outfit</span></div></div>' : '';
-  var addShoeBtn = suitcaseCurrentDay !== 'all'
-    ? '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:12px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;" onclick="showAddItem(\'shoes\')">'
-        +'<i class="ti ti-plus" style="font-size:16px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>' : '';
-
-  document.getElementById('suitcase-daytime').innerHTML = daytime.map(outfitCard).join('') + addOutfitBtn;
-  document.getElementById('suitcase-evening').innerHTML = evening.map(outfitCard).join('') + addOutfitBtn;
-  document.getElementById('suitcase-shoes').innerHTML   = shoes.map(shoeCard).join('') + addShoeBtn;
-}
-
-function editSuitcaseItem(id){
-  var item = suitcaseItems.find(function(i){ return i.id===id; });
-  if(!item) return;
-  editingSuitcaseId = id;
-  // pre-fill form
-  document.getElementById('add-item-category').value = item.category;
-  var timeVal = item.time==='day' ? '🌅 Daytime' : item.time==='evening' ? '🌙 Evening' : '🌅🌙 Both';
-  document.getElementById('add-item-time').value = timeVal;
-  if(item.photo){
-    setAddMode('photo');
-    var preview = document.getElementById('add-item-photo-preview');
-    preview.style.backgroundImage = 'url('+item.photo+')';
-    preview.style.backgroundSize = 'cover';
-    preview.style.backgroundPosition = 'center';
-    preview.style.position = 'relative';
-    preview.innerHTML = '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
-    preview._photoData = item.photo;
-  } else {
-    setAddMode('text');
-    document.getElementById('add-item-name').value = item.name||'';
-  }
-  // update save button label
-  document.querySelector('#add-item-form .btn-d').textContent = 'Save changes →';
-  document.getElementById('add-item-form').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function deleteSuitcaseItem(id){
-  suitcaseItems = suitcaseItems.filter(function(i){ return i.id!==id; });
-  renderSuitcaseItems();
   renderPlansOutfits(currentDayNum);
 }
 
-// ── Outfit Sheet (in Plans) ──────────────────────────────────────────────────
-var outfitSheetMode = 'photo';
-var editingOutfitId = null;
+// ── Day Outfit Sheet ──────────────────────────────────────────────────────────
+var outfitSelectedIds = [];
 
 function openOutfitSheet(){
-  suitcaseCurrentDay = currentDayNum;
-  var label = document.getElementById('plans-day-title').textContent;
+  var label = document.getElementById('plans-day-title') ? document.getElementById('plans-day-title').textContent : ('Day '+currentDayNum);
   document.getElementById('outfit-sheet-day-label').textContent = label;
+  // Load existing selection for this day
+  var existing = (getDayOutfits()[currentDayNum] || {});
+  outfitSelectedIds = (existing.itemIds || []).slice();
+  var shareTog = document.getElementById('outfit-share-toggle');
+  if(shareTog){ shareTog.classList.toggle('on', !!existing.shared); }
   renderOutfitSheet();
-  resetOutfitForm();
   document.getElementById('add-outfit-sheet').style.display = 'flex';
 }
 
 function closeOutfitSheet(){
   document.getElementById('add-outfit-sheet').style.display = 'none';
-  editingOutfitId = null;
   renderPlansOutfits(currentDayNum);
 }
+
+function toggleOutfitShare(el){ el.classList.toggle('on'); }
 
 function renderOutfitSheet(){
-  var dayItems = suitcaseItems.filter(function(i){ return String(i.day)===String(currentDayNum); });
-  var daytime  = dayItems.filter(function(i){ return (i.time==='day'||i.time==='both') && i.category!=='👟 Shoes'; });
-  var evening  = dayItems.filter(function(i){ return (i.time==='evening'||i.time==='both') && i.category!=='👟 Shoes'; });
-  var shoes    = dayItems.filter(function(i){ return i.category==='👟 Shoes'; });
-
-  function timeTag(item){ return item.time==='day'?'🌅 Day':item.time==='evening'?'🌙 Eve':'🌅🌙'; }
-  function outfitCard(item){
-    var imgHtml = item.photo
-      ? '<div style="height:90px;background:url(\''+item.photo+'\') center/cover no-repeat;border-radius:12px 12px 0 0;position:relative;"><span style="position:absolute;top:5px;left:5px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>'
-      : '<div style="background:var(--card3);height:72px;display:flex;align-items:center;justify-content:center;position:relative;border-radius:12px 12px 0 0;"><i class="ti ti-shirt" style="font-size:26px;color:#9a9a9a;"></i><span style="position:absolute;top:5px;left:5px;background:#fff8e0;color:#c8a020;border-radius:5px;padding:1px 6px;font-size:9px;font-weight:700;">'+timeTag(item)+'</span></div>';
-    return '<div style="background:var(--card2);border-radius:14px;overflow:hidden;">'+imgHtml
-      +'<div style="padding:7px;">'+(item.name?'<div style="font-size:11px;font-weight:600;line-height:1.4;margin-bottom:2px;">'+item.name+'</div>':'')
-      +'<div style="font-size:10px;color:var(--muted);margin-bottom:4px;">'+item.category+'</div>'
-      +'<div style="display:flex;gap:4px;"><button onclick="editOutfitItem('+item.id+')" style="flex:1;background:var(--card3);border:none;border-radius:6px;padding:3px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
-      +'<button onclick="deleteOutfitItem('+item.id+')" style="background:none;border:none;border-radius:6px;padding:3px 6px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
-      +'</div></div></div>';
+  var wardrobe = getWardrobe();
+  var empty = document.getElementById('outfit-sheet-empty');
+  var catsEl = document.getElementById('outfit-sheet-categories');
+  if(wardrobe.length === 0){
+    if(empty) empty.style.display = 'block';
+    if(catsEl) catsEl.innerHTML = '';
+    return;
   }
-  function shoeCard(item){
-    var thumb = item.photo
-      ? '<div style="width:40px;height:40px;border-radius:8px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
-      : '<div style="width:40px;height:40px;border-radius:8px;background:var(--card3);display:flex;align-items:center;justify-content:center;flex:0 0 auto;"><i class="ti ti-shoe" style="font-size:18px;color:#9a9a9a;"></i></div>';
-    return '<div style="background:var(--card2);border-radius:12px;padding:9px;display:flex;align-items:center;gap:9px;">'+thumb
-      +'<div style="flex:1;">'+(item.name?'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>':'')
-      +'<div style="font-size:10px;color:var(--muted);">'+item.category+'</div></div>'
-      +'<div style="display:flex;gap:4px;align-items:center;"><button onclick="editOutfitItem('+item.id+')" style="background:var(--card3);border:none;border-radius:6px;padding:3px 7px;font-size:11px;cursor:pointer;font-family:inherit;">✏️</button>'
-      +'<button onclick="deleteOutfitItem('+item.id+')" style="background:none;border:none;font-size:13px;cursor:pointer;color:#cc3a3a;padding:3px 5px;">✕</button>'
+  if(empty) empty.style.display = 'none';
+  var html = '';
+  WARDROBE_CATS.forEach(function(cat){
+    var items = wardrobe.filter(function(i){ return i.category === cat; });
+    if(items.length === 0) return;
+    html += '<div style="margin-bottom:14px;">'
+      +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">'+wardrobeCatIcon(cat)+' '+cat+'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:7px;">'
+      +items.map(function(item){
+        var sel = outfitSelectedIds.indexOf(item.id) !== -1;
+        var thumb = item.photo
+          ? '<div style="width:48px;height:48px;border-radius:9px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
+          : '<div style="width:48px;height:48px;border-radius:9px;background:var(--card3);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:22px;">'+wardrobeCatIcon(item.category)+'</div>';
+        return '<div onclick="toggleOutfitItem('+item.id+')" id="outfit-item-row-'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;border:2px solid '+(sel?'var(--blue)':'var(--card3)')+';background:'+(sel?'rgba(74,122,222,.08)':'var(--card2)')+';">'
+          +thumb
+          +'<div style="flex:1;">'
+          +'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
+          +(item.desc?'<div style="font-size:10px;color:var(--muted);">'+item.desc+'</div>':'')
+          +'</div>'
+          +'<div style="width:20px;height:20px;border-radius:50%;border:2px solid '+(sel?'var(--blue)':'#ccc')+';background:'+(sel?'var(--blue)':'transparent')+';display:flex;align-items:center;justify-content:center;flex:0 0 auto;">'
+          +(sel?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'')
+          +'</div>'
+          +'</div>';
+      }).join('')
       +'</div></div>';
-  }
-  var addBtn = '<div style="background:var(--card2);border-radius:14px;border:1.5px dashed var(--card3);min-height:60px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="resetOutfitForm()"><div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:18px;display:block;margin-bottom:2px;"></i><span style="font-size:10px;font-weight:600;">Add</span></div></div>';
-  var addShoeBtn = '<div style="background:var(--card2);border-radius:12px;border:1.5px dashed var(--card3);padding:12px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;" onclick="resetOutfitForm()"><i class="ti ti-plus" style="font-size:14px;color:#9a9a9a;"></i><span style="font-size:11px;font-weight:600;color:#9a9a9a;">Add shoes</span></div>';
-
-  document.getElementById('outfit-sheet-daytime').innerHTML = daytime.map(outfitCard).join('') + addBtn;
-  document.getElementById('outfit-sheet-evening').innerHTML = evening.map(outfitCard).join('') + addBtn;
-  document.getElementById('outfit-sheet-shoes').innerHTML   = shoes.map(shoeCard).join('') + addShoeBtn;
+  });
+  if(catsEl) catsEl.innerHTML = html;
 }
 
-function editOutfitItem(id){
-  var item = suitcaseItems.find(function(i){ return i.id===id; });
-  if(!item) return;
-  editingOutfitId = id;
-  document.getElementById('outfit-item-category').value = item.category;
-  document.getElementById('outfit-item-time').value = item.time==='day'?'🌅 Daytime':item.time==='evening'?'🌙 Evening':'🌅🌙 Both';
-  if(item.photo){
-    setOutfitMode('photo');
-    var p = document.getElementById('outfit-photo-preview');
-    p.style.backgroundImage='url('+item.photo+')'; p.style.backgroundSize='cover'; p.style.backgroundPosition='center';
-    p.style.position='relative'; p.innerHTML='<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
-    p._photoData = item.photo;
-  } else {
-    setOutfitMode('text');
-    document.getElementById('outfit-item-name').value = item.name||'';
-  }
-  document.querySelector('#outfit-save-btn-wrap .btn-d').textContent = 'Save changes →';
-  document.getElementById('outfit-save-btn-wrap').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function deleteOutfitItem(id){
-  suitcaseItems = suitcaseItems.filter(function(i){ return i.id!==id; });
-  renderOutfitSheet();
-  renderPlansOutfits(currentDayNum);
-}
-
-function resetOutfitForm(){
-  editingOutfitId = null;
-  setOutfitMode('photo');
-  document.getElementById('outfit-item-name').value='';
-  document.getElementById('outfit-item-category').value='👗 Outfit';
-  document.getElementById('outfit-item-time').value='🌅 Daytime';
-  var p = document.getElementById('outfit-photo-preview');
-  p.style.backgroundImage=''; p.style.position='';
-  p.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
-  delete p._photoData;
-  var btn = document.querySelector('#outfit-save-btn-wrap .btn-d');
-  if(btn) btn.textContent='Save to this day →';
-}
-
-function setOutfitMode(mode){
-  outfitSheetMode = mode;
-  document.getElementById('outfit-photo-area').style.display = mode==='photo' ? 'block' : 'none';
-  document.getElementById('outfit-text-area').style.display  = mode==='text'  ? 'block' : 'none';
-  document.getElementById('outfit-mode-photo').classList.toggle('on', mode==='photo');
-  document.getElementById('outfit-mode-text').classList.toggle('on',  mode==='text');
-}
-
-function pickOutfitPhoto(){
-  var input = document.createElement('input');
-  input.type='file'; input.accept='image/*';
-  input.onchange = function(e){
-    var file = e.target.files[0]; if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      var p = document.getElementById('outfit-photo-preview');
-      p.style.backgroundImage='url('+ev.target.result+')'; p.style.backgroundSize='cover'; p.style.backgroundPosition='center';
-      p.style.position='relative';
-      p.innerHTML='<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
-      p._photoData = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-function saveOutfitItem(){
-  var cat     = document.getElementById('outfit-item-category').value;
-  var timeVal = document.getElementById('outfit-item-time').value;
-  var timeKey = timeVal.indexOf('Daytime')!==-1 ? 'day' : timeVal.indexOf('Evening')!==-1 ? 'evening' : 'both';
-  var photo = null, name = '';
-
-  if(outfitSheetMode==='photo'){
-    var p = document.getElementById('outfit-photo-preview');
-    if(!p._photoData){ alert('Please add a photo first'); return; }
-    photo = p._photoData;
-    p.style.backgroundImage=''; p.style.position='';
-    p.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
-    delete p._photoData;
-  } else {
-    name = (document.getElementById('outfit-item-name').value||'').trim();
-    if(!name){ alert('Please describe the outfit'); return; }
-    document.getElementById('outfit-item-name').value='';
-  }
-
-  if(editingOutfitId !== null){
-    var idx = suitcaseItems.findIndex(function(i){ return i.id===editingOutfitId; });
-    if(idx!==-1){ suitcaseItems[idx].category=cat; suitcaseItems[idx].time=timeKey; if(photo) suitcaseItems[idx].photo=photo; if(name) suitcaseItems[idx].name=name; }
-    editingOutfitId = null;
-    document.querySelector('#outfit-save-btn-wrap .btn-d').textContent='Save to this day →';
-  } else {
-    suitcaseItems.push({id:++suitcaseItemIdCounter, category:cat, time:timeKey, photo:photo, name:name, day:currentDayNum});
-  }
-
-  renderOutfitSheet();
-  renderPlansOutfits(currentDayNum);
-}
-
-var suitcaseAddMode = 'photo';
-
-function setAddMode(mode){
-  suitcaseAddMode = mode;
-  document.getElementById('add-item-photo-area').style.display = mode==='photo' ? 'block' : 'none';
-  document.getElementById('add-item-text-area').style.display  = mode==='text'  ? 'block' : 'none';
-  document.getElementById('add-mode-photo').classList.toggle('on', mode==='photo');
-  document.getElementById('add-mode-text').classList.toggle('on',  mode==='text');
-}
-
-function showAddItem(mode){
-  if(mode==='evening') document.getElementById('add-item-time').value='🌙 Evening';
-  else if(mode==='shoes'){ document.getElementById('add-item-category').value='👟 Shoes'; document.getElementById('add-item-time').value='🌅 Daytime'; }
-  else { document.getElementById('add-item-time').value='🌅 Daytime'; }
-  document.getElementById('add-item-form').scrollIntoView({behavior:'smooth',block:'nearest'});
-}
-
-function pickSuitcasePhoto(){
-  var input = document.createElement('input');
-  input.type='file'; input.accept='image/*';
-  input.onchange = function(e){
-    var file = e.target.files[0]; if(!file) return;
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      var preview = document.getElementById('add-item-photo-preview');
-      preview.style.backgroundImage = 'url('+ev.target.result+')';
-      preview.style.backgroundSize = 'cover';
-      preview.style.backgroundPosition = 'center';
-      preview.innerHTML = '<div style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,.4);border-radius:6px;padding:3px 7px;font-size:10px;color:#fff;font-weight:600;">Change</div>';
-      preview.style.position = 'relative';
-      preview._photoData = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-function saveNewItem(){
-  var cat     = document.getElementById('add-item-category').value;
-  var time    = document.getElementById('add-item-time').value;
-  var timeKey = time.indexOf('Daytime')!==-1 ? 'day' : time.indexOf('Evening')!==-1 ? 'evening' : 'both';
-  var photo = null, name = '';
-
-  if(suitcaseAddMode==='photo'){
-    var preview = document.getElementById('add-item-photo-preview');
-    if(!preview._photoData){ alert('Please add a photo first'); return; }
-    photo = preview._photoData;
-    // reset preview
-    preview.style.backgroundImage=''; preview.style.position='';
-    preview.innerHTML='<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:24px;display:block;margin-bottom:4px;"></i><span style="font-size:11px;font-weight:600;">Tap to take or choose photo</span></div>';
-    delete preview._photoData;
-  } else {
-    name = (document.getElementById('add-item-name').value||'').trim();
-    if(!name){ alert('Please describe the outfit'); return; }
-    document.getElementById('add-item-name').value='';
-  }
-
-  if(editingSuitcaseId !== null){
-    // update existing item
-    var idx = suitcaseItems.findIndex(function(i){ return i.id===editingSuitcaseId; });
-    if(idx!==-1){
-      suitcaseItems[idx].category = cat;
-      suitcaseItems[idx].time = timeKey;
-      if(photo) suitcaseItems[idx].photo = photo;
-      if(name)  suitcaseItems[idx].name  = name;
+function toggleOutfitItem(id){
+  var idx = outfitSelectedIds.indexOf(id);
+  if(idx === -1){ outfitSelectedIds.push(id); } else { outfitSelectedIds.splice(idx,1); }
+  // Update just the row visually
+  var row = document.getElementById('outfit-item-row-'+id);
+  if(row){
+    var sel = outfitSelectedIds.indexOf(id) !== -1;
+    row.style.border = '2px solid '+(sel?'var(--blue)':'var(--card3)');
+    row.style.background = sel?'rgba(74,122,222,.08)':'var(--card2)';
+    var check = row.querySelector('div:last-child');
+    if(check){
+      check.style.borderColor = sel?'var(--blue)':'#ccc';
+      check.style.background = sel?'var(--blue)':'transparent';
+      check.innerHTML = sel?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'';
     }
-    editingSuitcaseId = null;
-    document.querySelector('#add-item-form .btn-d').textContent = 'Save to suitcase →';
-  } else {
-    suitcaseItems.push({id:++suitcaseItemIdCounter, category:cat, time:timeKey, photo:photo, name:name, day:suitcaseCurrentDay});
   }
-
-  renderSuitcaseItems();
-  renderPlansOutfits(currentDayNum);
 }
 
-function assignDay(el, day){
-  el.classList.toggle('assigned');
-  if(el.classList.contains('assigned')){
-    el.style.background='var(--ink)'; el.style.color='#fffaf0'; el.style.fontWeight='700';
-  } else {
-    el.style.background='var(--card3)'; el.style.color='var(--muted)'; el.style.fontWeight='400';
+function saveOutfitSelection(){
+  var shared = document.getElementById('outfit-share-toggle').classList.contains('on');
+  setDayOutfit(currentDayNum, {itemIds: outfitSelectedIds.slice(), shared: shared});
+  // Push shared outfits to Supabase trip_outfits table if shared
+  if(currentTripId && currentUser && shared){
+    var wardrobe = getWardrobe();
+    var outfitData = outfitSelectedIds.map(function(id){
+      var item = wardrobe.find(function(i){ return i.id===id; });
+      return item ? {name:item.name, category:item.category, photo:item.photo||null} : null;
+    }).filter(Boolean);
+    sb.from('trip_outfits').upsert({
+      trip_id: currentTripId, user_id: currentUser.id, day_num: currentDayNum,
+      outfit_data: outfitData, shared: true, updated_at: new Date().toISOString()
+    },{onConflict:'trip_id,user_id,day_num'}).then(function(){});
+  } else if(currentTripId && currentUser && !shared){
+    // Mark as not shared
+    sb.from('trip_outfits').upsert({
+      trip_id: currentTripId, user_id: currentUser.id, day_num: currentDayNum,
+      outfit_data: [], shared: false, updated_at: new Date().toISOString()
+    },{onConflict:'trip_id,user_id,day_num'}).then(function(){});
   }
+  closeOutfitSheet();
+  showToast('👗 Outfit saved');
 }
 
 function openPhoto(title, uploader, date){
