@@ -1276,8 +1276,7 @@ var sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: false,
-    storageKey: 'wander_auth'
+    detectSessionInUrl: false
   }
 });
 
@@ -1756,28 +1755,42 @@ function resetInactivityTimer(){
 });
 
 // ── Check existing session on page load ──────────────────────────────────────
+var _authReady = false;
+
 window.addEventListener('DOMContentLoaded', async function(){
-  // Check inactivity: if last active > 1 hour ago, force sign-out
+  // Check inactivity: if last active > 1 hour ago, force sign-out then show login
   var lastActive = parseInt(localStorage.getItem('wander_last_active') || '0');
   if(lastActive && (Date.now() - lastActive) > INACTIVITY_MS){
     await sb.auth.signOut();
+    _authReady = true;
     go('login');
     return;
   }
 
+  // Try to restore existing session
   var {data:{session}} = await sb.auth.getSession();
   if(session){
     resetInactivityTimer();
     await afterLogin(session.user);
+  } else {
+    go('login');
   }
+  _authReady = true;
 
-  // Listen for auth changes (INITIAL_SESSION fires on refresh with stored session)
+  // React to future auth events — but ignore SIGNED_OUT that fires during init
   sb.auth.onAuthStateChange(async function(event, session){
-    if((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && session){
+    if(!_authReady) return;
+    if(event === 'SIGNED_IN' && session && !currentUser){
       resetInactivityTimer();
       await afterLogin(session.user);
     }
-    if(event === 'SIGNED_OUT'){ currentUser=null; currentProfile={}; go('login'); }
+    if(event === 'TOKEN_REFRESHED' && session){
+      currentUser = session.user;
+    }
+    if(event === 'SIGNED_OUT' && currentUser){
+      currentUser = null; currentProfile = {}; userTrips = [];
+      go('login');
+    }
   });
 });
 
