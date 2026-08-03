@@ -1569,7 +1569,9 @@ function initTripCache(trip) {
     mapUrl: trip.map_url || '',
     wardrobe: Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [],
     dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json)) ? trip.day_outfits_json : {},
-    clocks: Array.isArray(trip.clocks_json) ? trip.clocks_json : []
+    clocks: Array.isArray(trip.clocks_json) && trip.clocks_json.length
+      ? trip.clocks_json
+      : (function(){ try{ return JSON.parse(localStorage.getItem('wander_clocks_'+tid)||'[]'); }catch(e){ return []; } }())
   };
   // Sync wardrobe counter so new items don't collide
   if(tripCache.wardrobe.length){
@@ -1635,6 +1637,17 @@ function openDbTrip(id){
   var subtitle = dests;
   document.getElementById('trip-subtitle').textContent = subtitle;
   document.getElementById('trip-subtitle').style.color = txtColor;
+
+  // ── Clock bar styling ────────────────────────────────────────────────────
+  var clockBar = document.getElementById('trip-clock-bar');
+  if(clockBar){
+    clockBar.style.background = 'rgba(0,0,0,.18)';
+    clockBar.style.backdropFilter = 'none';
+    // inherit header bg so bar blends in
+    clockBar.style.backgroundColor = color;
+    clockBar.style.filter = 'brightness(.82)';
+    clockBar._txtColor = txtColor;
+  }
 
   // ── Stats & countdown ────────────────────────────────────────────────────
   var wrap = document.getElementById('trip-countdown-wrap');
@@ -3343,27 +3356,26 @@ function renderClockBar(){
   var inner = document.getElementById('trip-clock-inner');
   if(!inner) return;
   var clocks = (tripCache && tripCache.clocks) ? tripCache.clocks : [];
-  // Always prepend AZ home clock
   var all = [{city:'Phoenix, AZ', tz:'America/Phoenix', home:true}].concat(clocks);
   var now = new Date();
-  var hdr = document.getElementById('trip-header');
-  var bg = hdr ? hdr.style.background : '#b8a4ed';
+  // Use the text color set on the clock bar, fall back to dark ink
+  var clockBar = document.getElementById('trip-clock-bar');
+  var baseColor = (clockBar && clockBar._txtColor) ? clockBar._txtColor : '#1a1a2e';
+  var isLight = baseColor === '#fffaf0';
+  var strongClr = isLight ? 'rgba(255,255,255,1)' : 'rgba(26,26,46,1)';
+  var mutedClr  = isLight ? 'rgba(255,255,255,.6)' : 'rgba(26,26,46,.55)';
+  var sepClr    = isLight ? 'rgba(255,255,255,.25)' : 'rgba(26,26,46,.18)';
   inner.innerHTML = all.map(function(c, i){
     var timeStr = '--:--';
-    try {
-      timeStr = now.toLocaleTimeString('en-US', {timeZone: c.tz, hour:'numeric', minute:'2-digit', hour12:true});
-    } catch(e){}
+    try { timeStr = now.toLocaleTimeString('en-US', {timeZone:c.tz, hour:'numeric', minute:'2-digit', hour12:true}); } catch(e){}
     var isHome = !!c.home;
     var sep = (i < all.length-1)
-      ? '<div style="width:1px;background:rgba(255,255,255,.25);margin:0 14px;align-self:stretch;"></div>'
-      : '';
+      ? '<div style="width:1px;background:'+sepClr+';margin:0 14px;align-self:stretch;"></div>' : '';
     return '<div style="display:flex;align-items:center;">'
       +'<div style="text-align:center;min-width:70px;">'
-      +'<div style="font-size:'+(isHome?'13px':'15px')+';font-weight:'+(isHome?'600':'800')+';letter-spacing:-.3px;color:rgba(255,255,255,'+(isHome?'.75':'1')+');white-space:nowrap;font-variant-numeric:tabular-nums;">'+timeStr+'</div>'
-      +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:rgba(255,255,255,'+(isHome?'.5':'.8')+');white-space:nowrap;margin-top:1px;">'+c.city+'</div>'
-      +'</div>'
-      +sep
-      +'</div>';
+      +'<div style="font-size:'+(isHome?'13px':'15px')+';font-weight:'+(isHome?'600':'800')+';letter-spacing:-.3px;color:'+(isHome?mutedClr:strongClr)+';white-space:nowrap;font-variant-numeric:tabular-nums;">'+timeStr+'</div>'
+      +'<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:'+mutedClr+';white-space:nowrap;margin-top:1px;">'+c.city+'</div>'
+      +'</div>'+sep+'</div>';
   }).join('');
 }
 
@@ -3389,19 +3401,25 @@ function renderClockConfigList(){
       +'</div>';
   }).join('');
 }
+function saveClocks(clocks){
+  if(tripCache) tripCache.clocks = clocks;
+  if(currentTripId){
+    localStorage.setItem('wander_clocks_'+currentTripId, JSON.stringify(clocks));
+    // keep userTrips in sync so re-navigation doesn't lose clocks
+    var t = userTrips.find(function(x){ return x.id===currentTripId; });
+    if(t) t.clocks_json = clocks;
+  }
+  persistDebounced('clocks_json');
+}
+
 function addClockEntry(){
   var input = document.getElementById('clock-city-input');
   var city = (input.value||'').trim();
   if(!city){ alert('Enter a city name.'); return; }
-  var tz = cityToTz(city);
-  if(!tz){
-    // Show the tz picker instead
-    var tzSel = document.getElementById('clock-tz-select');
-    tz = tzSel.value;
-  }
+  var tz = cityToTz(city) || document.getElementById('clock-tz-select').value;
   var clocks = ((tripCache && tripCache.clocks) ? tripCache.clocks : []).slice();
   clocks.push({city: city, tz: tz});
-  if(tripCache){ tripCache.clocks = clocks; persistDebounced('clocks_json'); }
+  saveClocks(clocks);
   input.value = '';
   renderClockConfigList();
   startClock();
@@ -3410,7 +3428,7 @@ function addClockEntry(){
 function removeClockEntry(i){
   var clocks = ((tripCache && tripCache.clocks) ? tripCache.clocks : []).slice();
   clocks.splice(i, 1);
-  if(tripCache){ tripCache.clocks = clocks; persistDebounced('clocks_json'); }
+  saveClocks(clocks);
   renderClockConfigList();
   startClock();
 }
