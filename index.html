@@ -1354,6 +1354,7 @@ async function doSignup(){
 
 // ── After successful login ────────────────────────────────────────────────────
 async function afterLogin(user){
+  _alertDismissed = false;
   currentUser = user;
   // Load profile, upsert email so it's always current
   var {data:prof} = await sb.from('profiles').select('*').eq('id', user.id).single();
@@ -4221,7 +4222,10 @@ function _getAllUpcomingTasks(){
   return all;
 }
 
+var _alertDismissed = false;
+
 function showAlert(){
+  if(_alertDismissed) return;
   var el = document.getElementById('alert-sheet');
   if(!el) return;
   var allTasks = _getAllUpcomingTasks();
@@ -4290,6 +4294,7 @@ function checkSoonAlerts(){
   if(flagged.length) setTimeout(showAlert, 800);
 }
 function dismissAlert(){
+  _alertDismissed = true;
   var el = document.getElementById('alert-sheet');
   if(el) el.style.display = 'none';
 }
