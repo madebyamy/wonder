@@ -1114,8 +1114,16 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
       <button onclick="closeAddWardrobeSheet()" style="background:var(--card2);border:none;border-radius:9999px;width:28px;height:28px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
     </div>
     <!-- Photo picker -->
-    <div id="wardrobe-photo-preview" style="background:var(--card3);border-radius:14px;height:120px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1.5px dashed rgba(128,128,128,.3);margin-bottom:12px;position:relative;" onclick="pickWardrobePhoto()">
-      <div id="wardrobe-photo-placeholder" style="text-align:center;color:#9a9a9a;"><i class="ti ti-camera" style="font-size:28px;display:block;margin-bottom:5px;"></i><span style="font-size:11px;font-weight:600;">Add photo (optional)</span></div>
+    <div id="wardrobe-photo-preview" style="background:var(--card3);border-radius:14px;height:150px;display:flex;align-items:center;justify-content:center;border:1.5px dashed rgba(128,128,128,.3);margin-bottom:8px;position:relative;overflow:hidden;">
+      <div id="wardrobe-photo-placeholder" style="text-align:center;color:#9a9a9a;pointer-events:none;">
+        <i class="ti ti-shirt" style="font-size:36px;display:block;margin-bottom:6px;opacity:.4;"></i>
+        <span style="font-size:11px;font-weight:600;">No photo yet</span>
+      </div>
+      <button id="wardrobe-photo-remove" onclick="removeWardrobePhoto()" style="display:none;position:absolute;top:8px;right:8px;background:rgba(0,0,0,.5);border:none;border-radius:8px;padding:4px 9px;font-size:11px;font-weight:700;color:#fff;cursor:pointer;">Remove</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
+      <button onclick="pickWardrobePhoto('camera')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:none;background:var(--card3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--ink);"><i class="ti ti-camera" style="font-size:15px;"></i> Take Photo</button>
+      <button onclick="pickWardrobePhoto('library')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border-radius:12px;border:none;background:var(--card3);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--ink);"><i class="ti ti-photo" style="font-size:15px;"></i> Choose Photo</button>
     </div>
     <!-- Category -->
     <div style="margin-bottom:10px;">
@@ -3286,6 +3294,11 @@ function openAddWardrobeSheet(editId){
         preview.style.backgroundSize = 'cover';
         preview.style.backgroundPosition = 'center';
         if(placeholder) placeholder.style.display = 'none';
+        var rb = document.getElementById('wardrobe-photo-remove');
+        if(rb) rb.style.display = 'block';
+      } else {
+        var rb = document.getElementById('wardrobe-photo-remove');
+        if(rb) rb.style.display = 'none';
       }
     }
   }
@@ -3298,9 +3311,10 @@ function closeAddWardrobeSheet(){
   wardrobePhotoData = null;
 }
 
-function pickWardrobePhoto(){
+function pickWardrobePhoto(source){
   var input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
+  if(source === 'camera') input.capture = 'environment';
   input.onchange = function(e){
     var file = e.target.files[0]; if(!file) return;
     var reader = new FileReader();
@@ -3308,14 +3322,26 @@ function pickWardrobePhoto(){
       wardrobePhotoData = ev.target.result;
       var preview = document.getElementById('wardrobe-photo-preview');
       var placeholder = document.getElementById('wardrobe-photo-placeholder');
+      var removeBtn = document.getElementById('wardrobe-photo-remove');
       preview.style.backgroundImage = 'url('+ev.target.result+')';
       preview.style.backgroundSize = 'cover';
       preview.style.backgroundPosition = 'center';
       if(placeholder) placeholder.style.display = 'none';
+      if(removeBtn) removeBtn.style.display = 'block';
     };
     reader.readAsDataURL(file);
   };
   input.click();
+}
+
+function removeWardrobePhoto(){
+  wardrobePhotoData = null;
+  var preview = document.getElementById('wardrobe-photo-preview');
+  var placeholder = document.getElementById('wardrobe-photo-placeholder');
+  var removeBtn = document.getElementById('wardrobe-photo-remove');
+  preview.style.backgroundImage = '';
+  if(placeholder) placeholder.style.display = '';
+  if(removeBtn) removeBtn.style.display = 'none';
 }
 
 function saveWardrobeItem(){
