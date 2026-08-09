@@ -1186,8 +1186,11 @@ html,body{height:100%;background:#e8e3d8;font-family:'Inter',-apple-system,sans-
     <!-- Items by category -->
     <div id="outfit-sheet-categories"></div>
 
-    <!-- Done button -->
-    <button onclick="saveOutfitSelection()" class="btn-d" style="width:100%;padding:13px;font-size:13px;font-weight:700;margin-top:8px;">Done →</button>
+    <!-- Clear + Done buttons -->
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button onclick="clearOutfitSelection()" style="flex:0 0 auto;padding:13px 16px;font-size:13px;font-weight:700;background:var(--card2);border:none;border-radius:12px;color:var(--muted);cursor:pointer;">Clear</button>
+      <button onclick="saveOutfitSelection()" class="btn-d" style="flex:1;padding:13px;font-size:13px;font-weight:700;">Done →</button>
+    </div>
   </div>
 </div>
 
@@ -1355,52 +1358,64 @@ async function doSignup(){
 async function afterLogin(user){
   _alertDismissed = false;
   currentUser = user;
-  // Load profile, upsert email so it's always current
-  var {data:prof} = await sb.from('profiles').select('*').eq('id', user.id).single();
-  if(prof && prof.email !== user.email){
-    await sb.from('profiles').update({email: user.email}).eq('id', user.id);
-    prof.email = user.email;
-  }
-  currentProfile = prof || {id:user.id, name:user.email.split('@')[0], avatar_color:'blue'};
-  // Fallbacks for is_admin: JWT metadata, then hardcoded admin user IDs
-  if(!currentProfile.is_admin){
-    var meta = (user.user_metadata || {});
-    if(meta.is_admin) currentProfile.is_admin = true;
-  }
-  if(!currentProfile.is_admin){
-    var ADMIN_IDS = ['bd9875f3-3a55-4a55-bfc4-a319e8923b32'];
-    if(ADMIN_IDS.indexOf(user.id) !== -1) currentProfile.is_admin = true;
-  }
-  // Block suspended accounts
-  if(currentProfile.account_status === 'suspended'){
-    await sb.auth.signOut();
-    var errEl = document.getElementById('login-error');
-    if(errEl){ errEl.textContent = 'Your account has been suspended. Please contact support.'; errEl.style.display=''; }
-    go('login');
-    return;
-  }
-  // Update UI with real name
+
+  // Set a minimal profile immediately so the UI isn't blank while we load
+  currentProfile = {id:user.id, name:(user.user_metadata&&user.user_metadata.name)||user.email.split('@')[0], avatar_color:'blue'};
+  var ADMIN_IDS = ['bd9875f3-3a55-4a55-bfc4-a319e8923b32'];
+  if(ADMIN_IDS.indexOf(user.id) !== -1) currentProfile.is_admin = true;
   updateUserUI();
-  // Load trips
-  await loadTrips();
-  // Restore last navigation state
+
+  // Navigate instantly — don't wait for network
   var lastScreen = localStorage.getItem('wander_nav_screen') || 'home';
   var lastTripId = localStorage.getItem('wander_nav_trip');
-  var lastDay    = parseInt(localStorage.getItem('wander_nav_day')) || 1;
   var lastTab    = localStorage.getItem('wander_nav_tab') || 'plans';
+  var lastDay    = parseInt(localStorage.getItem('wander_nav_day')) || 1;
+  go(lastScreen === 'trip' && lastTripId ? 'home' : (lastScreen || 'home'));
+
+  // Load profile + trips in parallel
+  var [profResult, tripsResult] = await Promise.all([
+    sb.from('profiles').select('*').eq('id', user.id).single(),
+    sb.from('trips').select('*, trip_members(*)').order('start_date')
+  ]);
+
+  // Update profile
+  var prof = profResult.data;
+  if(prof){
+    // Sync email in background — don't block
+    if(prof.email !== user.email) sb.from('profiles').update({email:user.email}).eq('id',user.id).then(function(){});
+    currentProfile = prof;
+    if(!currentProfile.is_admin){
+      var meta = user.user_metadata || {};
+      if(meta.is_admin) currentProfile.is_admin = true;
+    }
+    if(!currentProfile.is_admin && ADMIN_IDS.indexOf(user.id)!==-1) currentProfile.is_admin = true;
+    // Block suspended accounts
+    if(currentProfile.account_status === 'suspended'){
+      await sb.auth.signOut();
+      currentUser = null;
+      var errEl = document.getElementById('login-error');
+      if(errEl){ errEl.textContent='Your account has been suspended. Please contact support.'; errEl.style.display=''; }
+      go('login');
+      return;
+    }
+    updateUserUI();
+  }
+
+  // Update trips
+  userTrips = tripsResult.data || [];
+  renderHomeTrips();
+
+  // Now restore trip screen if that's where they were
   if(lastScreen === 'trip' && lastTripId && userTrips.find(function(t){ return t.id===lastTripId; })){
     openDbTrip(lastTripId);
-    // restore day pill
     if(lastDay > 1){
       setTimeout(function(){
         var pills = document.querySelectorAll('#trip-day-picker .dp');
         if(pills[lastDay-1]) pills[lastDay-1].click();
       }, 50);
     }
-    // restore tab
     setTimeout(function(){ tabByName(lastTab); }, 80);
   } else {
-    go('home');
     setTimeout(showAlert, 600);
   }
 }
@@ -1566,8 +1581,12 @@ function initTripCache(trip) {
     bookingPlatforms: migrateBkp(trip.booking_platforms_json),
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
     mapUrl: trip.map_url || '',
-    wardrobe: Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [],
-    dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json)) ? trip.day_outfits_json : {},
+    wardrobe: Array.isArray(trip.wardrobe_json) && trip.wardrobe_json.length
+      ? trip.wardrobe_json
+      : (function(){ try{ return JSON.parse(localStorage.getItem('wander_wardrobe_'+tid)||'[]'); }catch(e){ return []; } }()),
+    dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json))
+      ? trip.day_outfits_json
+      : (function(){ try{ var s=localStorage.getItem('wander_outfits_'+tid); return s?JSON.parse(s):{}; }catch(e){ return {}; } }()),
     clocks: Array.isArray(trip.clocks_json) && trip.clocks_json.length
       ? trip.clocks_json
       : (function(){ try{ return JSON.parse(localStorage.getItem('wander_clocks_'+tid)||'[]'); }catch(e){ return []; } }())
@@ -1756,40 +1775,49 @@ function resetInactivityTimer(){
 
 // ── Check existing session on page load ──────────────────────────────────────
 var _authReady = false;
+var _afterLoginRunning = false;
 
-window.addEventListener('DOMContentLoaded', async function(){
-  // Check inactivity: if last active > 1 hour ago, force sign-out then show login
+window.addEventListener('DOMContentLoaded', function(){
+  // Optimistically show last screen while auth resolves — avoids login flash on refresh
   var lastActive = parseInt(localStorage.getItem('wander_last_active') || '0');
-  if(lastActive && (Date.now() - lastActive) > INACTIVITY_MS){
-    await sb.auth.signOut();
-    _authReady = true;
-    go('login');
-    return;
+  var timedOut = lastActive && (Date.now() - lastActive) > INACTIVITY_MS;
+  var savedScreen = localStorage.getItem('wander_nav_screen');
+  var sbKey = Object.keys(localStorage).find(function(k){ return k.startsWith('sb-') && k.endsWith('-auth-token'); });
+  var likelyLoggedIn = !timedOut && savedScreen && savedScreen !== 'login' && sbKey && localStorage.getItem(sbKey);
+  if(likelyLoggedIn){
+    go(savedScreen === 'trip' ? 'home' : savedScreen, true);
   }
 
-  // Try to restore existing session
-  var {data:{session}} = await sb.auth.getSession();
-  if(session){
-    resetInactivityTimer();
-    await afterLogin(session.user);
-  } else {
-    go('login');
-  }
-  _authReady = true;
-
-  // React to future auth events — but ignore SIGNED_OUT that fires during init
+  // onAuthStateChange is the single source of truth — no getSession() needed.
+  // INITIAL_SESSION fires immediately with the restored session (or null).
   sb.auth.onAuthStateChange(async function(event, session){
-    if(!_authReady) return;
-    if(event === 'SIGNED_IN' && session && !currentUser){
+    if(event === 'INITIAL_SESSION'){
+      _authReady = true;
+      if(session){
+        var la = parseInt(localStorage.getItem('wander_last_active') || '0');
+        if(la && (Date.now() - la) > INACTIVITY_MS){
+          await sb.auth.signOut();
+          return; // SIGNED_OUT will fire and redirect
+        }
+        resetInactivityTimer();
+        _afterLoginRunning = true;
+        await afterLogin(session.user);
+        _afterLoginRunning = false;
+      } else {
+        go('login');
+      }
+    } else if(event === 'SIGNED_IN' && session && !currentUser && !_afterLoginRunning){
       resetInactivityTimer();
+      _afterLoginRunning = true;
       await afterLogin(session.user);
-    }
-    if(event === 'TOKEN_REFRESHED' && session){
+      _afterLoginRunning = false;
+    } else if(event === 'TOKEN_REFRESHED' && session){
       currentUser = session.user;
-    }
-    if(event === 'SIGNED_OUT' && currentUser){
-      currentUser = null; currentProfile = {}; userTrips = [];
-      go('login');
+    } else if(event === 'SIGNED_OUT'){
+      if(currentUser || _authReady){
+        currentUser = null; currentProfile = {}; userTrips = [];
+        go('login');
+      }
     }
   });
 });
@@ -1962,7 +1990,15 @@ function tab(btn,name){
   document.querySelectorAll('.tp').forEach(function(p){p.classList.remove('active');});
   var el = document.getElementById('tp-'+name);
   if(el) el.classList.add('active');
-  if(name==='suitcase'){ renderWardrobeGrid(); }
+  if(name==='suitcase'){
+    wardrobeFilter = 'All';
+    var allPill = document.querySelector('#tp-suitcase .pill');
+    if(allPill){
+      allPill.parentElement.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+      allPill.classList.add('on');
+    }
+    renderWardrobeGrid();
+  }
   if(name==='photos'){ renderPhotosDayFilter(); renderPhotosGrid(); }
   if(name==='log'){ renderLogOverview(); }
   if(name==='tasks'){ renderTaskList(); }
@@ -3511,11 +3547,33 @@ function wardrobeCatIcon(cat){ return WARDROBE_CAT_ICONS[cat] || '👗'; }
 function getWardrobe(){ return tripCache ? tripCache.wardrobe : wardrobeItems; }
 function setWardrobe(arr){
   wardrobeItems = arr;
-  if(tripCache){ tripCache.wardrobe = arr; persistDebounced('wardrobe_json'); }
+  if(tripCache){
+    tripCache.wardrobe = arr;
+    // localStorage fallback in case wardrobe_json column not yet in Supabase
+    if(currentTripId){
+      try{
+        // strip photos from localStorage copy to keep it small; photos stay in tripCache only
+        var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
+        localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
+      }catch(e){}
+      // update userTrips array so navigating away doesn't lose items
+      var t = userTrips.find(function(x){ return x.id===currentTripId; });
+      if(t) t.wardrobe_json = arr;
+    }
+    persistDebounced('wardrobe_json');
+  }
 }
 function getDayOutfits(){ return tripCache ? tripCache.dayOutfits : {}; }
 function setDayOutfit(dayNum, data){
-  if(tripCache){ tripCache.dayOutfits[dayNum] = data; persistDebounced('day_outfits_json'); }
+  if(tripCache){
+    tripCache.dayOutfits[dayNum] = data;
+    if(currentTripId){
+      try{ localStorage.setItem('wander_outfits_'+currentTripId, JSON.stringify(tripCache.dayOutfits)); }catch(e){}
+      var t = userTrips.find(function(x){ return x.id===currentTripId; });
+      if(t) t.day_outfits_json = tripCache.dayOutfits;
+    }
+    persistDebounced('day_outfits_json');
+  }
 }
 
 function wardrobeCat(btn, cat){
@@ -3745,6 +3803,11 @@ function toggleOutfitItem(id){
       check.innerHTML = sel?'<i class="ti ti-check" style="font-size:11px;color:#fff;"></i>':'';
     }
   }
+}
+
+function clearOutfitSelection(){
+  outfitSelectedIds = [];
+  renderOutfitSheet();
 }
 
 function saveOutfitSelection(){
