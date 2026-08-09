@@ -1593,12 +1593,17 @@ function initTripCache(trip) {
     wardrobe: (function(){
       var sb = Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [];
       var ls = []; try{ ls = JSON.parse(localStorage.getItem('wander_wardrobe_'+tid)||'[]'); }catch(e){}
-      if(!sb.length) return ls;
-      if(!ls.length) return sb;
-      // Merge: Supabase has photos; ls may have newer items not yet in Supabase
-      var sbIds = sb.map(function(i){ return i.id; });
-      var missing = ls.filter(function(i){ return sbIds.indexOf(i.id) === -1; });
-      return sb.concat(missing);
+      // Build photo lookup from localStorage (photos are never sent to Supabase)
+      var photoMap = {};
+      ls.forEach(function(i){ if(i.photo) photoMap[i.id] = i.photo; });
+      if(sb.length){
+        // Re-attach photos to Supabase items, then append any ls-only items
+        var sbIds = sb.map(function(i){ return i.id; });
+        var result = sb.map(function(i){ return photoMap[i.id] ? Object.assign({},i,{photo:photoMap[i.id]}) : i; });
+        var missing = ls.filter(function(i){ return sbIds.indexOf(i.id) === -1; });
+        return result.concat(missing);
+      }
+      return ls;
     }()),
     dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json))
       ? trip.day_outfits_json
@@ -1627,7 +1632,9 @@ function persistTripField(field) {
     'day_notes_json': tripCache.dayNotes,
     'booking_platforms_json': tripCache.bookingPlatforms,
     'budget_json': tripCache.budget,
-    'wardrobe_json': tripCache.wardrobe,
+    // Strip photos before sending to Supabase — base64 images can exceed 1MB limit.
+    // Photos live in localStorage only; they're re-attached on load.
+    'wardrobe_json': tripCache.wardrobe.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; }),
     'day_outfits_json': tripCache.dayOutfits,
     'clocks_json': tripCache.clocks
   };
