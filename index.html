@@ -1842,7 +1842,8 @@ window.addEventListener('DOMContentLoaded', function(){
     } else if(event === 'TOKEN_REFRESHED' && session){
       currentUser = session.user;
     } else if(event === 'SIGNED_OUT'){
-      if(currentUser || _authReady){
+      // Only redirect when we were actually logged in — prevents spurious logout during init
+      if(currentUser){
         currentUser = null; currentProfile = {}; userTrips = [];
         go('login');
       }
@@ -3580,14 +3581,10 @@ function setWardrobe(arr){
     // localStorage fallback in case wardrobe_json column not yet in Supabase
     if(currentTripId){
       try{
-        // Save full items including photos; if quota exceeded, save slim fallback
-        localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(arr));
-      }catch(e){
-        try{
-          var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
-          localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
-        }catch(e2){}
-      }
+        // Save slim items only — photos are large base64 and can blow localStorage quota
+        var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
+        localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
+      }catch(e){}
       var t = userTrips.find(function(x){ return x.id===currentTripId; });
       if(t) t.wardrobe_json = arr;
     }
