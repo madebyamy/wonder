@@ -1403,6 +1403,15 @@ async function afterLogin(user){
 
   // Update trips
   userTrips = tripsResult.data || [];
+  // Cache a slim version for instant home render on next load
+  try{
+    var slim = userTrips.map(function(t){
+      return {id:t.id,name:t.name,color:t.color,cover_emoji:t.cover_emoji,
+              start_date:t.start_date,end_date:t.end_date,destinations:t.destinations,
+              created_by:t.created_by,trip_members:t.trip_members};
+    });
+    localStorage.setItem('wander_trips_cache', JSON.stringify(slim));
+  }catch(e){}
   renderHomeTrips();
 
   // Now restore trip screen if that's where they were
@@ -1581,9 +1590,16 @@ function initTripCache(trip) {
     bookingPlatforms: migrateBkp(trip.booking_platforms_json),
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
     mapUrl: trip.map_url || '',
-    wardrobe: Array.isArray(trip.wardrobe_json) && trip.wardrobe_json.length
-      ? trip.wardrobe_json
-      : (function(){ try{ return JSON.parse(localStorage.getItem('wander_wardrobe_'+tid)||'[]'); }catch(e){ return []; } }()),
+    wardrobe: (function(){
+      var sb = Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [];
+      var ls = []; try{ ls = JSON.parse(localStorage.getItem('wander_wardrobe_'+tid)||'[]'); }catch(e){}
+      if(!sb.length) return ls;
+      if(!ls.length) return sb;
+      // Merge: Supabase has photos; ls may have newer items not yet in Supabase
+      var sbIds = sb.map(function(i){ return i.id; });
+      var missing = ls.filter(function(i){ return sbIds.indexOf(i.id) === -1; });
+      return sb.concat(missing);
+    }()),
     dayOutfits: (trip.day_outfits_json && typeof trip.day_outfits_json === 'object' && !Array.isArray(trip.day_outfits_json))
       ? trip.day_outfits_json
       : (function(){ try{ var s=localStorage.getItem('wander_outfits_'+tid); return s?JSON.parse(s):{}; }catch(e){ return {}; } }()),
@@ -1786,6 +1802,11 @@ window.addEventListener('DOMContentLoaded', function(){
   var likelyLoggedIn = !timedOut && savedScreen && savedScreen !== 'login' && sbKey && localStorage.getItem(sbKey);
   if(likelyLoggedIn){
     go(savedScreen === 'trip' ? 'home' : savedScreen, true);
+    // Show cached trips immediately so home screen isn't blank while Supabase loads
+    try{
+      var cached = JSON.parse(localStorage.getItem('wander_trips_cache') || 'null');
+      if(cached && cached.length){ userTrips = cached; renderHomeTrips(); }
+    }catch(e){}
   }
 
   // onAuthStateChange is the single source of truth — no getSession() needed.
@@ -3552,11 +3573,14 @@ function setWardrobe(arr){
     // localStorage fallback in case wardrobe_json column not yet in Supabase
     if(currentTripId){
       try{
-        // strip photos from localStorage copy to keep it small; photos stay in tripCache only
-        var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
-        localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
-      }catch(e){}
-      // update userTrips array so navigating away doesn't lose items
+        // Save full items including photos; if quota exceeded, save slim fallback
+        localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(arr));
+      }catch(e){
+        try{
+          var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
+          localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
+        }catch(e2){}
+      }
       var t = userTrips.find(function(x){ return x.id===currentTripId; });
       if(t) t.wardrobe_json = arr;
     }
