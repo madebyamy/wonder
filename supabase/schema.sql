@@ -42,7 +42,21 @@ create table if not exists trips (
   color text default '#b8a4ed',
   cover_emoji text default '✈️',
   created_by uuid references auth.users on delete cascade not null,
-  created_at timestamptz default now()
+  created_at timestamptz default now(),
+  -- JSON data columns (added via ALTER TABLE below)
+  expenses_json jsonb,
+  plan_tracked_json jsonb,
+  tasks_json jsonb,
+  journal_json jsonb,
+  mood_json jsonb,
+  location_json jsonb,
+  day_notes_json jsonb,
+  booking_platforms_json jsonb,
+  budget_json numeric,
+  map_url text,
+  wardrobe_json jsonb,
+  day_outfits_json jsonb,
+  clocks_json jsonb
 );
 alter table trips enable row level security;
 create policy "Trip members can view trips" on trips for select using (

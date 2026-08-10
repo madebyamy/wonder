@@ -1747,6 +1747,7 @@ function openDbTrip(id){
   localStorage.setItem('wander_nav_trip', currentTripId);
   renderExpenses();
   checkSoonAlerts();
+  loadSuitcaseItems(); // async — populates wardrobe from suitcase_items table
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -3636,8 +3637,8 @@ function renderWardrobeGrid(){
       +'<div style="font-size:10px;color:var(--muted);margin-bottom:2px;">'+icon+' '+item.category+'</div>'
       +(item.desc ? '<div style="font-size:10px;color:var(--muted);line-height:1.4;margin-bottom:5px;">'+item.desc+'</div>' : '')
       +'<div style="display:flex;gap:5px;margin-top:4px;">'
-      +'<button onclick="openAddWardrobeSheet('+item.id+')" style="flex:1;background:var(--card3);border:none;border-radius:7px;padding:5px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
-      +'<button onclick="deleteWardrobeItem('+item.id+')" style="background:none;border:none;border-radius:7px;padding:5px 8px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
+      +'<button onclick="openAddWardrobeSheet(\''+item.id+'\')" style="flex:1;background:var(--card3);border:none;border-radius:7px;padding:5px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;">✏️ Edit</button>'
+      +'<button onclick="deleteWardrobeItem(\''+item.id+'\')" style="background:none;border:none;border-radius:7px;padding:5px 8px;font-size:13px;cursor:pointer;color:#cc3a3a;">✕</button>'
       +'</div></div></div>';
   }).join('');
 }
@@ -3684,6 +3685,24 @@ function closeAddWardrobeSheet(){
   wardrobePhotoData = null;
 }
 
+function compressPhoto(dataUrl, callback){
+  var img = new Image();
+  img.onload = function(){
+    var MAX = 640;
+    var w = img.width, h = img.height;
+    if(w > MAX || h > MAX){
+      if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
+      else { w = Math.round(w * MAX / h); h = MAX; }
+    }
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/jpeg', 0.65));
+  };
+  img.onerror = function(){ callback(dataUrl); };
+  img.src = dataUrl;
+}
+
 function pickWardrobePhoto(source){
   var input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
@@ -3692,15 +3711,17 @@ function pickWardrobePhoto(source){
     var file = e.target.files[0]; if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
-      wardrobePhotoData = ev.target.result;
-      var preview = document.getElementById('wardrobe-photo-preview');
-      var placeholder = document.getElementById('wardrobe-photo-placeholder');
-      var removeBtn = document.getElementById('wardrobe-photo-remove');
-      preview.style.backgroundImage = 'url('+ev.target.result+')';
-      preview.style.backgroundSize = 'cover';
-      preview.style.backgroundPosition = 'center';
-      if(placeholder) placeholder.style.display = 'none';
-      if(removeBtn) removeBtn.style.display = 'block';
+      compressPhoto(ev.target.result, function(compressed){
+        wardrobePhotoData = compressed;
+        var preview = document.getElementById('wardrobe-photo-preview');
+        var placeholder = document.getElementById('wardrobe-photo-placeholder');
+        var removeBtn = document.getElementById('wardrobe-photo-remove');
+        preview.style.backgroundImage = 'url('+compressed+')';
+        preview.style.backgroundSize = 'cover';
+        preview.style.backgroundPosition = 'center';
+        if(placeholder) placeholder.style.display = 'none';
+        if(removeBtn) removeBtn.style.display = 'block';
+      });
     };
     reader.readAsDataURL(file);
   };
@@ -3717,34 +3738,51 @@ function removeWardrobePhoto(){
   if(removeBtn) removeBtn.style.display = 'none';
 }
 
-function saveWardrobeItem(){
+async function saveWardrobeItem(){
   var name = (document.getElementById('wardrobe-name-input').value || '').trim();
   if(!name){ alert('Please enter a name for the item.'); return; }
   var cat  = document.getElementById('wardrobe-cat-select').value;
   var desc = (document.getElementById('wardrobe-desc-input').value || '').trim();
-  var wardrobe = getWardrobe().slice();
-  if(editingWardrobeId !== null){
-    var idx = wardrobe.findIndex(function(i){ return i.id === editingWardrobeId; });
-    if(idx !== -1){
-      wardrobe[idx].name = name;
-      wardrobe[idx].category = cat;
-      wardrobe[idx].desc = desc;
-      if(wardrobePhotoData) wardrobe[idx].photo = wardrobePhotoData;
+  var isEdit = editingWardrobeId !== null;
+
+  if(isEdit){
+    var upd = {name:name, category:cat, notes:desc};
+    if(wardrobePhotoData) upd.photo_url = wardrobePhotoData;
+    var {error} = await sb.from('suitcase_items').update(upd).eq('id', editingWardrobeId);
+    if(!error && tripCache){
+      var idx = tripCache.wardrobe.findIndex(function(i){ return i.id === editingWardrobeId; });
+      if(idx !== -1){
+        tripCache.wardrobe[idx].name = name;
+        tripCache.wardrobe[idx].category = cat;
+        tripCache.wardrobe[idx].desc = desc;
+        if(wardrobePhotoData) tripCache.wardrobe[idx].photo = wardrobePhotoData;
+      }
     }
   } else {
-    wardrobe.push({id: ++wardrobeIdCounter, name: name, category: cat, desc: desc, photo: wardrobePhotoData || null});
+    var row = {trip_id:currentTripId, name:name, category:cat, notes:desc,
+               photo_url: wardrobePhotoData||null, created_by:currentUser.id};
+    var {data, error} = await sb.from('suitcase_items').insert(row).select().single();
+    if(!error && data && tripCache){
+      tripCache.wardrobe.push({id:data.id, name:data.name, category:data.category,
+                               desc:data.notes||'', photo:data.photo_url||null});
+    } else if(error){
+      alert('Could not save item: '+error.message); return;
+    }
   }
-  setWardrobe(wardrobe);
+
   closeAddWardrobeSheet();
   renderWardrobeGrid();
-  showToast(editingWardrobeId ? 'Item updated' : '✅ Added to suitcase');
+  showToast(isEdit ? 'Item updated' : '✅ Added to suitcase');
 }
 
 function deleteWardrobeItem(id){
   if(!confirm('Remove this item from your suitcase?')) return;
-  setWardrobe(getWardrobe().filter(function(i){ return i.id !== id; }));
+  // Delete from Supabase
+  sb.from('suitcase_items').delete().eq('id', id).then(function(){});
+  // Remove from in-memory cache
+  if(tripCache) tripCache.wardrobe = tripCache.wardrobe.filter(function(i){ return i.id !== id; });
   renderWardrobeGrid();
-  // also remove from any day outfit selections
+  // Remove from any day outfit selections
   var outfits = getDayOutfits();
   Object.keys(outfits).forEach(function(dayNum){
     if(outfits[dayNum] && outfits[dayNum].itemIds){
@@ -3753,6 +3791,20 @@ function deleteWardrobeItem(id){
     }
   });
   renderPlansOutfits(currentDayNum);
+}
+
+async function loadSuitcaseItems(){
+  if(!currentTripId || !currentUser || !tripCache) return;
+  var {data, error} = await sb.from('suitcase_items')
+    .select('*').eq('trip_id', currentTripId).order('created_at');
+  if(error){ console.warn('suitcase load error:', error.message); return; }
+  tripCache.wardrobe = (data||[]).map(function(r){
+    return {id:r.id, name:r.name, category:r.category, desc:r.notes||'', photo:r.photo_url||null};
+  });
+  // Re-render grid if suitcase tab is active
+  if(document.getElementById('tp-suitcase') && document.getElementById('tp-suitcase').classList.contains('active')){
+    renderWardrobeGrid();
+  }
 }
 
 // ── Day Outfit Sheet ──────────────────────────────────────────────────────────
@@ -3799,7 +3851,7 @@ function renderOutfitSheet(){
         var thumb = item.photo
           ? '<div style="width:48px;height:48px;border-radius:9px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
           : '<div style="width:48px;height:48px;border-radius:9px;background:var(--card3);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:22px;">'+wardrobeCatIcon(item.category)+'</div>';
-        return '<div onclick="toggleOutfitItem('+item.id+')" id="outfit-item-row-'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;border:2px solid '+(sel?'var(--blue)':'var(--card3)')+';background:'+(sel?'rgba(74,122,222,.08)':'var(--card2)')+';">'
+        return '<div onclick="toggleOutfitItem(\''+item.id+'\')" id="outfit-item-row-'+item.id+'" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;cursor:pointer;border:2px solid '+(sel?'var(--blue)':'var(--card3)')+';background:'+(sel?'rgba(74,122,222,.08)':'var(--card2)')+';">'
           +thumb
           +'<div style="flex:1;">'
           +'<div style="font-size:12px;font-weight:600;">'+item.name+'</div>'
