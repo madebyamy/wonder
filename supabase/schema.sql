@@ -160,6 +160,9 @@ create policy "Users can insert own entries" on log_entries for insert with chec
 create policy "Users can update own entries" on log_entries for update using (auth.uid() = created_by);
 
 -- ── SUITCASE ITEMS ──────────────────────────────────────────────────────────
+-- NOTE: the app no longer reads or writes this table. Suitcase items live in
+-- trips.wardrobe_json, and item photos live in the trip-photos storage bucket
+-- (only the storage path is stored in JSON). Kept here for reference only.
 create table if not exists suitcase_items (
   id uuid default gen_random_uuid() primary key,
   trip_id uuid references trips on delete cascade not null,
@@ -282,3 +285,33 @@ create policy "Trip members can view photos" on storage.objects for select
 
 create policy "Photo owners can delete" on storage.objects for delete
   using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- Required for replacing an existing suitcase photo (upload uses upsert).
+create policy "Photo owners can update" on storage.objects for update
+  using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ── MIGRATION — run this on an existing project ─────────────────────────────
+-- Safe to run more than once. Adds the JSON columns the app writes to, plus
+-- the storage UPDATE policy needed to replace a suitcase photo.
+--
+-- alter table trips
+--   add column if not exists expenses_json jsonb,
+--   add column if not exists plan_tracked_json jsonb,
+--   add column if not exists tasks_json jsonb,
+--   add column if not exists journal_json jsonb,
+--   add column if not exists mood_json jsonb,
+--   add column if not exists location_json jsonb,
+--   add column if not exists day_notes_json jsonb,
+--   add column if not exists booking_platforms_json jsonb,
+--   add column if not exists budget_json numeric,
+--   add column if not exists map_url text,
+--   add column if not exists wardrobe_json jsonb,
+--   add column if not exists day_outfits_json jsonb,
+--   add column if not exists clocks_json jsonb;
+--
+-- insert into storage.buckets (id, name, public)
+--   values ('trip-photos','trip-photos',false) on conflict do nothing;
+--
+-- drop policy if exists "Photo owners can update" on storage.objects;
+-- create policy "Photo owners can update" on storage.objects for update
+--   using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);

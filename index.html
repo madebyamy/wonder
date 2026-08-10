@@ -1593,16 +1593,23 @@ function initTripCache(trip) {
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
     mapUrl: trip.map_url || '',
     wardrobe: (function(){
-      var sb = Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [];
+      var rows = Array.isArray(trip.wardrobe_json) ? trip.wardrobe_json : [];
       var ls = []; try{ ls = JSON.parse(localStorage.getItem('wander_wardrobe_'+tid)||'[]'); }catch(e){}
-      // Build photo lookup from localStorage (photos are never sent to Supabase)
-      var photoMap = {};
-      ls.forEach(function(i){ if(i.photo) photoMap[i.id] = i.photo; });
-      if(sb.length){
-        // Re-attach photos to Supabase items, then append any ls-only items
-        var sbIds = sb.map(function(i){ return i.id; });
-        var result = sb.map(function(i){ return photoMap[i.id] ? Object.assign({},i,{photo:photoMap[i.id]}) : i; });
-        var missing = ls.filter(function(i){ return sbIds.indexOf(i.id) === -1; });
+      // Carry over anything localStorage still holds that Supabase doesn't:
+      // legacy inline photos, and the storage path if the column lagged behind.
+      var lsMap = {};
+      ls.forEach(function(i){ lsMap[String(i.id)] = i; });
+      if(rows.length){
+        var ids = rows.map(function(i){ return String(i.id); });
+        var result = rows.map(function(i){
+          var old = lsMap[String(i.id)];
+          if(!old) return i;
+          return Object.assign({}, i, {
+            photo: i.photo || old.photo || null,
+            photoPath: i.photoPath || old.photoPath || null
+          });
+        });
+        var missing = ls.filter(function(i){ return ids.indexOf(String(i.id)) === -1; });
         return result.concat(missing);
       }
       return ls;
@@ -1614,10 +1621,6 @@ function initTripCache(trip) {
       ? trip.clocks_json
       : (function(){ try{ return JSON.parse(localStorage.getItem('wander_clocks_'+tid)||'[]'); }catch(e){ return []; } }())
   };
-  // Sync wardrobe counter so new items don't collide
-  if(tripCache.wardrobe.length){
-    wardrobeIdCounter = Math.max.apply(null, tripCache.wardrobe.map(function(i){ return i.id||0; }));
-  }
   // Persist any migrated data right away
   ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
 }
@@ -1634,9 +1637,11 @@ function persistTripField(field) {
     'day_notes_json': tripCache.dayNotes,
     'booking_platforms_json': tripCache.bookingPlatforms,
     'budget_json': tripCache.budget,
-    // Strip photos before sending to Supabase — base64 images can exceed 1MB limit.
-    // Photos live in localStorage only; they're re-attached on load.
-    'wardrobe_json': tripCache.wardrobe.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; }),
+    // Persist the storage path, never the image bytes. Signed/base64 URLs are
+    // dropped here and re-resolved from photoPath on load.
+    'wardrobe_json': tripCache.wardrobe.map(function(i){
+      return {id:i.id,name:i.name,category:i.category,desc:i.desc,photoPath:i.photoPath||null};
+    }),
     'day_outfits_json': tripCache.dayOutfits,
     'clocks_json': tripCache.clocks
   };
@@ -1749,7 +1754,7 @@ function openDbTrip(id){
   localStorage.setItem('wander_nav_trip', currentTripId);
   renderExpenses();
   checkSoonAlerts();
-  loadSuitcaseItems(); // async — populates wardrobe from suitcase_items table
+  loadSuitcaseItems(); // async — re-signs wardrobe photo URLs from storage
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -2206,7 +2211,8 @@ function renderPlansOutfits(dayNum){
   var outfit = tripCache ? tripCache.dayOutfits[dayNum] : null;
   var selectedIds = outfit ? (outfit.itemIds || []) : [];
   var wardrobe = tripCache ? tripCache.wardrobe : wardrobeItems;
-  var items = wardrobe.filter(function(i){ return selectedIds.indexOf(i.id) !== -1; });
+  var ids = selectedIds.map(String);
+  var items = wardrobe.filter(function(i){ return ids.indexOf(String(i.id)) !== -1; });
   if(items.length === 0){ section.style.display='none'; return; }
   section.style.display = 'block';
   var sharedBadge = (outfit && outfit.shared) ? '<span style="font-size:9px;background:rgba(74,122,222,.15);color:#4a7ade;border-radius:5px;padding:1px 6px;font-weight:700;margin-left:4px;">Shared</span>' : '';
@@ -3566,7 +3572,6 @@ function logRate(el, dayNum){
 
 // ── Wardrobe (Suitcase tab) ───────────────────────────────────────────────────
 var wardrobeItems = [];
-var wardrobeIdCounter = 0;
 var wardrobeFilter = 'All';
 var editingWardrobeId = null;
 var wardrobePhotoData = null;
@@ -3584,8 +3589,11 @@ function setWardrobe(arr){
     // localStorage fallback in case wardrobe_json column not yet in Supabase
     if(currentTripId){
       try{
-        // Save slim items only — photos are large base64 and can blow localStorage quota
-        var slim = arr.map(function(i){ return {id:i.id,name:i.name,category:i.category,desc:i.desc}; });
+        // Never store image bytes here — base64 blows the 5MB localStorage quota,
+        // which on some browsers wipes every key including the auth token.
+        var slim = arr.map(function(i){
+          return {id:i.id,name:i.name,category:i.category,desc:i.desc,photoPath:i.photoPath||null};
+        });
         localStorage.setItem('wander_wardrobe_'+currentTripId, JSON.stringify(slim));
       }catch(e){}
       var t = userTrips.find(function(x){ return x.id===currentTripId; });
@@ -3659,8 +3667,13 @@ function openAddWardrobeSheet(editId){
   document.getElementById('wardrobe-desc-input').value = '';
   document.getElementById('wardrobe-cat-select').value = 'Shirts';
   if(editId){
-    var item = getWardrobe().find(function(i){ return i.id === editId; });
-    if(item){
+    var item = getWardrobe().find(function(i){ return String(i.id) === String(editId); });
+    if(!item){
+      alert('Could not load that item.');
+      editingWardrobeId = null;
+      return;
+    }
+    {
       document.getElementById('wardrobe-name-input').value = item.name || '';
       document.getElementById('wardrobe-desc-input').value = item.desc || '';
       document.getElementById('wardrobe-cat-select').value = item.category || 'Shirts';
@@ -3705,6 +3718,52 @@ function compressPhoto(dataUrl, callback){
   img.src = dataUrl;
 }
 
+function newWardrobeId(){
+  if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'w-'+Date.now()+'-'+Math.random().toString(36).slice(2,10);
+}
+
+function dataUrlToBlob(dataUrl){
+  var parts = dataUrl.split(',');
+  var mime = (parts[0].match(/:(.*?);/) || [null,'image/jpeg'])[1];
+  var bin = atob(parts[1]);
+  var arr = new Uint8Array(bin.length);
+  for(var i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+  return new Blob([arr], {type:mime});
+}
+
+// Uploads a compressed data URL to the trip-photos bucket.
+// Returns the storage path, or null if the upload fails (caller keeps the
+// data URL inline as a fallback so the photo is never silently lost).
+async function uploadWardrobePhoto(dataUrl, itemId){
+  if(!dataUrl || dataUrl.indexOf('data:') !== 0) return null;
+  if(!currentUser || !currentTripId) return null;
+  try{
+    var path = currentUser.id+'/'+currentTripId+'/'+itemId+'.jpg';
+    var {error} = await sb.storage.from('trip-photos')
+      .upload(path, dataUrlToBlob(dataUrl), {contentType:'image/jpeg', upsert:true});
+    if(error){ console.warn('photo upload failed:', error.message); return null; }
+    return path;
+  }catch(e){ console.warn('photo upload threw:', e); return null; }
+}
+
+// Turns stored storage paths back into displayable signed URLs.
+// Legacy items whose photo is an inline data: URL are left untouched.
+async function resolveWardrobePhotos(items){
+  var needed = items.filter(function(i){ return i.photoPath; });
+  if(!needed.length) return items;
+  try{
+    var {data, error} = await sb.storage.from('trip-photos')
+      .createSignedUrls(needed.map(function(i){ return i.photoPath; }), 604800);
+    if(error || !data) return items;
+    needed.forEach(function(item, idx){
+      var row = data[idx];
+      if(row && row.signedUrl) item.photo = row.signedUrl;
+    });
+  }catch(e){ console.warn('signed url resolve failed:', e); }
+  return items;
+}
+
 function pickWardrobePhoto(source){
   var input = document.createElement('input');
   input.type = 'file'; input.accept = 'image/*';
@@ -3747,66 +3806,61 @@ async function saveWardrobeItem(){
   var desc = (document.getElementById('wardrobe-desc-input').value || '').trim();
   var isEdit = editingWardrobeId !== null;
 
-  if(isEdit){
-    var upd = {name:name, category:cat, notes:desc};
-    if(wardrobePhotoData) upd.photo_url = wardrobePhotoData;
-    var {error} = await sb.from('suitcase_items').update(upd).eq('id', editingWardrobeId);
-    if(!error && tripCache){
-      var idx = tripCache.wardrobe.findIndex(function(i){ return i.id === editingWardrobeId; });
-      if(idx !== -1){
-        tripCache.wardrobe[idx].name = name;
-        tripCache.wardrobe[idx].category = cat;
-        tripCache.wardrobe[idx].desc = desc;
-        if(wardrobePhotoData) tripCache.wardrobe[idx].photo = wardrobePhotoData;
-      }
-    }
-  } else {
-    var row = {trip_id:currentTripId, name:name, category:cat, notes:desc,
-               photo_url: wardrobePhotoData||null, created_by:currentUser.id};
-    var {data, error} = await sb.from('suitcase_items').insert(row).select().single();
-    if(!error && data && tripCache){
-      tripCache.wardrobe.push({id:data.id, name:data.name, category:data.category,
-                               desc:data.notes||'', photo:data.photo_url||null});
-    } else if(error){
-      alert('Could not save item: '+error.message); return;
-    }
+  var items = getWardrobe().slice();
+  var idx = isEdit ? items.findIndex(function(i){ return String(i.id) === String(editingWardrobeId); }) : -1;
+  if(isEdit && idx === -1){ alert('Could not find that item to edit.'); return; }
+
+  var itemId = isEdit ? items[idx].id : newWardrobeId();
+  var existing = isEdit ? items[idx] : {};
+
+  // Only re-upload when the user picked a new photo this session.
+  var photo = existing.photo || null;
+  var photoPath = existing.photoPath || null;
+  if(wardrobePhotoData && wardrobePhotoData !== existing.photo){
+    var uploaded = await uploadWardrobePhoto(wardrobePhotoData, itemId);
+    photo = wardrobePhotoData;
+    photoPath = uploaded; // null if upload failed — data URL still shows this session
+  } else if(!wardrobePhotoData){
+    photo = null; photoPath = null; // user removed the photo
   }
 
+  var record = {id:itemId, name:name, category:cat, desc:desc, photo:photo, photoPath:photoPath};
+  if(isEdit){ items[idx] = record; } else { items.push(record); }
+
+  setWardrobe(items);
   closeAddWardrobeSheet();
   renderWardrobeGrid();
+  renderPlansOutfits(currentDayNum);
   showToast(isEdit ? 'Item updated' : '✅ Added to suitcase');
 }
 
 function deleteWardrobeItem(id){
   if(!confirm('Remove this item from your suitcase?')) return;
-  // Delete from Supabase
-  sb.from('suitcase_items').delete().eq('id', id).then(function(){});
-  // Remove from in-memory cache
-  if(tripCache) tripCache.wardrobe = tripCache.wardrobe.filter(function(i){ return i.id !== id; });
+  var item = getWardrobe().find(function(i){ return String(i.id) === String(id); });
+  if(item && item.photoPath){
+    sb.storage.from('trip-photos').remove([item.photoPath]).then(function(){});
+  }
+  setWardrobe(getWardrobe().filter(function(i){ return String(i.id) !== String(id); }));
   renderWardrobeGrid();
   // Remove from any day outfit selections
   var outfits = getDayOutfits();
   Object.keys(outfits).forEach(function(dayNum){
     if(outfits[dayNum] && outfits[dayNum].itemIds){
-      outfits[dayNum].itemIds = outfits[dayNum].itemIds.filter(function(x){ return x !== id; });
+      outfits[dayNum].itemIds = outfits[dayNum].itemIds.filter(function(x){ return String(x) !== String(id); });
       setDayOutfit(dayNum, outfits[dayNum]);
     }
   });
   renderPlansOutfits(currentDayNum);
 }
 
+// Re-signs stored photo paths after a trip loads. Wardrobe data itself comes
+// from trips.wardrobe_json via initTripCache — this only restores the images.
 async function loadSuitcaseItems(){
-  if(!currentTripId || !currentUser || !tripCache) return;
-  var {data, error} = await sb.from('suitcase_items')
-    .select('*').eq('trip_id', currentTripId).order('created_at');
-  if(error){ console.warn('suitcase load error:', error.message); return; }
-  tripCache.wardrobe = (data||[]).map(function(r){
-    return {id:r.id, name:r.name, category:r.category, desc:r.notes||'', photo:r.photo_url||null};
-  });
-  // Re-render grid if suitcase tab is active
-  if(document.getElementById('tp-suitcase') && document.getElementById('tp-suitcase').classList.contains('active')){
-    renderWardrobeGrid();
-  }
+  if(!currentTripId || !tripCache) return;
+  if(!tripCache.wardrobe || !tripCache.wardrobe.length) return;
+  await resolveWardrobePhotos(tripCache.wardrobe);
+  renderWardrobeGrid();
+  renderPlansOutfits(currentDayNum);
 }
 
 // ── Day Outfit Sheet ──────────────────────────────────────────────────────────
@@ -3817,7 +3871,9 @@ function openOutfitSheet(){
   document.getElementById('outfit-sheet-day-label').textContent = label;
   // Load existing selection for this day
   var existing = (getDayOutfits()[currentDayNum] || {});
-  outfitSelectedIds = (existing.itemIds || []).slice();
+  // Normalise to strings — onclick handlers always pass ids as strings, and
+  // older items were stored with numeric ids.
+  outfitSelectedIds = (existing.itemIds || []).map(String);
   var shareTog = document.getElementById('outfit-share-toggle');
   if(shareTog){ shareTog.classList.toggle('on', !!existing.shared); }
   renderOutfitSheet();
@@ -3849,7 +3905,7 @@ function renderOutfitSheet(){
       +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:8px;">'+wardrobeCatIcon(cat)+' '+cat+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:7px;">'
       +items.map(function(item){
-        var sel = outfitSelectedIds.indexOf(item.id) !== -1;
+        var sel = outfitSelectedIds.indexOf(String(item.id)) !== -1;
         var thumb = item.photo
           ? '<div style="width:48px;height:48px;border-radius:9px;background:url(\''+item.photo+'\') center/cover no-repeat;flex:0 0 auto;"></div>'
           : '<div style="width:48px;height:48px;border-radius:9px;background:var(--card3);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:22px;">'+wardrobeCatIcon(item.category)+'</div>';
@@ -3870,6 +3926,7 @@ function renderOutfitSheet(){
 }
 
 function toggleOutfitItem(id){
+  id = String(id);
   var idx = outfitSelectedIds.indexOf(id);
   if(idx === -1){ outfitSelectedIds.push(id); } else { outfitSelectedIds.splice(idx,1); }
   // Update just the row visually
@@ -3899,19 +3956,16 @@ function saveOutfitSelection(){
   if(currentTripId && currentUser && shared){
     var wardrobe = getWardrobe();
     var outfitData = outfitSelectedIds.map(function(id){
-      var item = wardrobe.find(function(i){ return i.id===id; });
-      return item ? {name:item.name, category:item.category, photo:item.photo||null} : null;
+      var item = wardrobe.find(function(i){ return String(i.id)===String(id); });
+      return item ? {name:item.name, category:item.category, photoPath:item.photoPath||null} : null;
     }).filter(Boolean);
+    // Optional table — the outfit is already saved locally either way.
     sb.from('trip_outfits').upsert({
       trip_id: currentTripId, user_id: currentUser.id, day_num: currentDayNum,
       outfit_data: outfitData, shared: true, updated_at: new Date().toISOString()
-    },{onConflict:'trip_id,user_id,day_num'}).then(function(){});
-  } else if(currentTripId && currentUser && !shared){
-    // Mark as not shared
-    sb.from('trip_outfits').upsert({
-      trip_id: currentTripId, user_id: currentUser.id, day_num: currentDayNum,
-      outfit_data: [], shared: false, updated_at: new Date().toISOString()
-    },{onConflict:'trip_id,user_id,day_num'}).then(function(){});
+    },{onConflict:'trip_id,user_id,day_num'}).then(function(r){
+      if(r && r.error) console.warn('trip_outfits sync skipped:', r.error.message);
+    });
   }
   closeOutfitSheet();
   showToast('👗 Outfit saved');
