@@ -2030,6 +2030,25 @@ async function loadAllDayPlans(totalDays) {
   for (var i = 1; i <= totalDays; i++) { loadDayPlans(i); }
 }
 
+// Call after any plan is added, edited or deleted.
+// Re-renders every day rather than just the current one: car rentals render
+// only from the tripCarRentals cache (so it must be refetched or the change is
+// invisible), and hotels and overnight flights span days beyond this one.
+async function refreshPlansAfterChange() {
+  await loadAllDayPlans(totalTripDays || 1);
+}
+
+// An update whose filter matches nothing is not an error to PostgREST, so a
+// stale id would report success while changing nothing. Require a row back.
+async function updatePlanRow(table, id, data) {
+  var r = await sb.from(table).update(data).eq('id', id).select();
+  if (r.error) return r.error;
+  if (!r.data || !r.data.length) {
+    return {message: 'Could not find that item to update — it may have been deleted.'};
+  }
+  return null;
+}
+
 function tab(btn,name){
   document.querySelectorAll('.tbtn').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
@@ -2450,6 +2469,27 @@ function openEditSheet(type, id) {
 }
 
 async function deletePlanItem(table, id) {
+  var cached = planItemCache[id];
+  var d = cached ? cached.data : null;
+  var label = table === 'flights' ? 'flight'
+            : table === 'hotels'  ? 'hotel'
+            : (d && d.activity_type === 'Car Rental') ? 'car rental' : 'event';
+  var name = d ? (d.hotel_name || d.title || [d.airline, d.flight_number].filter(Boolean).join(' ')) : '';
+
+  if (!confirm('Delete this ' + label + (name ? ' — ' + name : '') + '?\n\nThis cannot be undone.')) return;
+
+  // Delete from Supabase first. A rejected delete matches no rows and reports
+  // no error, so require a row back before touching the linked task/expense —
+  // otherwise a failed delete would still destroy them.
+  var r = await sb.from(table).delete().eq('id', id).select();
+  if (r.error) { alert('Could not delete this ' + label + ':\n\n' + r.error.message); return; }
+  if (!r.data || !r.data.length) {
+    alert('Could not delete this ' + label + '.\n\nIt may have already been removed, '
+      + 'or it was added by someone else — only the person who created an item can delete it.');
+    refreshPlansAfterChange();
+    return;
+  }
+
   if (table === 'hotels') {
     saveTasks(loadTasks().filter(function(t){ return t.hotelId !== id; }));
   }
@@ -2463,28 +2503,30 @@ async function deletePlanItem(table, id) {
     renderExpenses();
   }
   deletePlatform(id);
-  await sb.from(table).delete().eq('id', id);
-  loadDayPlans(currentDayNum);
+  refreshPlansAfterChange();
 }
 
 // ── Add sheet open/close ──────────────────────────────────────────────────────
 function openAddSheet(type) {
-  if (!editingPlanId) {
-    var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
-    if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
-    var dayDate = getDayDateStr(currentDayNum);
-    if (type === 'flight') {
-      document.getElementById('f-date').value = dayDate;
-    } else if (type === 'hotel') {
-      document.getElementById('h-in').value = dayDate;
-      var nextDate = getDayDateStr(currentDayNum + 1);
-      document.getElementById('h-out').value = nextDate;
-    } else if (type === 'excursion') {
-      document.getElementById('e-date').value = dayDate;
-    } else if (type === 'car') {
-      document.getElementById('c-pickup-date').value = dayDate;
-      document.getElementById('c-return-date').value = getDayDateStr(currentDayNum + 1);
-    }
+  // Edits open their sheet directly from openEditSheet, so reaching here always
+  // means "add". Clear any id left behind by an edit that was dismissed without
+  // closing its sheet — otherwise this add would silently UPDATE that item, or
+  // target an id that does not exist in this table and quietly change nothing.
+  editingPlanId = null;
+  var btn = document.querySelector('#add-'+type+'-sheet .btn-d');
+  if (btn) btn.textContent = type === 'flight' ? 'Save flight →' : type === 'hotel' ? 'Save hotel →' : 'Save activity →';
+  var dayDate = getDayDateStr(currentDayNum);
+  if (type === 'flight') {
+    document.getElementById('f-date').value = dayDate;
+  } else if (type === 'hotel') {
+    document.getElementById('h-in').value = dayDate;
+    var nextDate = getDayDateStr(currentDayNum + 1);
+    document.getElementById('h-out').value = nextDate;
+  } else if (type === 'excursion') {
+    document.getElementById('e-date').value = dayDate;
+  } else if (type === 'car') {
+    document.getElementById('c-pickup-date').value = dayDate;
+    document.getElementById('c-return-date').value = getDayDateStr(currentDayNum + 1);
   }
   document.getElementById('add-'+type+'-sheet').style.display = 'flex';
 }
@@ -2612,7 +2654,7 @@ async function saveFlight() {
   };
   var error, flightId;
   if (editingPlanId) {
-    ({error} = await sb.from('flights').update(data).eq('id', editingPlanId));
+    error = await updatePlanRow('flights', editingPlanId, data);
     flightId = editingPlanId;
   } else {
     var {data: inserted, error: insertErr} = await sb.from('flights').insert(data).select().single();
@@ -2623,7 +2665,7 @@ async function saveFlight() {
   closeAddSheet('flight');
   ['f-date','f-airline','f-number','f-from','f-to','f-dep','f-arr','f-notes','f-cost','f-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   resetOvernightBtn();
-  loadDayPlans(currentDayNum);
+  refreshPlansAfterChange();
 }
 
 // ── Save hotel ────────────────────────────────────────────────────────────────
@@ -2649,7 +2691,7 @@ async function saveHotel() {
   };
   var error, hotelId;
   if (editingPlanId) {
-    ({error} = await sb.from('hotels').update(data).eq('id', editingPlanId));
+    error = await updatePlanRow('hotels', editingPlanId, data);
     hotelId = editingPlanId;
   } else {
     var {data: inserted, error: insertErr} = await sb.from('hotels').insert(data).select().single();
@@ -2678,7 +2720,7 @@ async function saveHotel() {
   savePlatform(hotelId, document.getElementById('h-platform').value.trim());
   closeAddSheet('hotel');
   ['h-name','h-addr','h-in','h-out','h-cin-time','h-cout-time','h-conf','h-cancel','h-link','h-cost','h-platform'].forEach(function(id){ document.getElementById(id).value=''; });
-  loadDayPlans(currentDayNum);
+  refreshPlansAfterChange();
 }
 
 // ── Save excursion ────────────────────────────────────────────────────────────
@@ -2702,7 +2744,7 @@ async function saveExcursion() {
   };
   var error, excId;
   if (editingPlanId) {
-    ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+    error = await updatePlanRow('excursions', editingPlanId, data);
     excId = editingPlanId;
   } else {
     var {data: inserted, error: insertErr} = await sb.from('excursions').insert(data).select().single();
@@ -2714,7 +2756,7 @@ async function saveExcursion() {
   closeAddSheet('excursion');
   ['e-title','e-time','e-end-time','e-cost','e-link','e-desc','e-ref','e-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   document.getElementById('e-type').value='';
-  loadDayPlans(currentDayNum);
+  refreshPlansAfterChange();
 }
 
 // ── Save car rental ───────────────────────────────────────────────────────────
@@ -2744,7 +2786,7 @@ async function saveCar() {
   };
   var error, carId;
   if (editingPlanId) {
-    ({error} = await sb.from('excursions').update(data).eq('id', editingPlanId));
+    error = await updatePlanRow('excursions', editingPlanId, data);
     carId = editingPlanId;
   } else {
     var {data: inserted, error: insertErr} = await sb.from('excursions').insert(data).select().single();
@@ -2755,7 +2797,7 @@ async function saveCar() {
   closeAddSheet('car');
   ['c-company','c-type','c-pickup-loc','c-return-loc','c-conf','c-link','c-platform'].forEach(function(id){ document.getElementById(id).value=''; });
   ['c-pickup-date','c-return-date','c-pickup-time','c-return-time','c-cost'].forEach(function(id){ document.getElementById(id).value=''; });
-  loadDayPlans(currentDayNum);
+  refreshPlansAfterChange();
 }
 
 function showAddFlight(){
