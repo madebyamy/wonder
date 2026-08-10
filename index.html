@@ -1637,11 +1637,20 @@ function persistTripField(field) {
     'day_notes_json': tripCache.dayNotes,
     'booking_platforms_json': tripCache.bookingPlatforms,
     'budget_json': tripCache.budget,
-    // Persist the storage path, never the image bytes. Signed/base64 URLs are
-    // dropped here and re-resolved from photoPath on load.
-    'wardrobe_json': tripCache.wardrobe.map(function(i){
-      return {id:i.id,name:i.name,category:i.category,desc:i.desc,photoPath:i.photoPath||null};
-    }),
+    // Normally only the storage path is persisted and the image is re-signed on
+    // load. If an upload failed there is no path, so fall back to embedding the
+    // compressed image — but only while the whole payload stays well under
+    // PostgREST's 1MB request limit, otherwise the write fails silently.
+    'wardrobe_json': (function(){
+      var budget = 600000;
+      return tripCache.wardrobe.map(function(i){
+        var row = {id:i.id, name:i.name, category:i.category, desc:i.desc,
+                   photoPath:i.photoPath||null};
+        var inline = (!i.photoPath && i.photo && i.photo.indexOf('data:') === 0) ? i.photo : null;
+        if(inline && inline.length < budget){ row.photo = inline; budget -= inline.length; }
+        return row;
+      });
+    }()),
     'day_outfits_json': tripCache.dayOutfits,
     'clocks_json': tripCache.clocks
   };
@@ -3736,15 +3745,21 @@ function dataUrlToBlob(dataUrl){
 // Returns the storage path, or null if the upload fails (caller keeps the
 // data URL inline as a fallback so the photo is never silently lost).
 async function uploadWardrobePhoto(dataUrl, itemId){
-  if(!dataUrl || dataUrl.indexOf('data:') !== 0) return null;
-  if(!currentUser || !currentTripId) return null;
+  if(!dataUrl || dataUrl.indexOf('data:') !== 0) return {path:null, error:null};
+  if(!currentUser || !currentTripId) return {path:null, error:'not signed in'};
   try{
     var path = currentUser.id+'/'+currentTripId+'/'+itemId+'.jpg';
     var {error} = await sb.storage.from('trip-photos')
       .upload(path, dataUrlToBlob(dataUrl), {contentType:'image/jpeg', upsert:true});
-    if(error){ console.warn('photo upload failed:', error.message); return null; }
-    return path;
-  }catch(e){ console.warn('photo upload threw:', e); return null; }
+    if(error){
+      console.warn('photo upload failed:', error.message);
+      return {path:null, error:error.message};
+    }
+    return {path:path, error:null};
+  }catch(e){
+    console.warn('photo upload threw:', e);
+    return {path:null, error:(e && e.message) || String(e)};
+  }
 }
 
 // Turns stored storage paths back into displayable signed URLs.
@@ -3816,10 +3831,12 @@ async function saveWardrobeItem(){
   // Only re-upload when the user picked a new photo this session.
   var photo = existing.photo || null;
   var photoPath = existing.photoPath || null;
+  var uploadError = null;
   if(wardrobePhotoData && wardrobePhotoData !== existing.photo){
-    var uploaded = await uploadWardrobePhoto(wardrobePhotoData, itemId);
+    var res = await uploadWardrobePhoto(wardrobePhotoData, itemId);
     photo = wardrobePhotoData;
-    photoPath = uploaded; // null if upload failed — data URL still shows this session
+    photoPath = res.path;
+    uploadError = res.error;
   } else if(!wardrobePhotoData){
     photo = null; photoPath = null; // user removed the photo
   }
@@ -3831,7 +3848,14 @@ async function saveWardrobeItem(){
   closeAddWardrobeSheet();
   renderWardrobeGrid();
   renderPlansOutfits(currentDayNum);
-  showToast(isEdit ? 'Item updated' : '✅ Added to suitcase');
+  if(uploadError){
+    // The photo only exists in memory. Say so rather than showing a success
+    // toast and letting it disappear on the next refresh.
+    alert('Item saved, but the photo could not be uploaded and will be lost on '
+      + 'refresh.\n\nReason: ' + uploadError);
+  } else {
+    showToast(isEdit ? 'Item updated' : '✅ Added to suitcase');
+  }
 }
 
 function deleteWardrobeItem(id){

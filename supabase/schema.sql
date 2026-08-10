@@ -277,18 +277,21 @@ create policy "Creators can delete excursions" on excursions for delete using (a
 insert into storage.buckets (id, name, public) values ('trip-photos', 'trip-photos', false)
 on conflict do nothing;
 
+-- NOTE: these use `to authenticated` rather than `auth.role() = 'authenticated'`.
+-- auth.role() is deprecated and evaluates to null on current Supabase, which
+-- makes the policy never match and every upload fail with an RLS error.
 create policy "Trip members can upload photos" on storage.objects for insert
-  with check (bucket_id = 'trip-photos' and auth.role() = 'authenticated');
+  to authenticated with check (bucket_id = 'trip-photos');
 
 create policy "Trip members can view photos" on storage.objects for select
-  using (bucket_id = 'trip-photos' and auth.role() = 'authenticated');
+  to authenticated using (bucket_id = 'trip-photos');
 
 create policy "Photo owners can delete" on storage.objects for delete
-  using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
+  to authenticated using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
 
 -- Required for replacing an existing suitcase photo (upload uses upsert).
 create policy "Photo owners can update" on storage.objects for update
-  using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
+  to authenticated using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
 
 -- ── MIGRATION — run this on an existing project ─────────────────────────────
 -- Safe to run more than once. Adds the JSON columns the app writes to, plus
@@ -312,6 +315,18 @@ create policy "Photo owners can update" on storage.objects for update
 -- insert into storage.buckets (id, name, public)
 --   values ('trip-photos','trip-photos',false) on conflict do nothing;
 --
--- drop policy if exists "Photo owners can update" on storage.objects;
+-- -- Rebuild the storage policies. The originals used auth.role(), which is
+-- -- deprecated and returns null on current Supabase, so uploads were rejected.
+-- drop policy if exists "Trip members can upload photos" on storage.objects;
+-- drop policy if exists "Trip members can view photos"   on storage.objects;
+-- drop policy if exists "Photo owners can delete"        on storage.objects;
+-- drop policy if exists "Photo owners can update"        on storage.objects;
+--
+-- create policy "Trip members can upload photos" on storage.objects for insert
+--   to authenticated with check (bucket_id = 'trip-photos');
+-- create policy "Trip members can view photos" on storage.objects for select
+--   to authenticated using (bucket_id = 'trip-photos');
+-- create policy "Photo owners can delete" on storage.objects for delete
+--   to authenticated using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
 -- create policy "Photo owners can update" on storage.objects for update
---   using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
+--   to authenticated using (bucket_id = 'trip-photos' and auth.uid()::text = (storage.foldername(name))[1]);
