@@ -3878,7 +3878,7 @@ function toggleOutfitItem(id){
     var sel = outfitSelectedIds.indexOf(id) !== -1;
     row.style.border = '2px solid '+(sel?'var(--blue)':'var(--card3)');
     row.style.background = sel?'rgba(74,122,222,.08)':'var(--card2)';
-    var check = row.querySelector('div:last-child');
+    var check = row.lastElementChild;
     if(check){
       check.style.borderColor = sel?'var(--blue)':'#ccc';
       check.style.background = sel?'var(--blue)':'transparent';
