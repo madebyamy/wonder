@@ -1555,21 +1555,37 @@ async function unfollowTrip(id) {
 // ── Trip data cache (syncs localStorage → Supabase JSON columns) ─────────────
 function initTripCache(trip) {
   var tid = trip.id;
-  function fromArr(dbVal, lsKey) {
-    if (dbVal && dbVal.length) return dbVal;
-    try { return JSON.parse(localStorage.getItem(lsKey)||'[]'); } catch(e) { return []; }
+  // Fields that had no value in Supabase and were recovered from localStorage.
+  // Only these get written back — see the note at the end of this function.
+  var migrated = [];
+  // An empty array/object in Supabase means the user cleared it, which is not
+  // the same as the column never having been written. Only fall back to
+  // localStorage when there is genuinely no stored value, otherwise clearing
+  // something brings it straight back from stale local data.
+  function fromArr(dbVal, lsKey, field) {
+    if (Array.isArray(dbVal)) return dbVal;
+    try {
+      var v = JSON.parse(localStorage.getItem(lsKey)||'[]');
+      if (v.length) migrated.push(field);
+      return v;
+    } catch(e) { return []; }
   }
-  function fromObj(dbVal, lsKey) {
-    if (dbVal && Object.keys(dbVal).length) return dbVal;
-    try { return JSON.parse(localStorage.getItem(lsKey)||'{}'); } catch(e) { return {}; }
+  function fromObj(dbVal, lsKey, field) {
+    if (dbVal && typeof dbVal === 'object') return dbVal;
+    try {
+      var v = JSON.parse(localStorage.getItem(lsKey)||'{}');
+      if (Object.keys(v).length) migrated.push(field);
+      return v;
+    } catch(e) { return {}; }
   }
-  function perDay(dbVal, prefix) {
-    if (dbVal && Object.keys(dbVal).length) return dbVal;
+  function perDay(dbVal, prefix, field) {
+    if (dbVal && typeof dbVal === 'object') return dbVal;
     var out = {};
     for (var i = 1; i <= 60; i++) {
       var v = localStorage.getItem(prefix+tid+'_'+i);
       if (v) out[i] = v;
     }
+    if (Object.keys(out).length) migrated.push(field);
     return out;
   }
   function migrateBkp(dbVal) {
@@ -1579,16 +1595,17 @@ function initTripCache(trip) {
       var k = localStorage.key(i);
       if (k && k.startsWith('wander_bkp_')) out[k.slice(11)] = localStorage.getItem(k);
     }
+    if (Object.keys(out).length) migrated.push('booking_platforms_json');
     return out;
   }
   tripCache = {
-    expenses:         fromArr(trip.expenses_json,           'wander_expenses_'+tid),
-    planTracked:      fromObj(trip.plan_tracked_json,       'wander_plan_tracked_'+tid),
-    tasks:            fromArr(trip.tasks_json,              'wander_tasks_'+tid),
-    journal:          perDay(trip.journal_json,             'wander_journal_'),
-    mood:             perDay(trip.mood_json,                'wander_mood_'),
-    location:         perDay(trip.location_json,            'wander_loc_'),
-    dayNotes:         perDay(trip.day_notes_json,           'wander_notes_'),
+    expenses:         fromArr(trip.expenses_json,           'wander_expenses_'+tid,      'expenses_json'),
+    planTracked:      fromObj(trip.plan_tracked_json,       'wander_plan_tracked_'+tid,  'plan_tracked_json'),
+    tasks:            fromArr(trip.tasks_json,              'wander_tasks_'+tid,         'tasks_json'),
+    journal:          perDay(trip.journal_json,             'wander_journal_',           'journal_json'),
+    mood:             perDay(trip.mood_json,                'wander_mood_',              'mood_json'),
+    location:         perDay(trip.location_json,            'wander_loc_',               'location_json'),
+    dayNotes:         perDay(trip.day_notes_json,           'wander_notes_',             'day_notes_json'),
     bookingPlatforms: migrateBkp(trip.booking_platforms_json),
     budget: trip.budget_json != null ? trip.budget_json : (parseFloat(localStorage.getItem('wander_budget_'+tid))||0),
     mapUrl: trip.map_url || '',
@@ -1621,8 +1638,12 @@ function initTripCache(trip) {
       ? trip.clocks_json
       : (function(){ try{ return JSON.parse(localStorage.getItem('wander_clocks_'+tid)||'[]'); }catch(e){ return []; } }())
   };
-  // Persist any migrated data right away
-  ['expenses_json','plan_tracked_json','tasks_json','journal_json','mood_json','location_json','day_notes_json','booking_platforms_json'].forEach(function(f){ persistTripField(f); });
+  // Write back ONLY what was recovered from localStorage because Supabase had
+  // nothing. Persisting every field here would push this freshly-built cache
+  // back over whatever the trip row already held — and since the row can be a
+  // stale copy from the last trips fetch, that silently reverted changes made
+  // earlier in the session (unticked tracker items, expenses losing paid).
+  migrated.forEach(function(f){ persistTripField(f); });
 }
 
 function persistTripField(field) {
@@ -1656,6 +1677,11 @@ function persistTripField(field) {
   };
   if (!(field in map)) return;
   var upd = {}; upd[field] = map[field];
+  // Keep the cached trip row in step with what was just written. Reopening a
+  // trip rebuilds tripCache from this row, so leaving it stale meant returning
+  // to a trip restored the values from the last trips fetch.
+  var t = userTrips.find(function(x){ return x.id === currentTripId; });
+  if (t) t[field] = map[field];
   sb.from('trips').update(upd).eq('id', currentTripId).then(function(r) {
     if (r && r.error) console.warn('Wander sync error ['+field+']:', r.error.message);
   });
