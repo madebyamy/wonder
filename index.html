@@ -3179,6 +3179,57 @@ async function loadTripPhotos(){
   });
 }
 
+// Downscale straight from the File to a JPEG Blob. The old path went
+// File -> base64 -> Image -> canvas -> base64 -> Blob, holding several copies
+// of every photo in memory at once; a batch of full-size phone photos ran the
+// tab out of memory and the uploads died partway through.
+async function compressFileToBlob(file, max){
+  max = max || 1280;
+  var src = null, w, h;
+  if(typeof createImageBitmap === 'function'){
+    src = await createImageBitmap(file);
+    w = src.width; h = src.height;
+  } else {
+    // Older Safari: decode via an object URL, still avoiding base64.
+    var url = URL.createObjectURL(file);
+    try{
+      src = await new Promise(function(res, rej){
+        var im = new Image();
+        im.onload = function(){ res(im); };
+        im.onerror = function(){ rej(new Error('could not decode image')); };
+        im.src = url;
+      });
+      w = src.naturalWidth; h = src.naturalHeight;
+    } finally { URL.revokeObjectURL(url); }
+  }
+  if(w > max || h > max){
+    if(w > h){ h = Math.round(h * max / w); w = max; }
+    else { w = Math.round(w * max / h); h = max; }
+  }
+  var canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(src, 0, 0, w, h);
+  if(src.close) src.close();
+  var blob = await new Promise(function(r){ canvas.toBlob(r, 'image/jpeg', 0.72); });
+  canvas.width = 0; canvas.height = 0; // let the backing store go
+  if(!blob) throw new Error('could not encode image');
+  return blob;
+}
+
+// One retry: in a long batch the odd upload fails on a transient network blip,
+// and losing a photo to that is worse than waiting a moment.
+async function uploadBlobWithRetry(path, blob){
+  var lastErr = null;
+  for(var attempt = 0; attempt < 2; attempt++){
+    var up = await sb.storage.from('trip-photos')
+      .upload(path, blob, {contentType:'image/jpeg', upsert:true});
+    if(!up.error) return null;
+    lastErr = up.error.message;
+    if(attempt === 0) await new Promise(function(r){ setTimeout(r, 700); });
+  }
+  return lastErr;
+}
+
 // Shared by the Photos tab and the Log day picker.
 async function uploadDayPhotos(files, dayNum, onDone){
   if(!currentTripId || !currentUser){
@@ -3198,12 +3249,10 @@ async function uploadDayPhotos(files, dayNum, onDone){
 
   async function uploadOne(file){
     try{
-      var dataUrl = await readFileAsDataUrl(file);
-      var compressed = await new Promise(function(r){ compressPhoto(dataUrl, r); });
+      var blob = await compressFileToBlob(file);
       var path = currentUser.id+'/'+currentTripId+'/'+newWardrobeId()+'.jpg';
-      var up = await sb.storage.from('trip-photos')
-        .upload(path, dataUrlToBlob(compressed), {contentType:'image/jpeg', upsert:true});
-      if(up.error){ failures.push(file.name+': '+up.error.message); return; }
+      var up = await uploadBlobWithRetry(path, blob);
+      if(up){ failures.push(file.name+': '+up); return; }
       var ins = await sb.from('photos').insert({
         trip_id: currentTripId, storage_path: path,
         uploaded_by: currentUser.id, day_date: dateStr
@@ -3234,15 +3283,6 @@ async function uploadDayPhotos(files, dayNum, onDone){
       +' could not be saved:\n\n' + failures.slice(0,8).join('\n')
       + (failures.length>8 ? '\n…and '+(failures.length-8)+' more' : ''));
   }
-}
-
-function readFileAsDataUrl(file){
-  return new Promise(function(resolve, reject){
-    var r = new FileReader();
-    r.onload = function(e){ resolve(e.target.result); };
-    r.onerror = function(){ reject(new Error('could not read file')); };
-    r.readAsDataURL(file);
-  });
 }
 
 function logTriggerPhoto(){
