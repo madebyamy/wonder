@@ -149,6 +149,11 @@ create table if not exists log_entries (
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+-- Required by the journal upsert (onConflict trip_id,created_by,entry_date).
+-- Without this index every journal sync to this table fails.
+create unique index if not exists log_entries_trip_user_date_idx
+  on log_entries (trip_id, created_by, entry_date);
+
 alter table log_entries enable row level security;
 create policy "Trip members can view log entries" on log_entries for select using (
   exists (
@@ -311,6 +316,10 @@ create policy "Photo owners can update" on storage.objects for update
 --   add column if not exists wardrobe_json jsonb,
 --   add column if not exists day_outfits_json jsonb,
 --   add column if not exists clocks_json jsonb;
+--
+-- -- Journal entries upsert onto this key; without it every sync fails.
+-- create unique index if not exists log_entries_trip_user_date_idx
+--   on log_entries (trip_id, created_by, entry_date);
 --
 -- insert into storage.buckets (id, name, public)
 --   values ('trip-photos','trip-photos',false) on conflict do nothing;

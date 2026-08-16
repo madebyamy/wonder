@@ -1579,14 +1579,21 @@ function initTripCache(trip) {
     } catch(e) { return {}; }
   }
   function perDay(dbVal, prefix, field) {
-    if (dbVal && typeof dbVal === 'object') return dbVal;
-    var out = {};
+    var local = {};
     for (var i = 1; i <= 60; i++) {
       var v = localStorage.getItem(prefix+tid+'_'+i);
-      if (v) out[i] = v;
+      if (v) local[i] = v;
     }
-    if (Object.keys(out).length) migrated.push(field);
-    return out;
+    if (dbVal && typeof dbVal === 'object') {
+      // Supabase wins for any day it holds — including one deliberately blanked
+      // — but days it has never held fall back to localStorage instead of being
+      // dropped, so older entries are not lost.
+      var missing = Object.keys(local).filter(function(k){ return !(k in dbVal); });
+      if (missing.length) migrated.push(field);
+      return Object.assign({}, local, dbVal);
+    }
+    if (Object.keys(local).length) migrated.push(field);
+    return local;
   }
   function migrateBkp(dbVal) {
     if (dbVal && Object.keys(dbVal).length) return dbVal;
@@ -1792,6 +1799,9 @@ function openDbTrip(id){
   loadSuitcaseItems(); // async — re-signs wardrobe photo URLs from storage
   photosDayFilter = null; // day numbers differ per trip
   loadTripPhotos().then(function(){ renderPhotosDayFilter(); renderPhotosGrid(); renderLogOverview(); });
+  restoreJournalFromLogEntries().then(function(n){
+    if(n) renderLogOverview();
+  });
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -3124,6 +3134,25 @@ function logGetPhotos(dayNum){
   return logPhotoRecords(dayNum).map(function(p){ return p.url; });
 }
 
+// Every journal save is also mirrored into log_entries, so that table is a
+// second copy. If journal_json is missing a day that log_entries has, restore
+// it rather than showing the day as blank.
+async function restoreJournalFromLogEntries(){
+  if(!currentTripId || !currentUser || !tripCache) return 0;
+  var {data, error} = await sb.from('log_entries')
+    .select('entry_date, body').eq('trip_id', currentTripId).eq('created_by', currentUser.id);
+  if(error){ console.warn('journal restore skipped:', error.message); return 0; }
+  var recovered = 0;
+  (data||[]).forEach(function(r){
+    if(!r.body) return;
+    var dn = dayNumFromDateStr(r.entry_date);
+    if(!dn) return;
+    if(!tripCache.journal[dn]){ tripCache.journal[dn] = r.body; recovered++; }
+  });
+  if(recovered) persistTripField('journal_json');
+  return recovered;
+}
+
 async function loadTripPhotos(){
   tripPhotos = {};
   if(!currentTripId || !currentUser) return;
@@ -3295,8 +3324,10 @@ function renderLogOverview(){
     'linear-gradient(135deg,#fdf4d0 0%,#f5e8a8 100%)',
   ];
   el.innerHTML = logTripDays.map(function(day, i){
-    var jKey = 'wander_journal_'+(currentTripId||'x')+'_'+day.num;
-    var entry = localStorage.getItem(jKey)||'';
+    // Read through tripCache — saves go there, so reading localStorage direct
+    // showed every day as empty however much had been written.
+    var entry = (tripCache ? tripCache.journal[day.num]
+                           : localStorage.getItem('wander_journal_'+(currentTripId||'x')+'_'+day.num))||'';
     var loc = (tripCache ? tripCache.location[day.num] : localStorage.getItem('wander_loc_'+(currentTripId||'x')+'_'+day.num))||'';
     var mood = (tripCache ? tripCache.mood[day.num] : localStorage.getItem('wander_mood_'+(currentTripId||'x')+'_'+day.num))||'';
     var photos = logGetPhotos(day.num);
@@ -3538,15 +3569,21 @@ function logSave(){
   var ta = document.getElementById('log-entry-text');
   if(!ta) return;
   var txt = ta.value.trim();
-  if (tripCache) { tripCache.journal[currentLogDay] = txt; persistDebounced('journal_json'); }
+  // Written straight through, not debounced — a 1.5s delay was long enough to
+  // lose the entry if the day or tab changed right after saving.
+  if (tripCache) { tripCache.journal[currentLogDay] = txt; persistTripField('journal_json'); }
   else localStorage.setItem('wander_journal_'+(currentTripId||'x')+'_'+currentLogDay, txt);
-  // Also save to log_entries for collaboration
+  // Second copy in log_entries, for collaboration and as a backup
   if(currentTripId && currentUser){
     var dateStr = getDayDateStr(currentLogDay);
     sb.from('log_entries').upsert({
       trip_id: currentTripId, created_by: currentUser.id,
       entry_date: dateStr, body: txt, updated_at: new Date().toISOString()
-    }, {onConflict:'trip_id,created_by,entry_date'}).then(function(){});
+    }, {onConflict:'trip_id,created_by,entry_date'}).then(function(r){
+      // Needs a unique index on (trip_id, created_by, entry_date) — without it
+      // this fails every time, which is how the backup copy went missing.
+      if(r && r.error) console.warn('log_entries sync failed:', r.error.message);
+    });
   }
   openLogDay(currentLogDay);
   renderLogOverview();
