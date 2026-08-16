@@ -1790,7 +1790,8 @@ function openDbTrip(id){
   renderExpenses();
   checkSoonAlerts();
   loadSuitcaseItems(); // async — re-signs wardrobe photo URLs from storage
-  loadTripPhotos().then(function(){ renderPhotosGrid(); renderLogOverview(); });
+  photosDayFilter = null; // day numbers differ per trip
+  loadTripPhotos().then(function(){ renderPhotosDayFilter(); renderPhotosGrid(); renderLogOverview(); });
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -3159,29 +3160,50 @@ async function uploadDayPhotos(files, dayNum, onDone){
   if(!dateStr){ alert('This trip needs start and end dates before photos can be added.'); return; }
 
   var failures = [];
-  for(var i=0; i<files.length; i++){
+  var done = 0;
+  var label = document.getElementById('photos-count-label');
+  function progress(){
+    done++;
+    if(label) label.textContent = 'Uploading '+done+' of '+files.length+'…';
+  }
+
+  async function uploadOne(file){
     try{
-      var dataUrl = await readFileAsDataUrl(files[i]);
+      var dataUrl = await readFileAsDataUrl(file);
       var compressed = await new Promise(function(r){ compressPhoto(dataUrl, r); });
       var path = currentUser.id+'/'+currentTripId+'/'+newWardrobeId()+'.jpg';
       var up = await sb.storage.from('trip-photos')
         .upload(path, dataUrlToBlob(compressed), {contentType:'image/jpeg', upsert:true});
-      if(up.error){ failures.push(files[i].name+': '+up.error.message); continue; }
+      if(up.error){ failures.push(file.name+': '+up.error.message); return; }
       var ins = await sb.from('photos').insert({
         trip_id: currentTripId, storage_path: path,
         uploaded_by: currentUser.id, day_date: dateStr
       }).select().single();
       if(ins.error){
         await sb.storage.from('trip-photos').remove([path]); // don't orphan the file
-        failures.push(files[i].name+': '+ins.error.message);
+        failures.push(file.name+': '+ins.error.message);
       }
-    }catch(e){ failures.push(files[i].name+': '+((e && e.message)||e)); }
+    }catch(e){ failures.push(file.name+': '+((e && e.message)||e)); }
+    progress();
   }
+
+  // A few at a time: sequential is far too slow for a 20+ photo batch, and all
+  // at once floods the connection and starts timing out.
+  var queue = Array.prototype.slice.call(files);
+  var workers = [];
+  for(var w=0; w<4; w++){
+    workers.push((async function(){
+      while(queue.length){ await uploadOne(queue.shift()); }
+    })());
+  }
+  await Promise.all(workers);
 
   await loadTripPhotos();
   if(onDone) onDone();
   if(failures.length){
-    alert('Some photos could not be saved:\n\n' + failures.join('\n'));
+    alert(failures.length+' of '+files.length+' photo'+(files.length>1?'s':'')
+      +' could not be saved:\n\n' + failures.slice(0,8).join('\n')
+      + (failures.length>8 ? '\n…and '+(failures.length-8)+' more' : ''));
   }
 }
 
@@ -4197,10 +4219,11 @@ function triggerUpload(){
   input.onchange = function(e){
     var files = Array.from(e.target.files);
     if(!files.length) return;
-    var dayNum = currentDayNum || 1;
+    var dayNum = photoUploadDay();
     uploadDayPhotos(files, dayNum, function(){
       renderPhotosGrid();
       renderLogOverview();
+      if(currentLogDay === dayNum) openLogDay(dayNum);
     });
   };
   input.click();
@@ -4209,52 +4232,80 @@ function triggerUpload(){
 function renderPhotosGrid(){
   var grid = document.getElementById('photos-grid');
   if(!grid) return;
-  // Collect all photos across all days for this trip
-  var allPhotos = []; // [{src, dayNum}]
+  var allPhotos = []; // [{src, dayNum, idx}]
   var trip = userTrips.find(function(t){ return t.id===currentTripId; });
-  if(trip && trip.start_date && trip.end_date){
+  function collect(n){
+    logGetPhotos(n).forEach(function(src, i){ allPhotos.push({src:src, dayNum:n, idx:i}); });
+  }
+  if(photosDayFilter !== null){
+    collect(photosDayFilter);                     // one day only
+  } else if(trip && trip.start_date && trip.end_date){
     var d = new Date(trip.start_date+'T00:00:00');
     var end = new Date(trip.end_date+'T00:00:00');
     var n = 1;
-    while(d <= end){
-      logGetPhotos(n).forEach(function(src){ allPhotos.push({src:src, dayNum:n}); });
-      d.setDate(d.getDate()+1); n++;
-    }
+    while(d <= end){ collect(n); d.setDate(d.getDate()+1); n++; }
   } else {
-    // fallback: just current day
-    logGetPhotos(currentDayNum||1).forEach(function(src){ allPhotos.push({src:src, dayNum:currentDayNum||1}); });
+    collect(currentDayNum||1);
   }
-  // Build grid
   var html = allPhotos.map(function(p){
     return '<div class="photo-thumb" style="background:url(\''+p.src+'\') center/cover no-repeat;position:relative;">'
-      +'<div class="photo-overlay"><span style="font-size:9px;font-weight:700;background:rgba(0,0,0,.45);color:#fff;border-radius:4px;padding:2px 5px;">Day '+p.dayNum+'</span></div>'
+      +'<div class="photo-overlay"><span style="font-size:9px;font-weight:700;background:rgba(0,0,0,.45);color:#fff;border-radius:4px;padding:2px 5px;">'+photoDayLabel(p.dayNum)+'</span></div>'
+      +'<button onclick="logDeletePhoto('+p.dayNum+','+p.idx+')" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.55);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;line-height:1;cursor:pointer;" title="Delete">✕</button>'
       +'</div>';
   }).join('');
-  // Add tile
+  // Add tile — names the day the photos will be filed under
   html += '<div class="photo-thumb" style="background:var(--card2);border:1.5px dashed var(--card3);" onclick="triggerUpload()">'
-    +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i><span style="font-size:10px;font-weight:600;">Add photo</span></div>'
+    +'<div style="text-align:center;color:#9a9a9a;"><i class="ti ti-plus" style="font-size:22px;display:block;margin-bottom:3px;"></i>'
+    +'<span style="font-size:10px;font-weight:600;">Add to '+photoDayLabel(photoUploadDay())+'</span></div>'
     +'</div>';
   grid.innerHTML = html;
   var label = document.getElementById('photos-count-label');
-  if(label) label.textContent = allPhotos.length > 0 ? allPhotos.length+' photo'+(allPhotos.length>1?'s':'') : 'Add your first photo';
+  if(label){
+    var scope = photosDayFilter !== null ? ' on '+photoDayLabel(photosDayFilter) : '';
+    label.textContent = allPhotos.length > 0
+      ? allPhotos.length+' photo'+(allPhotos.length>1?'s':'')+scope
+      : (photosDayFilter !== null ? 'No photos on '+photoDayLabel(photosDayFilter) : 'Add your first photo');
+  }
 }
 
 function downloadAllPhotos(){
   alert('Download all — coming soon!');
 }
 
+// null = All days, otherwise the day number being viewed
+var photosDayFilter = null;
+
+// Photos are added to the day currently selected in the filter. With "All days"
+// active there is no selected day, so fall back to the day the trip is on.
+function photoUploadDay(){ return photosDayFilter || currentDayNum || 1; }
+
+function photoDayLabel(dayNum){
+  var ds = getDayDateStr(dayNum);
+  if(!ds) return 'Day '+dayNum;
+  var MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var d = new Date(ds+'T00:00:00');
+  return MS[d.getMonth()]+' '+d.getDate();
+}
+
+function photosDay(btn, dayNum){
+  btn.parentElement.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('on'); });
+  btn.classList.add('on');
+  photosDayFilter = dayNum;
+  renderPhotosGrid();
+}
+
 function renderPhotosDayFilter(){
   var trip = userTrips.find(function(t){ return t.id===currentTripId; });
   var el = document.getElementById('photos-day-filter');
   if(!el) return;
-  var html = '<button class="pill on" onclick="catpill(this)" style="font-size:11px;">All days</button>';
+  var html = '<button class="pill'+(photosDayFilter===null?' on':'')+'" onclick="photosDay(this,null)" style="font-size:11px;">All days</button>';
   if(trip && trip.start_date && trip.end_date){
     var d = new Date(trip.start_date+'T00:00:00');
     var end = new Date(trip.end_date+'T00:00:00');
     var MS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var n=1;
     while(d<=end){
-      html+='<button class="pill" onclick="catpill(this)" style="font-size:11px;">'+MS[d.getMonth()]+' '+d.getDate()+'</button>';
+      html+='<button class="pill'+(photosDayFilter===n?' on':'')+'" onclick="photosDay(this,'+n+')" style="font-size:11px;">'+MS[d.getMonth()]+' '+d.getDate()+'</button>';
       d.setDate(d.getDate()+1); n++;
     }
   }
