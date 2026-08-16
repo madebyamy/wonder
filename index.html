@@ -1764,6 +1764,7 @@ function openDbTrip(id){
   renderExpenses();
   checkSoonAlerts();
   loadSuitcaseItems(); // async — re-signs wardrobe photo URLs from storage
+  loadTripPhotos().then(function(){ renderPhotosGrid(); renderLogOverview(); });
 }
 
 // ── Update UI with logged-in user ────────────────────────────────────────────
@@ -3066,8 +3067,106 @@ function getLocationIcon(loc){
 
 // ── Log photos ────────────────────────────────────────────────────────────────
 function logPhotosKey(dayNum){ return 'wander_photos_'+(currentTripId||'x')+'_'+dayNum; }
-function logGetPhotos(dayNum){ try{ return JSON.parse(localStorage.getItem(logPhotosKey(dayNum))||'[]'); }catch(e){ return []; } }
-function logSavePhotos(dayNum, arr){ localStorage.setItem(logPhotosKey(dayNum), JSON.stringify(arr)); }
+function logGetLegacyPhotos(dayNum){ try{ return JSON.parse(localStorage.getItem(logPhotosKey(dayNum))||'[]'); }catch(e){ return []; } }
+function logSaveLegacyPhotos(dayNum, arr){
+  // Guarded: a full-size photo overruns the 5MB quota, and an uncaught throw
+  // here used to abort the caller before it ever re-rendered.
+  try{ localStorage.setItem(logPhotosKey(dayNum), JSON.stringify(arr)); }
+  catch(e){ console.warn('legacy photo write skipped:', e && e.message); }
+}
+
+// dayNum -> [{id, path, url}] loaded from the photos table
+var tripPhotos = {};
+
+function dayNumFromDateStr(dateStr){
+  if(!currentTripStartDate || !dateStr) return null;
+  var start = new Date(currentTripStartDate+'T00:00:00');
+  var d = new Date(dateStr+'T00:00:00');
+  return Math.round((d - start) / 86400000) + 1;
+}
+
+// Uploaded photos first, then any older ones still held in localStorage, so
+// nothing that was saved before photos moved to Supabase disappears.
+function logPhotoRecords(dayNum){
+  var db = tripPhotos[dayNum] || [];
+  return db.concat(logGetLegacyPhotos(dayNum).map(function(src, i){
+    return {legacyIndex:i, url:src};
+  }));
+}
+function logGetPhotos(dayNum){
+  return logPhotoRecords(dayNum).map(function(p){ return p.url; });
+}
+
+async function loadTripPhotos(){
+  tripPhotos = {};
+  if(!currentTripId || !currentUser) return;
+  var {data, error} = await sb.from('photos')
+    .select('*').eq('trip_id', currentTripId).order('created_at');
+  if(error){ console.warn('photo load error:', error.message); return; }
+  var rows = data || [];
+  if(!rows.length){ return; }
+  var signed = {};
+  try{
+    var res = await sb.storage.from('trip-photos')
+      .createSignedUrls(rows.map(function(r){ return r.storage_path; }), 604800);
+    if(res.data){
+      rows.forEach(function(r, i){
+        if(res.data[i] && res.data[i].signedUrl) signed[r.storage_path] = res.data[i].signedUrl;
+      });
+    }
+  }catch(e){ console.warn('photo sign failed:', e); }
+  rows.forEach(function(r){
+    var dn = dayNumFromDateStr(r.day_date);
+    if(!dn) return;
+    if(!tripPhotos[dn]) tripPhotos[dn] = [];
+    tripPhotos[dn].push({id:r.id, path:r.storage_path, url:signed[r.storage_path] || ''});
+  });
+}
+
+// Shared by the Photos tab and the Log day picker.
+async function uploadDayPhotos(files, dayNum, onDone){
+  if(!currentTripId || !currentUser){
+    alert('Please sign in and open a trip before adding photos.');
+    return;
+  }
+  var dateStr = getDayDateStr(dayNum);
+  if(!dateStr){ alert('This trip needs start and end dates before photos can be added.'); return; }
+
+  var failures = [];
+  for(var i=0; i<files.length; i++){
+    try{
+      var dataUrl = await readFileAsDataUrl(files[i]);
+      var compressed = await new Promise(function(r){ compressPhoto(dataUrl, r); });
+      var path = currentUser.id+'/'+currentTripId+'/'+newWardrobeId()+'.jpg';
+      var up = await sb.storage.from('trip-photos')
+        .upload(path, dataUrlToBlob(compressed), {contentType:'image/jpeg', upsert:true});
+      if(up.error){ failures.push(files[i].name+': '+up.error.message); continue; }
+      var ins = await sb.from('photos').insert({
+        trip_id: currentTripId, storage_path: path,
+        uploaded_by: currentUser.id, day_date: dateStr
+      }).select().single();
+      if(ins.error){
+        await sb.storage.from('trip-photos').remove([path]); // don't orphan the file
+        failures.push(files[i].name+': '+ins.error.message);
+      }
+    }catch(e){ failures.push(files[i].name+': '+((e && e.message)||e)); }
+  }
+
+  await loadTripPhotos();
+  if(onDone) onDone();
+  if(failures.length){
+    alert('Some photos could not be saved:\n\n' + failures.join('\n'));
+  }
+}
+
+function readFileAsDataUrl(file){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(e){ resolve(e.target.result); };
+    r.onerror = function(){ reject(new Error('could not read file')); };
+    r.readAsDataURL(file);
+  });
+}
 
 function logTriggerPhoto(){
   var inp = document.getElementById('log-photo-input');
@@ -3076,33 +3175,39 @@ function logTriggerPhoto(){
 
 function logPhotoChosen(input){
   var files = Array.from(input.files);
+  input.value = '';
   if(!files.length) return;
   var dayNum = currentLogDay;
-  var photos = logGetPhotos(dayNum);
-  var toRead = files.length;
-  files.forEach(function(file){
-    var reader = new FileReader();
-    reader.onload = function(e){
-      photos.push(e.target.result);
-      toRead--;
-      if(toRead===0){
-        logSavePhotos(dayNum, photos);
-        openLogDay(dayNum);
-        renderLogOverview();
-        renderPhotosGrid();
-      }
-    };
-    reader.readAsDataURL(file);
+  uploadDayPhotos(files, dayNum, function(){
+    openLogDay(dayNum);
+    renderLogOverview();
+    renderPhotosGrid();
   });
-  input.value = '';
 }
 
-function logDeletePhoto(dayNum, idx){
-  var photos = logGetPhotos(dayNum);
-  photos.splice(idx,1);
-  logSavePhotos(dayNum, photos);
+async function logDeletePhoto(dayNum, idx){
+  var rec = logPhotoRecords(dayNum)[idx];
+  if(!rec) return;
+  if(!confirm('Delete this photo?\n\nThis cannot be undone.')) return;
+
+  if(rec.legacyIndex !== undefined){
+    var legacy = logGetLegacyPhotos(dayNum);
+    legacy.splice(rec.legacyIndex, 1);
+    logSaveLegacyPhotos(dayNum, legacy);
+  } else {
+    var del = await sb.from('photos').delete().eq('id', rec.id).select();
+    if(del.error){ alert('Could not delete this photo:\n\n'+del.error.message); return; }
+    if(!del.data || !del.data.length){
+      alert('Could not delete this photo. It may already be gone, or it was '
+        + 'added by someone else — only the person who uploaded a photo can delete it.');
+      return;
+    }
+    await sb.storage.from('trip-photos').remove([rec.path]);
+    await loadTripPhotos();
+  }
   openLogDay(dayNum);
   renderLogOverview();
+  renderPhotosGrid();
 }
 
 function buildLogTripDays(){
@@ -4067,19 +4172,9 @@ function triggerUpload(){
     var files = Array.from(e.target.files);
     if(!files.length) return;
     var dayNum = currentDayNum || 1;
-    var photos = logGetPhotos(dayNum);
-    var remaining = files.length;
-    files.forEach(function(file){
-      var reader = new FileReader();
-      reader.onload = function(ev){
-        photos.push(ev.target.result);
-        remaining--;
-        if(remaining === 0){
-          logSavePhotos(dayNum, photos);
-          renderPhotosGrid();
-        }
-      };
-      reader.readAsDataURL(file);
+    uploadDayPhotos(files, dayNum, function(){
+      renderPhotosGrid();
+      renderLogOverview();
     });
   };
   input.click();
